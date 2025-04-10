@@ -3,15 +3,42 @@ const Finance = require('../models/financeModel');
 // Add Income
 exports.addIncome = async (req, res, next) => {
   try {
-    const { source, amount, description } = req.body;
+    const { source, amount, category, date, description } = req.body;
+
+    if (!source || !amount) {
+      return res.status(400).json({ message: 'Source and amount are required' });
+    }
+
     const finance = await Finance.findOne();
+    const incomeEntry = {
+      source,
+      amount: parseFloat(amount),
+      category,
+      date: date ? new Date(date) : Date.now(),
+      description,
+    };
+
     if (!finance) {
-      const newFinance = new Finance({ income: [{ source, amount, description }] });
+      const newFinance = new Finance({ income: [incomeEntry] });
+      newFinance.transactions.push({
+        type: 'income',
+        amount: incomeEntry.amount,
+        category: incomeEntry.category,
+        date: incomeEntry.date,
+        description: incomeEntry.description,
+      });
       await newFinance.save();
       return res.status(201).json(newFinance);
     }
-    finance.income.push({ source, amount, description });
-    finance.transactions.push({ type: 'income', amount, description });
+
+    finance.income.push(incomeEntry);
+    finance.transactions.push({
+      type: 'income',
+      amount: incomeEntry.amount,
+      category: incomeEntry.category,
+      date: incomeEntry.date,
+      description: incomeEntry.description,
+    });
     await finance.save();
     res.status(201).json(finance);
   } catch (error) {
@@ -42,7 +69,7 @@ exports.getIncome = async (req, res, next) => {
 exports.updateIncome = async (req, res, next) => {
   try {
     const { incomeId } = req.params;
-    const { source, amount, description } = req.body;
+    const { source, amount, category, date, description } = req.body;
     const finance = await Finance.findOne();
     if (!finance) return res.status(404).json({ message: 'No finance data found' });
 
@@ -50,12 +77,18 @@ exports.updateIncome = async (req, res, next) => {
     if (!income) return res.status(404).json({ message: 'Income not found' });
 
     income.source = source || income.source;
-    income.amount = amount || income.amount;
+    income.amount = amount ? parseFloat(amount) : income.amount;
+    income.category = category || income.category;
+    income.date = date ? new Date(date) : income.date;
     income.description = description || income.description;
 
-    const transaction = finance.transactions.find(t => t.type === 'income' && t.amount === income.amount);
+    const transaction = finance.transactions.find(
+      (t) => t.type === 'income' && t.date.toISOString() === income.date.toISOString()
+    );
     if (transaction) {
       transaction.amount = income.amount;
+      transaction.category = income.category;
+      transaction.date = income.date;
       transaction.description = income.description;
     }
 
@@ -77,7 +110,9 @@ exports.deleteIncome = async (req, res, next) => {
     if (!income) return res.status(404).json({ message: 'Income not found' });
 
     finance.income.pull(incomeId);
-    finance.transactions = finance.transactions.filter(t => !(t.type === 'income' && t.amount === income.amount));
+    finance.transactions = finance.transactions.filter(
+      (t) => !(t.type === 'income' && t.date.toISOString() === income.date.toISOString())
+    );
     await finance.save();
     res.status(200).json(finance);
   } catch (error) {
@@ -88,15 +123,42 @@ exports.deleteIncome = async (req, res, next) => {
 // Add Expense
 exports.addExpense = async (req, res, next) => {
   try {
-    const { category, amount, description } = req.body;
+    const { category, amount, expenseCategory, date, description } = req.body;
+
+    if (!category || !amount) {
+      return res.status(400).json({ message: 'Category and amount are required' });
+    }
+
     const finance = await Finance.findOne();
+    const expenseEntry = {
+      category,
+      amount: parseFloat(amount),
+      expenseCategory,
+      date: date ? new Date(date) : Date.now(),
+      description,
+    };
+
     if (!finance) {
-      const newFinance = new Finance({ expenses: [{ category, amount, description }] });
+      const newFinance = new Finance({ expenses: [expenseEntry] });
+      newFinance.transactions.push({
+        type: 'expense',
+        amount: expenseEntry.amount,
+        category: expenseEntry.expenseCategory,
+        date: expenseEntry.date,
+        description: expenseEntry.description,
+      });
       await newFinance.save();
       return res.status(201).json(newFinance);
     }
-    finance.expenses.push({ category, amount, description });
-    finance.transactions.push({ type: 'expense', amount, description });
+
+    finance.expenses.push(expenseEntry);
+    finance.transactions.push({
+      type: 'expense',
+      amount: expenseEntry.amount,
+      category: expenseEntry.expenseCategory,
+      date: expenseEntry.date,
+      description: expenseEntry.description,
+    });
     await finance.save();
     res.status(201).json(finance);
   } catch (error) {
@@ -127,7 +189,7 @@ exports.getExpense = async (req, res, next) => {
 exports.updateExpense = async (req, res, next) => {
   try {
     const { expenseId } = req.params;
-    const { category, amount, description } = req.body;
+    const { category, amount, expenseCategory, date, description } = req.body;
     const finance = await Finance.findOne();
     if (!finance) return res.status(404).json({ message: 'No finance data found' });
 
@@ -135,12 +197,18 @@ exports.updateExpense = async (req, res, next) => {
     if (!expense) return res.status(404).json({ message: 'Expense not found' });
 
     expense.category = category || expense.category;
-    expense.amount = amount || expense.amount;
+    expense.amount = amount ? parseFloat(amount) : expense.amount;
+    expense.expenseCategory = expenseCategory || expense.expenseCategory;
+    expense.date = date ? new Date(date) : expense.date;
     expense.description = description || expense.description;
 
-    const transaction = finance.transactions.find(t => t.type === 'expense' && t.amount === expense.amount);
+    const transaction = finance.transactions.find(
+      (t) => t.type === 'expense' && t.date.toISOString() === expense.date.toISOString()
+    );
     if (transaction) {
       transaction.amount = expense.amount;
+      transaction.category = expense.expenseCategory;
+      transaction.date = expense.date;
       transaction.description = expense.description;
     }
 
@@ -162,7 +230,9 @@ exports.deleteExpense = async (req, res, next) => {
     if (!expense) return res.status(404).json({ message: 'Expense not found' });
 
     finance.expenses.pull(expenseId);
-    finance.transactions = finance.transactions.filter(t => !(t.type === 'expense' && t.amount === expense.amount));
+    finance.transactions = finance.transactions.filter(
+      (t) => !(t.type === 'expense' && t.date.toISOString() === expense.date.toISOString())
+    );
     await finance.save();
     res.status(200).json(finance);
   } catch (error) {
@@ -173,15 +243,39 @@ exports.deleteExpense = async (req, res, next) => {
 // Add Salary
 exports.addSalary = async (req, res, next) => {
   try {
-    const { employeeId, amount } = req.body;
+    const { employeeId, amount, date, description } = req.body;
+
+    if (!employeeId || !amount) {
+      return res.status(400).json({ message: 'Employee ID and amount are required' });
+    }
+
     const finance = await Finance.findOne();
+    const salaryEntry = {
+      employeeId,
+      amount: parseFloat(amount),
+      date: date ? new Date(date) : Date.now(),
+      description,
+    };
+
     if (!finance) {
-      const newFinance = new Finance({ salaries: [{ employeeId, amount }] });
+      const newFinance = new Finance({ salaries: [salaryEntry] });
+      newFinance.transactions.push({
+        type: 'salary',
+        amount: salaryEntry.amount,
+        date: salaryEntry.date,
+        description: salaryEntry.description,
+      });
       await newFinance.save();
       return res.status(201).json(newFinance);
     }
-    finance.salaries.push({ employeeId, amount });
-    finance.transactions.push({ type: 'salary', amount });
+
+    finance.salaries.push(salaryEntry);
+    finance.transactions.push({
+      type: 'salary',
+      amount: salaryEntry.amount,
+      date: salaryEntry.date,
+      description: salaryEntry.description,
+    });
     await finance.save();
     res.status(201).json(finance);
   } catch (error) {
@@ -212,7 +306,7 @@ exports.getSalary = async (req, res, next) => {
 exports.updateSalary = async (req, res, next) => {
   try {
     const { salaryId } = req.params;
-    const { employeeId, amount } = req.body;
+    const { employeeId, amount, date, description } = req.body;
     const finance = await Finance.findOne();
     if (!finance) return res.status(404).json({ message: 'No finance data found' });
 
@@ -220,11 +314,17 @@ exports.updateSalary = async (req, res, next) => {
     if (!salary) return res.status(404).json({ message: 'Salary not found' });
 
     salary.employeeId = employeeId || salary.employeeId;
-    salary.amount = amount || salary.amount;
+    salary.amount = amount ? parseFloat(amount) : salary.amount;
+    salary.date = date ? new Date(date) : salary.date;
+    salary.description = description || salary.description;
 
-    const transaction = finance.transactions.find(t => t.type === 'salary' && t.amount === salary.amount);
+    const transaction = finance.transactions.find(
+      (t) => t.type === 'salary' && t.date.toISOString() === salary.date.toISOString()
+    );
     if (transaction) {
       transaction.amount = salary.amount;
+      transaction.date = salary.date;
+      transaction.description = salary.description;
     }
 
     await finance.save();
@@ -245,7 +345,9 @@ exports.deleteSalary = async (req, res, next) => {
     if (!salary) return res.status(404).json({ message: 'Salary not found' });
 
     finance.salaries.pull(salaryId);
-    finance.transactions = finance.transactions.filter(t => !(t.type === 'salary' && t.amount === salary.amount));
+    finance.transactions = finance.transactions.filter(
+      (t) => !(t.type === 'salary' && t.date.toISOString() === salary.date.toISOString())
+    );
     await finance.save();
     res.status(200).json(finance);
   } catch (error) {
