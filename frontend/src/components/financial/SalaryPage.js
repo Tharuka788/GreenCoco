@@ -9,7 +9,7 @@ const SalaryPage = () => {
     description: '',
   });
 
-  const [editSalary, setEditSalary] = useState(null); // State for editing an entry
+  const [editSalary, setEditSalary] = useState(null);
   const [formErrors, setFormErrors] = useState({});
   const [salaryList, setSalaryList] = useState([]);
   const [loading, setLoading] = useState(false);
@@ -153,7 +153,7 @@ const SalaryPage = () => {
 
   const styles = `
     .salary-page {
-      margin-left: 220px;
+      margin-top: 80px; /* Space for the fixed MainNavbar */
       padding: 30px;
       flex-grow: 1;
       background: #ffffff;
@@ -307,32 +307,38 @@ const SalaryPage = () => {
       background: #e6f0ea;
     }
 
-    .salary-list .action-buttons button {
-      padding: 5px 10px;
-      margin-right: 5px;
-      border: none;
-      border-radius: 4px;
+    .salary-list .action-buttons {
+      display: flex;
+      gap: 10px;
+    }
+
+    .salary-list .action-buttons svg {
+      width: 20px;
+      height: 20px;
       cursor: pointer;
-      font-size: 0.9rem;
-      transition: background 0.3s ease;
+      transition: transform 0.2s ease;
+      padding: 5px;
+      border-radius: 4px;
     }
 
-    .salary-list .edit-button {
-      background: #328e6e;
-      color: white;
+    .salary-list .edit-icon {
+      fill: #328e6e;
     }
 
-    .salary-list .edit-button:hover {
-      background: #46b38a;
+    .salary-list .edit-icon:hover {
+      fill: #46b38a;
+      transform: scale(1.2);
+      background: #e6f0ea;
     }
 
-    .salary-list .delete-button {
-      background: #e74c3c;
-      color: white;
+    .salary-list .delete-icon {
+      fill: #e74c3c;
     }
 
-    .salary-list .delete-button:hover {
-      background: #c0392b;
+    .salary-list .delete-icon:hover {
+      fill: #c0392b;
+      transform: scale(1.2);
+      background: #f8e1e1;
     }
 
     .loading {
@@ -347,6 +353,12 @@ const SalaryPage = () => {
       color: #e74c3c;
       font-size: 1rem;
       margin-top: 20px;
+    }
+
+    @media (max-width: 768px) {
+      .salary-page {
+        margin-top: 120px; /* Adjust for taller MainNavbar */
+      }
     }
   `;
 
@@ -435,12 +447,22 @@ const SalaryPage = () => {
                     <td>{salary.description || '-'}</td>
                     <td>{new Date(salary.date).toLocaleDateString()}</td>
                     <td className="action-buttons">
-                      <button className="edit-button" onClick={() => handleEditSalary(salary)}>
-                        Edit
-                      </button>
-                      <button className="delete-button" onClick={() => handleDeleteSalary(salary._id)}>
-                        Delete
-                      </button>
+                      <svg
+                        className="edit-icon"
+                        onClick={() => handleEditSalary(salary)}
+                        xmlns="http://www.w3.org/2000/svg"
+                        viewBox="0 0 24 24"
+                      >
+                        <path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04c.39-.39.39-1.02 0-1.41l-2.34-2.34c-.39-.39-1.02-.39-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z" />
+                      </svg>
+                      <svg
+                        className="delete-icon"
+                        onClick={() => handleDeleteSalary(salary._id)}
+                        xmlns="http://www.w3.org/2000/svg"
+                        viewBox="0 0 24 24"
+                      >
+                        <path d="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z" />
+                      </svg>
                     </td>
                   </tr>
                 ))}

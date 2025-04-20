@@ -1,20 +1,109 @@
 import React from 'react';
 import { BrowserRouter as Router, Route, Routes } from 'react-router-dom';
-import Navbar from './components/financial/Navbar';
+import HomePage from './components/Home/HomePage';
+import MainNavbar from './components/Home/MainNavbar';
 import Dashboard from './components/financial/Dashboard';
 import IncomePage from './components/financial/IncomePage';
 import ExpensePage from './components/financial/ExpensePage';
 import SalaryPage from './components/financial/SalaryPage';
-import TransactionsPage from './components/financial/TransactionsPage'; // Import the new page
+import TransactionsPage from './components/financial/TransactionsPage';
 import { FinanceProvider } from './FinanceContext';
 import { ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 
+// Placeholder components for other main functions with styling
+const PlaceholderPage = ({ title, description }) => {
+  const styles = `
+    @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap');
+
+    .placeholder-page {
+      margin-top: 80px; /* Space for the fixed MainNavbar */
+      padding: 40px;
+      min-height: 100vh;
+      background: linear-gradient(135deg, #f5f7fa 0%, #e6f0ea 100%);
+      font-family: 'Poppins', sans-serif;
+      text-align: center;
+    }
+
+    .placeholder-page h1 {
+      font-size: 2.5rem;
+      font-weight: 600;
+      color: #2a7458;
+      margin-bottom: 20px;
+      text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.1);
+    }
+
+    .placeholder-page p {
+      font-size: 1.2rem;
+      color: #5e6d55;
+    }
+
+    @media (max-width: 768px) {
+      .placeholder-page {
+        padding: 20px;
+        margin-top: 120px; /* Adjust for taller MainNavbar */
+      }
+
+      .placeholder-page h1 {
+        font-size: 2rem;
+      }
+
+      .placeholder-page p {
+        font-size: 1rem;
+      }
+    }
+  `;
+
+  return (
+    <>
+      <style dangerouslySetInnerHTML={{ __html: styles }} />
+      <div className="placeholder-page">
+        <h1>{title}</h1>
+        <p>{description}</p>
+      </div>
+    </>
+  );
+};
+
+const InventoryPage = () => (
+  <PlaceholderPage
+    title="Inventory Management"
+    description="Inventory Management - Coming Soon"
+  />
+);
+
+const DeliveryPage = () => (
+  <PlaceholderPage
+    title="Delivery"
+    description="Delivery - Coming Soon"
+  />
+);
+
+const OrderSupplierPage = () => (
+  <PlaceholderPage
+    title="Order & Supplier Management"
+    description="Order & Supplier Management - Coming Soon"
+  />
+);
+
+const EmployeePage = () => (
+  <PlaceholderPage
+    title="Employee Management"
+    description="Employee Management - Coming Soon"
+  />
+);
+
 function App() {
   const appStyles = `
     .app {
-      display: flex;
       min-height: 100vh;
+      padding-top: 80px; /* Space for the fixed MainNavbar */
+    }
+
+    @media (max-width: 768px) {
+      .app {
+        padding-top: 120px; /* Adjust for taller navbar on smaller screens */
+      }
     }
   `;
 
@@ -23,14 +112,26 @@ function App() {
       <style dangerouslySetInnerHTML={{ __html: appStyles }} />
       <Router>
         <FinanceProvider>
+          <MainNavbar />
           <div className="app">
-            <Navbar />
             <Routes>
-              <Route path="/" element={<Dashboard />} />
-              <Route path="/income" element={<IncomePage />} />
-              <Route path="/expense" element={<ExpensePage />} />
-              <Route path="/salary" element={<SalaryPage />} />
-              <Route path="/transactions" element={<TransactionsPage />} /> {/* Add the new route */}
+              {/* Root route for the homepage */}
+              <Route path="/" element={<HomePage />} />
+
+              {/* Nested finance routes */}
+              <Route path="/finance">
+                <Route index element={<Dashboard />} />
+                <Route path="income" element={<IncomePage />} />
+                <Route path="expense" element={<ExpensePage />} />
+                <Route path="salary" element={<SalaryPage />} />
+                <Route path="transactions" element={<TransactionsPage />} />
+              </Route>
+
+              {/* Placeholder routes for other main functions */}
+              <Route path="/inventory" element={<InventoryPage />} />
+              <Route path="/delivery" element={<DeliveryPage />} />
+              <Route path="/order-supplier" element={<OrderSupplierPage />} />
+              <Route path="/employee" element={<EmployeePage />} />
             </Routes>
           </div>
           <ToastContainer

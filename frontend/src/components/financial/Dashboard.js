@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import axios from 'axios';
-import { Bar } from 'react-chartjs-2';
-import { Chart as ChartJS, CategoryScale, LinearScale, BarElement, Title, Tooltip, Legend } from 'chart.js';
+import { Line } from 'react-chartjs-2';
+import { Chart as ChartJS, CategoryScale, LinearScale, PointElement, LineElement, Title, Tooltip, Legend } from 'chart.js';
 import IncomeCard from './IncomeCard';
 import ExpenseCard from './ExpenseCard';
 import ProfitCard from './ProfitCard';
@@ -10,7 +10,8 @@ import PaymentsCard from './PaymentsCard';
 import Transactions from './Transactions';
 import { useFinance } from '../../FinanceContext';
 
-ChartJS.register(CategoryScale, LinearScale, BarElement, Title, Tooltip, Legend);
+// Register Chart.js components for a line chart
+ChartJS.register(CategoryScale, LinearScale, PointElement, LineElement, Title, Tooltip, Legend);
 
 const Dashboard = () => {
   const [financeData, setFinanceData] = useState({
@@ -21,7 +22,7 @@ const Dashboard = () => {
     profitLoss: {},
   });
   const [error, setError] = useState(null);
-  const { refreshTrigger } = useFinance(); // Use the refresh trigger
+  const { refreshTrigger } = useFinance();
 
   const fetchData = async () => {
     try {
@@ -49,20 +50,86 @@ const Dashboard = () => {
 
   useEffect(() => {
     fetchData();
-  }, [refreshTrigger]); // Refresh when the trigger changes
+  }, [refreshTrigger]);
 
-  const totalIncome = financeData.income.reduce((sum, item) => sum + item.amount, 0);
-  const totalExpenses = financeData.expenses.reduce((sum, item) => sum + item.amount, 0);
+  // Function to get the last 6 months' labels (e.g., "Jan 2025", "Feb 2025", etc.)
+  const getLastSixMonths = () => {
+    const months = [];
+    const today = new Date();
+    for (let i = 5; i >= 0; i--) {
+      const date = new Date(today.getFullYear(), today.getMonth() - i, 1);
+      months.push(date.toLocaleString('default', { month: 'short', year: 'numeric' }));
+    }
+    return months;
+  };
 
+  // Aggregate income and expenses by month
+  const aggregateByMonth = (data) => {
+    const monthlyData = Array(6).fill(0); // Array for the last 6 months
+    const today = new Date();
+    const sixMonthsAgo = new Date(today.getFullYear(), today.getMonth() - 5, 1);
+
+    data.forEach((item) => {
+      const itemDate = new Date(item.date);
+      if (itemDate >= sixMonthsAgo && itemDate <= today) {
+        const monthDiff = (today.getFullYear() - itemDate.getFullYear()) * 12 + (today.getMonth() - itemDate.getMonth());
+        if (monthDiff >= 0 && monthDiff < 6) {
+          const index = 5 - monthDiff; // Map to the correct month index
+          monthlyData[index] += item.amount;
+        }
+      }
+    });
+
+    return monthlyData;
+  };
+
+  const monthlyIncome = aggregateByMonth(financeData.income);
+  const monthlyExpenses = aggregateByMonth(financeData.expenses);
+  const monthLabels = getLastSixMonths();
+
+  // Create datasets for the line chart
   const chartData = {
-    labels: ['Income', 'Expenses'],
+    labels: monthLabels,
     datasets: [
       {
-        label: 'Amount ($)',
-        data: [totalIncome, totalExpenses],
-        backgroundColor: ['#328e6e', '#e74c3c'],
-        borderColor: ['#2a7458', '#c0392b'],
-        borderWidth: 1,
+        label: 'Income',
+        data: monthlyIncome,
+        fill: true,
+        backgroundColor: (context) => {
+          const ctx = context.chart.ctx;
+          const gradient = ctx.createLinearGradient(0, 0, 0, 200);
+          gradient.addColorStop(0, 'rgba(70, 179, 138, 0.3)');
+          gradient.addColorStop(1, 'rgba(70, 179, 138, 0)');
+          return gradient;
+        },
+        borderColor: '#328e6e',
+        borderWidth: 2,
+        tension: 0.4, // Smooth curve
+        pointBackgroundColor: '#328e6e',
+        pointBorderColor: '#fff',
+        pointBorderWidth: 2,
+        pointRadius: 5,
+        pointHoverRadius: 7,
+      },
+      {
+        label: 'Expenses',
+        data: monthlyExpenses,
+        fill: true,
+        backgroundColor: (context) => {
+          const ctx = context.chart.ctx;
+          const gradient = ctx.createLinearGradient(0, 0, 0, 200);
+          gradient.addColorStop(0, 'rgba(231, 76, 60, 0.3)');
+          gradient.addColorStop(1, 'rgba(231, 76, 60, 0)');
+          return gradient;
+        },
+        borderColor: '#e74c3c',
+        borderWidth: 2,
+        tension: 0.4, // Smooth curve
+        pointBackgroundColor: '#e74c3c',
+        pointBorderColor: '#fff',
+        pointBorderWidth: 2,
+        pointRadius: 5,
+        pointHoverRadius: 7,
       },
     ],
   };
@@ -80,33 +147,45 @@ const Dashboard = () => {
             size: 14,
           },
           color: '#2a7458',
+          padding: 15,
+          boxWidth: 20,
+          boxHeight: 20,
+          usePointStyle: true,
+          pointStyle: 'circle',
         },
       },
       title: {
         display: true,
-        text: 'Income vs Expenses',
+        text: 'Income vs Expenses Over Time',
         font: {
           family: "'Poppins', sans-serif",
           size: 20,
           weight: '600',
         },
         color: '#2a7458',
+        padding: {
+          top: 10,
+          bottom: 20,
+        },
+      },
+      tooltip: {
+        backgroundColor: 'rgba(0, 0, 0, 0.8)',
+        titleFont: {
+          family: "'Poppins', sans-serif",
+          size: 14,
+        },
+        bodyFont: {
+          family: "'Poppins', sans-serif",
+          size: 12,
+        },
+        padding: 10,
+        cornerRadius: 8,
+        callbacks: {
+          label: (context) => `LKR ${context.parsed.y.toFixed(2)}`,
+        },
       },
     },
     scales: {
-      y: {
-        beginAtZero: true,
-        ticks: {
-          font: {
-            family: "'Poppins', sans-serif",
-            size: 12,
-          },
-          color: '#2a7458',
-        },
-        grid: {
-          color: 'rgba(0, 0, 0, 0.05)',
-        },
-      },
       x: {
         ticks: {
           font: {
@@ -119,6 +198,24 @@ const Dashboard = () => {
           display: false,
         },
       },
+      y: {
+        beginAtZero: true,
+        ticks: {
+          font: {
+            family: "'Poppins', sans-serif",
+            size: 12,
+          },
+          color: '#2a7458',
+          callback: (value) => `LKR ${value}`,
+        },
+        grid: {
+          color: 'rgba(0, 0, 0, 0.05)',
+        },
+      },
+    },
+    animation: {
+      duration: 1500,
+      easing: 'easeOutQuart',
     },
   };
 
@@ -126,7 +223,7 @@ const Dashboard = () => {
     @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap');
 
     .dashboard {
-      margin-left: 220px;
+      margin-top: 80px; /* Space for the fixed MainNavbar */
       padding: 30px;
       flex-grow: 1;
       background: #ffffff;
@@ -151,7 +248,7 @@ const Dashboard = () => {
       background: #f5f7fa;
       border-radius: 12px;
       box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
-      max-width: 600px;
+      max-width: 800px; /* Wider container for better line chart visibility */
       width: 100%;
       margin-left: auto;
       margin-right: auto;
@@ -279,7 +376,7 @@ const Dashboard = () => {
 
     @media (max-width: 768px) {
       .dashboard {
-        margin-left: 0;
+        margin-top: 120px; /* Adjust for taller MainNavbar */
         padding: 20px;
       }
 
@@ -328,7 +425,7 @@ const Dashboard = () => {
         ) : (
           <>
             <div className="chart-container">
-              <Bar data={chartData} options={chartOptions} />
+              <Line data={chartData} options={chartOptions} />
             </div>
             <div className="dashboard-grid">
               <div className="card income">
