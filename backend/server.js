@@ -26,7 +26,7 @@ app.use(express.json());
 
 // Routes
 app.use('/api/finance', financeRoutes);
-app.use('/api/inventory', inventorys);
+app.use('/inventory', inventorys);
 
 // Error Handler
 app.use(errorHandler);
