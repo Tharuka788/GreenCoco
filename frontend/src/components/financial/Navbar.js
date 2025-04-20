@@ -1,6 +1,6 @@
 import React from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import logo from '../../logo.svg';
+import logo from '../../logo.png';
 
 const Navbar = () => {
   const location = useLocation();
@@ -26,8 +26,8 @@ const Navbar = () => {
     }
 
     .navbar-logo {
-      width: 60px;
-      margin-bottom: 20px;
+      width: 160px;
+      margin-bottom: 5px;
       transition: transform 0.3s ease;
     }
 
