@@ -2,7 +2,7 @@ const express = require('express');
 const dotenv = require('dotenv');
 const connectDB = require('./config/db');
 const financeRoutes = require('./routes/financeRoutes');
-const inventoryRoutes = require('./routes/inventoryRoutes');
+const inventorys = require('./routes/inventorys');
 const errorHandler = require('./middleware/errorHandler');
 const cors = require('cors'); // Ensure CORS is included
 
@@ -26,7 +26,7 @@ app.use(express.json());
 
 // Routes
 app.use('/api/finance', financeRoutes);
-app.use('/api/inventory', inventoryRoutes);
+app.use('/api/inventory', inventorys);
 
 // Error Handler
 app.use(errorHandler);
