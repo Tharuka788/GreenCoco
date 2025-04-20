@@ -1,7 +1,9 @@
+// inventoryRoutes.js
 const express = require('express');
 const router = express.Router();
 const multer = require('multer');
 const { GridFsStorage } = require('multer-gridfs-storage');
+const mongoose = require('mongoose');
 const {
   getInventory,
   createInventory,
@@ -10,9 +12,8 @@ const {
   getPicture
 } = require('../controllers/inventoryController');
 
-// Configure GridFS storage
 const storage = new GridFsStorage({
-  url: process.env.MONGO_URI,
+  db: mongoose.connection, // Use existing mongoose connection
   file: (req, file) => {
     return {
       bucketName: 'uploads',
