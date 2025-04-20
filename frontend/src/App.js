@@ -7,6 +7,7 @@ import IncomePage from './components/financial/IncomePage';
 import ExpensePage from './components/financial/ExpensePage';
 import SalaryPage from './components/financial/SalaryPage';
 import TransactionsPage from './components/financial/TransactionsPage';
+import InventoryForm from './components/Inventory/InventoryForm';
 import { FinanceProvider } from './FinanceContext';
 import { ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
@@ -65,13 +66,6 @@ const PlaceholderPage = ({ title, description }) => {
   );
 };
 
-const InventoryPage = () => (
-  <PlaceholderPage
-    title="Inventory Management"
-    description="Inventory Management - Coming Soon"
-  />
-);
-
 const DeliveryPage = () => (
   <PlaceholderPage
     title="Delivery"
@@ -127,8 +121,10 @@ function App() {
                 <Route path="transactions" element={<TransactionsPage />} />
               </Route>
 
+              {/* Inventory route */}
+              <Route path="/inventory" element={<InventoryForm />} />
+
               {/* Placeholder routes for other main functions */}
-              <Route path="/inventory" element={<InventoryPage />} />
               <Route path="/delivery" element={<DeliveryPage />} />
               <Route path="/order-supplier" element={<OrderSupplierPage />} />
               <Route path="/employee" element={<EmployeePage />} />
