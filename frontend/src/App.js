@@ -1,3 +1,4 @@
+// src/App.js
 import React from 'react';
 import { BrowserRouter as Router, Route, Routes } from 'react-router-dom';
 import HomePage from './components/Home/HomePage';
@@ -10,11 +11,12 @@ import TransactionsPage from './components/financial/TransactionsPage';
 import InventoryManagement from './components/Inventory/InventoryManagement';
 import InventoryForm from './components/Inventory/InventoryForm';
 import InventoryDetails from './components/Inventory/InventoryDetails';
+import EmployeeManagement from './components/Employee/EmployeeManagement';
 import { FinanceProvider } from './FinanceContext';
 import { ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 
-// Placeholder components for other main functions with styling
+// Placeholder components for other main functions
 const PlaceholderPage = ({ title, description }) => {
   const styles = `
     @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap');
@@ -82,13 +84,6 @@ const OrderSupplierPage = () => (
   />
 );
 
-const EmployeePage = () => (
-  <PlaceholderPage
-    title="Employee Management"
-    description="Employee Management - Coming Soon"
-  />
-);
-
 function App() {
   const appStyles = `
     .app {
@@ -131,10 +126,16 @@ function App() {
                 <Route path="edit/:id" element={<InventoryDetails />} />
               </Route>
 
+              {/* Employee routes */}
+              <Route path="/employee">
+                <Route index element={<EmployeeManagement />} />
+                <Route path="add" element={<EmployeeManagement />} />
+                <Route path="list" element={<EmployeeManagement />} />
+              </Route>
+
               {/* Placeholder routes for other main functions */}
               <Route path="/delivery" element={<DeliveryPage />} />
               <Route path="/order-supplier" element={<OrderSupplierPage />} />
-              <Route path="/employee" element={<EmployeePage />} />
             </Routes>
           </div>
           <ToastContainer
