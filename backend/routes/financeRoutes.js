@@ -15,6 +15,10 @@ const {
   deleteSalary,
   getTransactionHistory,
   getProfitLoss,
+  addScheduledPayment,
+  getScheduledPayments,
+  updateScheduledPayment,
+  deleteScheduledPayment,
 } = require('../controllers/financeController');
 
 // Income Routes
@@ -37,6 +41,13 @@ router.get('/salary', getSalary);
 router.get('/salary/:salaryId', getSalary);
 router.put('/salary/:salaryId', updateSalary);
 router.delete('/salary/:salaryId', deleteSalary);
+
+// Scheduled Payment Routes
+router.post('/scheduled-payments', addScheduledPayment);
+router.get('/scheduled-payments', getScheduledPayments);
+router.get('/scheduled-payments/:paymentId', getScheduledPayments);
+router.put('/scheduled-payments/:paymentId', updateScheduledPayment);
+router.delete('/scheduled-payments/:paymentId', deleteScheduledPayment);
 
 // Other Routes
 router.get('/transactions', getTransactionHistory);

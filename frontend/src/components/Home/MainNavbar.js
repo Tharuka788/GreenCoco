@@ -12,7 +12,14 @@ import {
   faChevronDown,
   faChartBar,
   faPlus,
-  faExclamationTriangle
+  faExclamationTriangle,
+  faChartLine,
+  faMoneyBillWave,
+  faCreditCard,
+  faHandHoldingUsd,
+  faExchangeAlt,
+  faPeopleCarry,
+  faSignInAlt,
 } from '@fortawesome/free-solid-svg-icons';
 
 const MainNavbar = () => {
@@ -20,27 +27,51 @@ const MainNavbar = () => {
   const [isOpen, setIsOpen] = useState(false);
   const [isFinanceDropdownOpen, setIsFinanceDropdownOpen] = useState(false);
   const [isInventoryDropdownOpen, setIsInventoryDropdownOpen] = useState(false);
+  const [isSupplierDropdownOpen, setIsSupplierDropdownOpen] = useState(false);
+  const [isOrdersDropdownOpen, setIsOrdersDropdownOpen] = useState(false);
 
   const toggleMenu = () => {
     setIsOpen(!isOpen);
     if (isFinanceDropdownOpen) setIsFinanceDropdownOpen(false);
     if (isInventoryDropdownOpen) setIsInventoryDropdownOpen(false);
+    if (isSupplierDropdownOpen) setIsSupplierDropdownOpen(false);
+    if (isOrdersDropdownOpen) setIsOrdersDropdownOpen(false);
   };
 
   const closeMenu = () => {
     setIsOpen(false);
     setIsFinanceDropdownOpen(false);
     setIsInventoryDropdownOpen(false);
+    setIsSupplierDropdownOpen(false);
+    setIsOrdersDropdownOpen(false);
   };
 
   const toggleFinanceDropdown = () => {
     setIsFinanceDropdownOpen(!isFinanceDropdownOpen);
-    setIsInventoryDropdownOpen(false); // Close other dropdown
+    setIsInventoryDropdownOpen(false);
+    setIsSupplierDropdownOpen(false);
+    setIsOrdersDropdownOpen(false);
   };
 
   const toggleInventoryDropdown = () => {
     setIsInventoryDropdownOpen(!isInventoryDropdownOpen);
-    setIsFinanceDropdownOpen(false); // Close other dropdown
+    setIsFinanceDropdownOpen(false);
+    setIsSupplierDropdownOpen(false);
+    setIsOrdersDropdownOpen(false);
+  };
+
+  const toggleSupplierDropdown = () => {
+    setIsSupplierDropdownOpen(!isSupplierDropdownOpen);
+    setIsFinanceDropdownOpen(false);
+    setIsInventoryDropdownOpen(false);
+    setIsOrdersDropdownOpen(false);
+  };
+
+  const toggleOrdersDropdown = () => {
+    setIsOrdersDropdownOpen(!isOrdersDropdownOpen);
+    setIsFinanceDropdownOpen(false);
+    setIsInventoryDropdownOpen(false);
+    setIsSupplierDropdownOpen(false);
   };
 
   const isFinanceActive = [
@@ -57,8 +88,12 @@ const MainNavbar = () => {
     '/inventory/details',
     '/inventory/edit',
     '/inventory/low-stock',
-    '/inventory/dashboard'
-  ].some(path => location.pathname.startsWith(path));
+    '/inventory/dashboard',
+  ].some((path) => location.pathname.startsWith(path));
+
+  const isSupplierActive = ['/suppliers'].includes(location.pathname);
+
+  const isOrdersActive = ['/orders', '/orders/add'].includes(location.pathname);
 
   const navbarStyles = `
     @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap');
@@ -153,7 +188,7 @@ const MainNavbar = () => {
       position: absolute;
       top: 100%;
       left: 0;
-      background: #3b9c73;
+      background: rgba(59, 156, 115, 0.9);
       list-style: none;
       padding: 0;
       margin: 0;
@@ -184,12 +219,12 @@ const MainNavbar = () => {
     }
 
     .dropdown-menu a:hover {
-      background: rgba(255, 255, 255, 0.2);
+      background: rgba(255, 255, 255, 0.1);
       color: #ffffff;
     }
 
     .dropdown-menu a.active {
-      background: rgba(255, 255, 255, 0.3);
+      background: rgba(255, 255, 255, 0.15);
       color: #ffffff;
       font-weight: 600;
     }
@@ -264,7 +299,7 @@ const MainNavbar = () => {
       .dropdown-menu {
         position: static;
         box-shadow: none;
-        background: #328e6e;
+        background: rgba(50, 142, 110, 0.9);
         width: 100%;
       }
 
@@ -314,12 +349,22 @@ const MainNavbar = () => {
               >
                 <li role="none">
                   <Link
+                    to="/finance"
+                    className={location.pathname === '/finance' ? 'active' : ''}
+                    role="menuitem"
+                    onClick={closeMenu}
+                  >
+                    <FontAwesomeIcon icon={faChartLine} /> Dashboard
+                  </Link>
+                </li>
+                <li role="none">
+                  <Link
                     to="/finance/income"
                     className={location.pathname === '/finance/income' ? 'active' : ''}
                     role="menuitem"
                     onClick={closeMenu}
                   >
-                    Income Page
+                    <FontAwesomeIcon icon={faMoneyBillWave} /> Income Page
                   </Link>
                 </li>
                 <li role="none">
@@ -329,7 +374,7 @@ const MainNavbar = () => {
                     role="menuitem"
                     onClick={closeMenu}
                   >
-                    Expense Page
+                    <FontAwesomeIcon icon={faCreditCard} /> Expense Page
                   </Link>
                 </li>
                 <li role="none">
@@ -339,7 +384,7 @@ const MainNavbar = () => {
                     role="menuitem"
                     onClick={closeMenu}
                   >
-                    Salary Page
+                    <FontAwesomeIcon icon={faHandHoldingUsd} /> Salary Page
                   </Link>
                 </li>
                 <li role="none">
@@ -349,7 +394,7 @@ const MainNavbar = () => {
                     role="menuitem"
                     onClick={closeMenu}
                   >
-                    View Transactions
+                    <FontAwesomeIcon icon={faExchangeAlt} /> View Transactions
                   </Link>
                 </li>
               </ul>
@@ -412,14 +457,68 @@ const MainNavbar = () => {
               </ul>
             </li>
             <li role="none">
-              <Link
-                to="/orders"
-                className={location.pathname === '/orders' ? 'active' : ''}
+              <div
+                className={`dropdown-toggle ${isSupplierActive ? 'active' : ''}`}
+                onClick={toggleSupplierDropdown}
                 role="menuitem"
-                onClick={closeMenu}
+                aria-haspopup="true"
+                aria-expanded={isSupplierDropdownOpen}
+              >
+                <FontAwesomeIcon icon={faPeopleCarry} /> Supplier
+                <FontAwesomeIcon icon={faChevronDown} style={{ marginLeft: '5px' }} />
+              </div>
+              <ul
+                className={`dropdown-menu ${isSupplierDropdownOpen ? 'active' : ''}`}
+                role="menu"
+              >
+                <li role="none">
+                  <Link
+                    to="/suppliers"
+                    className={location.pathname === '/suppliers' ? 'active' : ''}
+                    role="menuitem"
+                    onClick={closeMenu}
+                  >
+                    <FontAwesomeIcon icon={faChartBar} /> Supplier Dashboard
+                  </Link>
+                </li>
+              </ul>
+            </li>
+            <li role="none">
+              <div
+                className={`dropdown-toggle ${isOrdersActive ? 'active' : ''}`}
+                onClick={toggleOrdersDropdown}
+                role="menuitem"
+                aria-haspopup="true"
+                aria-expanded={isOrdersDropdownOpen}
               >
                 <FontAwesomeIcon icon={faTruck} /> Orders
-              </Link>
+                <FontAwesomeIcon icon={faChevronDown} style={{ marginLeft: '5px' }} />
+              </div>
+              <ul
+                className={`dropdown-menu ${isOrdersDropdownOpen ? 'active' : ''}`}
+                role="menu"
+              >
+                <li role="none">
+                  <Link
+                    to="/orders"
+                    className={location.pathname === '/orders' ? 'active' : ''}
+                    role="menuitem"
+                    onClick={closeMenu}
+                  >
+                    <FontAwesomeIcon icon={faTruck} /> Orders Dashboard
+                  </Link>
+                </li>
+                <li role="none">
+                  <Link
+                    to="/orders/add"
+                    className={location.pathname === '/orders/add' ? 'active' : ''}
+                    role="menuitem"
+                    onClick={closeMenu}
+                  >
+                    <FontAwesomeIcon icon={faPlus} /> Add Order
+                  </Link>
+                </li>
+              </ul>
             </li>
             <li role="none">
               <Link
@@ -429,6 +528,16 @@ const MainNavbar = () => {
                 onClick={closeMenu}
               >
                 <FontAwesomeIcon icon={faUsers} /> Employee Management
+              </Link>
+            </li>
+            <li role="none">
+              <Link
+                to="/login"
+                className={location.pathname === '/login' ? 'active' : ''}
+                role="menuitem"
+                onClick={closeMenu}
+              >
+                <FontAwesomeIcon icon={faSignInAlt} /> Login
               </Link>
             </li>
           </ul>

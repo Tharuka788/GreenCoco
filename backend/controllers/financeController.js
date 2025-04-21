@@ -387,3 +387,102 @@ exports.getProfitLoss = async (req, res, next) => {
     next(error);
   }
 };
+
+// Add Scheduled Payment
+exports.addScheduledPayment = async (req, res, next) => {
+  try {
+    const { utilityType, amount, dueDate, frequency, status } = req.body;
+
+    if (!utilityType || !amount || !dueDate || !frequency || !status) {
+      return res.status(400).json({ message: 'All fields are required' });
+    }
+    if (amount <= 0) {
+      return res.status(400).json({ message: 'Amount must be a positive number' });
+    }
+
+    const finance = await Finance.findOne();
+    const scheduledPaymentEntry = {
+      utilityType,
+      amount: parseFloat(amount),
+      dueDate,
+      frequency,
+      status,
+      createdAt: Date.now(),
+      updatedAt: Date.now(),
+    };
+
+    if (!finance) {
+      const newFinance = new Finance({ scheduledPayments: [scheduledPaymentEntry] });
+      await newFinance.save();
+      return res.status(201).json(newFinance);
+    }
+
+    finance.scheduledPayments.push(scheduledPaymentEntry);
+    await finance.save();
+    res.status(201).json(finance);
+  } catch (error) {
+    next(error);
+  }
+};
+
+// Get Scheduled Payments (All or Specific)
+exports.getScheduledPayments = async (req, res, next) => {
+  try {
+    const { paymentId } = req.params;
+    const finance = await Finance.findOne();
+    if (!finance) return res.status(404).json({ message: 'No finance data found' });
+
+    if (paymentId) {
+      const payment = finance.scheduledPayments.id(paymentId);
+      if (!payment) return res.status(404).json({ message: 'Scheduled payment not found' });
+      return res.status(200).json(payment);
+    }
+
+    res.status(200).json(finance.scheduledPayments);
+  } catch (error) {
+    next(error);
+  }
+};
+
+// Update Scheduled Payment
+exports.updateScheduledPayment = async (req, res, next) => {
+  try {
+    const { paymentId } = req.params;
+    const { utilityType, amount, dueDate, frequency, status } = req.body;
+    const finance = await Finance.findOne();
+    if (!finance) return res.status(404).json({ message: 'No finance data found' });
+
+    const payment = finance.scheduledPayments.id(paymentId);
+    if (!payment) return res.status(404).json({ message: 'Scheduled payment not found' });
+
+    payment.utilityType = utilityType || payment.utilityType;
+    payment.amount = amount ? parseFloat(amount) : payment.amount;
+    payment.dueDate = dueDate || payment.dueDate;
+    payment.frequency = frequency || payment.frequency;
+    payment.status = status || payment.status;
+    payment.updatedAt = Date.now();
+
+    await finance.save();
+    res.status(200).json(finance);
+  } catch (error) {
+    next(error);
+  }
+};
+
+// Delete Scheduled Payment
+exports.deleteScheduledPayment = async (req, res, next) => {
+  try {
+    const { paymentId } = req.params;
+    const finance = await Finance.findOne();
+    if (!finance) return res.status(404).json({ message: 'No finance data found' });
+
+    const payment = finance.scheduledPayments.id(paymentId);
+    if (!payment) return res.status(404).json({ message: 'Scheduled payment not found' });
+
+    finance.scheduledPayments.pull(paymentId);
+    await finance.save();
+    res.status(200).json(finance);
+  } catch (error) {
+    next(error);
+  }
+};
