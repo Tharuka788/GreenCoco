@@ -11,6 +11,7 @@ const OrdersDashboard = () => {
   const navigate = useNavigate();
   const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
 
   // Fetch orders from backend
   useEffect(() => {
@@ -21,6 +22,7 @@ const OrdersDashboard = () => {
         setLoading(false);
       } catch (error) {
         console.error('Error fetching orders:', error);
+        setError('Failed to load orders. Please try again.');
         setLoading(false);
       }
     };
@@ -32,7 +34,7 @@ const OrdersDashboard = () => {
     const updatedStatus = prompt('Enter new status for the order (e.g., Delivered, Pending, Cancelled):');
     if (updatedStatus) {
       try {
-        const response = await axios.put(`http://localhost:5000/api/orders/${id}`, { status: updatedStatus });
+        await axios.put(`http://localhost:5000/api/orders/${id}`, { status: updatedStatus });
         setOrders(
           orders.map((order) =>
             order._id === id ? { ...order, status: updatedStatus } : order
@@ -70,7 +72,7 @@ const OrdersDashboard = () => {
     { new: 0, delivered: 0, cancelled: 0 }
   );
 
-  // Include "On Delivery" as a category (mocking it for now since it's not in the backend schema)
+  // Include "On Delivery" as a category
   const onDeliveryCount = orders.filter((order) => order.status === 'On Delivery').length || 0;
 
   const pieChartData = {
@@ -82,6 +84,16 @@ const OrdersDashboard = () => {
         hoverBackgroundColor: ['#2DB44A', '#E68600', '#0066CC', '#E62E26'],
       },
     ],
+  };
+
+  const handleNavigateToAddOrder = () => {
+    console.log('New Order button clicked, navigating to /orders/add');
+    try {
+      navigate('/orders/add');
+    } catch (err) {
+      console.error('Navigation error:', err);
+      alert('Failed to navigate to the order form. Please check the console for errors.');
+    }
   };
 
   const dashboardStyles = `
@@ -225,6 +237,13 @@ const OrdersDashboard = () => {
       background: #FF3B30;
     }
 
+    .error-message {
+      color: #FF3B30;
+      text-align: center;
+      margin: 20px 0;
+      font-size: 1rem;
+    }
+
     @media (max-width: 768px) {
       .dashboard-header h1 {
         font-size: 1.5rem;
@@ -269,6 +288,7 @@ const OrdersDashboard = () => {
   `;
 
   if (loading) return <div>Loading...</div>;
+  if (error) return <div className="error-message">{error}</div>;
 
   return (
     <>
@@ -278,7 +298,7 @@ const OrdersDashboard = () => {
           <h1>Orders Dashboard</h1>
           <button
             className="new-order-button"
-            onClick={() => navigate('/orders/add')}
+            onClick={handleNavigateToAddOrder}
           >
             New Order
           </button>
