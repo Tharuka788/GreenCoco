@@ -1,9 +1,11 @@
+// server.js
 const express = require('express');
 const dotenv = require('dotenv');
 const connectDB = require('./config/db');
 const financeRoutes = require('./routes/financeRoutes');
 const inventorys = require('./routes/inventorys');
-const userRoutes = require('./routes/userRoutes'); // Add user routes
+const userRoutes = require('./routes/userRoutes');
+const supplierRoutes = require('./routes/supplierRoutes'); // Add supplier routes
 const errorHandler = require('./middleware/errorHandler');
 const cors = require('cors');
 
@@ -28,7 +30,8 @@ app.use(express.json());
 // Routes
 app.use('/api/finance', financeRoutes);
 app.use('/inventory', inventorys);
-app.use('/api/users', userRoutes); // Add user routes
+app.use('/api/users', userRoutes);
+app.use('/api/suppliers', supplierRoutes); // Add supplier routes
 
 // Error Handler
 app.use(errorHandler);
