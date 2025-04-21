@@ -419,10 +419,11 @@ const IncomePage = () => {
                 required
               >
                 <option value="">Select a category</option>
-                <option value="Salary">Salary</option>
-                <option value="Freelance">Freelance</option>
-                <option value="Investment">Investment</option>
-                <option value="Other">Other</option>
+                <option value="Raw Material Sales">Raw Material Sales</option>
+                <option value="Processed Product Sales">Processed Product Sales</option>
+                <option value="Service Income">Service Income</option>
+                <option value="Grants and Subsidies">Grants and Subsidies</option>
+                <option value="Other Income">Other Income</option>
               </select>
               {formErrors.category && <div className="error">{formErrors.category}</div>}
             </label>

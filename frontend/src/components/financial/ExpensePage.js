@@ -419,10 +419,10 @@ const ExpensePage = () => {
                 required
               >
                 <option value="">Select a category</option>
-                <option value="Utilities">Utilities</option>
-                <option value="Supplies">Supplies</option>
-                <option value="Travel">Travel</option>
-                <option value="Other">Other</option>
+                <option value="Operational Expenses">Operational Expenses</option>
+                <option value="Labor Costs">Labor Costs</option>
+                <option value="Utilities and Overheads">Utilities and Overheads</option>
+                <option value="Compliance and Legal">Compliance and Legal</option>
               </select>
               {formErrors.category && <div className="error">{formErrors.category}</div>}
             </label>
