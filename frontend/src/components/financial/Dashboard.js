@@ -21,7 +21,10 @@ const Dashboard = () => {
     transactions: [],
     profitLoss: {},
   });
+  const [upcomingIncome, setUpcomingIncome] = useState([]);
+  const [upcomingExpenses, setUpcomingExpenses] = useState([]);
   const [error, setError] = useState(null);
+  const [notification, setNotification] = useState(null);
   const { refreshTrigger } = useFinance();
 
   const fetchData = async () => {
@@ -35,13 +38,76 @@ const Dashboard = () => {
         axios.get('http://localhost:5000/api/finance/transactions'),
       ]);
 
-      setFinanceData({
+      const newFinanceData = {
         income: incomeRes.data,
         expenses: expenseRes.data,
         salaries: salaryRes.data,
         profitLoss: profitRes.data,
         transactions: transRes.data,
+      };
+
+      setFinanceData(newFinanceData);
+
+      // Filter for current and past entries (up to today) for financial calculations
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+
+      const currentIncome = newFinanceData.income.filter((item) => {
+        const itemDate = new Date(item.date);
+        return itemDate <= today;
       });
+      const currentExpenses = newFinanceData.expenses.filter((item) => {
+        const itemDate = new Date(item.date);
+        return itemDate <= today;
+      });
+
+      // Filter for future entries (after today) for upcoming payments
+      const futureIncome = newFinanceData.income.filter((item) => {
+        const itemDate = new Date(item.date);
+        return itemDate > today;
+      });
+      const futureExpenses = newFinanceData.expenses.filter((item) => {
+        const itemDate = new Date(item.date);
+        return itemDate > today;
+      });
+
+      setUpcomingIncome(futureIncome);
+      setUpcomingExpenses(futureExpenses);
+
+      // Calculate total income and expenses for current and past entries only
+      const totalIncome = currentIncome.reduce((sum, item) => sum + item.amount, 0);
+      const totalExpenses = currentExpenses.reduce((sum, item) => sum + item.amount, 0);
+      const difference = totalIncome - totalExpenses;
+
+      // Thresholds for notifications
+      const warningThreshold = 10000; // LKR 10,000 as a warning threshold
+      const criticalThreshold = 0; // LKR 0 as a critical threshold
+
+      // Check if browser notifications are supported and request permission
+      if ('Notification' in window) {
+        if (Notification.permission !== 'granted' && Notification.permission !== 'denied') {
+          Notification.requestPermission();
+        }
+      }
+
+      // Trigger notifications based on thresholds
+      if (difference <= criticalThreshold) {
+        const message = `Critical Alert: Your expenses (LKR ${totalExpenses.toFixed(2)}) have exceeded or matched your income (LKR ${totalIncome.toFixed(2)}). Net balance: LKR ${difference.toFixed(2)}. Immediate action is recommended!`;
+        if ('Notification' in window && Notification.permission === 'granted') {
+          new Notification('Financial Alert', { body: message });
+        } else {
+          setNotification({ type: 'critical', message });
+        }
+      } else if (difference <= warningThreshold) {
+        const message = `Warning: Your net balance is low (LKR ${difference.toFixed(2)}). Income: LKR ${totalIncome.toFixed(2)}, Expenses: LKR ${totalExpenses.toFixed(2)}. Consider reviewing your finances.`;
+        if ('Notification' in window && Notification.permission === 'granted') {
+          new Notification('Financial Warning', { body: message });
+        } else {
+          setNotification({ type: 'warning', message });
+        }
+      } else {
+        setNotification(null);
+      }
     } catch (error) {
       console.error('Error fetching finance data:', error);
       setError('Failed to fetch financial data. Please try again later.');
@@ -63,9 +129,9 @@ const Dashboard = () => {
     return months;
   };
 
-  // Aggregate income and expenses by month
+  // Aggregate income and expenses by month for current and past entries only
   const aggregateByMonth = (data) => {
-    const monthlyData = Array(6).fill(0); // Array for the last 6 months
+    const monthlyData = Array(6).fill(0);
     const today = new Date();
     const sixMonthsAgo = new Date(today.getFullYear(), today.getMonth() - 5, 1);
 
@@ -74,7 +140,7 @@ const Dashboard = () => {
       if (itemDate >= sixMonthsAgo && itemDate <= today) {
         const monthDiff = (today.getFullYear() - itemDate.getFullYear()) * 12 + (today.getMonth() - itemDate.getMonth());
         if (monthDiff >= 0 && monthDiff < 6) {
-          const index = 5 - monthDiff; // Map to the correct month index
+          const index = 5 - monthDiff;
           monthlyData[index] += item.amount;
         }
       }
@@ -83,8 +149,14 @@ const Dashboard = () => {
     return monthlyData;
   };
 
-  const monthlyIncome = aggregateByMonth(financeData.income);
-  const monthlyExpenses = aggregateByMonth(financeData.expenses);
+  // Filter income and expenses up to today for the chart
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  const currentIncome = financeData.income.filter((item) => new Date(item.date) <= today);
+  const currentExpenses = financeData.expenses.filter((item) => new Date(item.date) <= today);
+
+  const monthlyIncome = aggregateByMonth(currentIncome);
+  const monthlyExpenses = aggregateByMonth(currentExpenses);
   const monthLabels = getLastSixMonths();
 
   // Create datasets for the line chart
@@ -104,7 +176,7 @@ const Dashboard = () => {
         },
         borderColor: '#328e6e',
         borderWidth: 2,
-        tension: 0.4, // Smooth curve
+        tension: 0.4,
         pointBackgroundColor: '#328e6e',
         pointBorderColor: '#fff',
         pointBorderWidth: 2,
@@ -124,7 +196,7 @@ const Dashboard = () => {
         },
         borderColor: '#e74c3c',
         borderWidth: 2,
-        tension: 0.4, // Smooth curve
+        tension: 0.4,
         pointBackgroundColor: '#e74c3c',
         pointBorderColor: '#fff',
         pointBorderWidth: 2,
@@ -223,7 +295,7 @@ const Dashboard = () => {
     @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap');
 
     .dashboard {
-      margin-top: 80px; /* Space for the fixed MainNavbar */
+      margin-top: 80px;
       padding: 30px;
       flex-grow: 1;
       background: #ffffff;
@@ -248,7 +320,7 @@ const Dashboard = () => {
       background: #f5f7fa;
       border-radius: 12px;
       box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
-      max-width: 800px; /* Wider container for better line chart visibility */
+      max-width: 800px;
       width: 100%;
       margin-left: auto;
       margin-right: auto;
@@ -260,6 +332,30 @@ const Dashboard = () => {
       grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
       gap: 25px;
       animation: fadeIn 0.5s ease-in-out;
+    }
+
+    .notification {
+      margin-bottom: 20px;
+      padding: 15px;
+      border-radius: 8px;
+      text-align: center;
+      font-weight: 500;
+      font-size: 1rem;
+      max-width: 800px;
+      margin-left: auto;
+      margin-right: auto;
+    }
+
+    .notification.warning {
+      background: #fff3cd;
+      color: #856404;
+      border: 1px solid #ffeeba;
+    }
+
+    .notification.critical {
+      background: #f8d7da;
+      color: #721c24;
+      border: 1px solid #f5c6cb;
     }
 
     @keyframes fadeIn {
@@ -297,9 +393,39 @@ const Dashboard = () => {
       font-size: clamp(1.1rem, 2vw, 1.3rem);
     }
 
+    .card h4 {
+      margin-top: 20px;
+      margin-bottom: 10px;
+      color: #2a7458;
+      font-weight: 500;
+      font-size: 1.1rem;
+    }
+
     .card p {
       color: #5e6d55;
       font-size: clamp(0.9rem, 1.5vw, 1.1rem);
+    }
+
+    .card ul {
+      list-style: none;
+      padding: 0;
+      margin: 0;
+      max-height: 150px;
+      overflow-y: auto;
+    }
+
+    .card ul li {
+      margin: 8px 0;
+      padding: 8px;
+      background: #f5f7fa;
+      border-radius: 6px;
+      font-size: clamp(0.85rem, 1.2vw, 0.95rem);
+      color: #5e6d55;
+      transition: background 0.3s ease;
+    }
+
+    .card ul li:hover {
+      background: #e6f0ea;
     }
 
     .card.income {
@@ -376,7 +502,7 @@ const Dashboard = () => {
 
     @media (max-width: 768px) {
       .dashboard {
-        margin-top: 120px; /* Adjust for taller MainNavbar */
+        margin-top: 120px;
         padding: 20px;
       }
 
@@ -424,6 +550,11 @@ const Dashboard = () => {
           <div className="error-message">{error}</div>
         ) : (
           <>
+            {notification && (
+              <div className={`notification ${notification.type}`}>
+                {notification.message}
+              </div>
+            )}
             <div className="chart-container">
               <Line data={chartData} options={chartOptions} />
             </div>
@@ -441,7 +572,7 @@ const Dashboard = () => {
                 <SalaryCard salaries={financeData.salaries} />
               </div>
               <div className="card payments">
-                <PaymentsCard />
+                <PaymentsCard upcomingIncome={upcomingIncome} upcomingExpenses={upcomingExpenses} />
               </div>
               <div className="transactions">
                 <Transactions transactions={financeData.transactions} />

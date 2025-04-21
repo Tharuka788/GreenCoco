@@ -6,7 +6,7 @@ const IncomeCard = ({ income }) => {
   return (
     <div>
       <h3>Total Income</h3>
-      <p>${totalIncome.toFixed(2)}</p>
+      <p>LKR{totalIncome.toFixed(2)}</p>
     </div>
   );
 };

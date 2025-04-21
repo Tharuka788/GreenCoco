@@ -42,42 +42,132 @@ const ExpensePage = () => {
     setTargetState({ ...targetState, [name]: value });
 
     const errors = { ...formErrors };
-    if (name === 'title' && value.trim() === '') {
+
+    // Title Validation
+    if (name === 'title') {
+      if (value.trim() === '') {
+        errors.title = 'Title is required';
+      } else if (value.trim().length < 3) {
+        errors.title = 'Title must be at least 3 characters long';
+      } else if (value.trim().length > 50) {
+        errors.title = 'Title cannot exceed 50 characters';
+      } else if (!/^[a-zA-Z0-9\s]*$/.test(value)) {
+        errors.title = 'Title can only contain letters, numbers, and spaces (no symbols allowed)';
+      } else {
+        delete errors.title;
+      }
+    }
+
+    // Amount Validation
+    if (name === 'amount') {
+      if (value === '') {
+        errors.amount = 'Amount is required';
+      } else if (isNaN(value) || parseFloat(value) <= 0) {
+        errors.amount = 'Amount must be a positive number';
+      } else if (parseFloat(value) > 1000000000) {
+        errors.amount = 'Amount cannot exceed LKR 1,000,000,000';
+      } else {
+        delete errors.amount;
+      }
+    }
+
+    // Category Validation
+    if (name === 'category') {
+      if (!value) {
+        errors.category = 'Category is required';
+      } else {
+        delete errors.category;
+      }
+    }
+
+    // Date Validation
+    if (name === 'date') {
+      if (!value) {
+        errors.date = 'Date is required';
+      } else {
+        const selectedDate = new Date(value);
+        const today = new Date();
+        today.setHours(0, 0, 0, 0); // Reset time to midnight for accurate comparison
+        selectedDate.setHours(0, 0, 0, 0); // Reset time for selected date
+        if (selectedDate < today) {
+          errors.date = 'Date cannot be earlier than today';
+        } else {
+          delete errors.date;
+        }
+      }
+    }
+
+    // Description Validation
+    if (name === 'description') {
+      if (value.trim() === '') {
+        errors.description = 'Description is required';
+      } else if (value.trim().length < 5) {
+        errors.description = 'Description must be at least 5 characters long';
+      } else if (value.trim().length > 200) {
+        errors.description = 'Description cannot exceed 200 characters';
+      } else {
+        delete errors.description;
+      }
+    }
+
+    setFormErrors(errors);
+  };
+
+  const validateForm = (expenseData) => {
+    const errors = {};
+
+    // Title Validation
+    if (!expenseData.title.trim()) {
       errors.title = 'Title is required';
-    } else {
-      delete errors.title;
+    } else if (expenseData.title.trim().length < 3) {
+      errors.title = 'Title must be at least 3 characters long';
+    } else if (expenseData.title.trim().length > 50) {
+      errors.title = 'Title cannot exceed 50 characters';
+    } else if (!/^[a-zA-Z0-9\s]*$/.test(expenseData.title)) {
+      errors.title = 'Title can only contain letters, numbers, and spaces (no symbols allowed)';
     }
-    if (name === 'amount' && (value <= 0 || isNaN(value))) {
+
+    // Amount Validation
+    if (!expenseData.amount || isNaN(expenseData.amount) || parseFloat(expenseData.amount) <= 0) {
       errors.amount = 'Amount must be a positive number';
-    } else {
-      delete errors.amount;
+    } else if (parseFloat(expenseData.amount) > 1000000000) {
+      errors.amount = 'Amount cannot exceed LKR 1,000,000,000';
     }
-    if (name === 'category' && !value) {
+
+    // Category Validation
+    if (!expenseData.category) {
       errors.category = 'Category is required';
-    } else {
-      delete errors.category;
     }
-    if (name === 'date' && !value) {
+
+    // Date Validation
+    if (!expenseData.date) {
       errors.date = 'Date is required';
     } else {
-      delete errors.date;
+      const selectedDate = new Date(expenseData.date);
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+      selectedDate.setHours(0, 0, 0, 0);
+      if (selectedDate < today) {
+        errors.date = 'Date cannot be earlier than today';
+      }
     }
-    if (name === 'description' && value.trim() === '') {
+
+    // Description Validation
+    if (!expenseData.description.trim()) {
       errors.description = 'Description is required';
-    } else {
-      delete errors.description;
+    } else if (expenseData.description.trim().length < 5) {
+      errors.description = 'Description must be at least 5 characters long';
+    } else if (expenseData.description.trim().length > 200) {
+      errors.description = 'Description cannot exceed 200 characters';
     }
-    setFormErrors(errors);
+
+    return errors;
   };
 
   const handleAddExpense = async (e) => {
     e.preventDefault();
-    const errors = {};
-    if (!newExpense.title.trim()) errors.title = 'Title is required';
-    if (!newExpense.amount || newExpense.amount <= 0) errors.amount = 'Amount must be a positive number';
-    if (!newExpense.category) errors.category = 'Category is required';
-    if (!newExpense.date) errors.date = 'Date is required';
-    if (!newExpense.description.trim()) errors.description = 'Description is required';
+
+    const errors = validateForm(newExpense);
 
     if (Object.keys(errors).length > 0) {
       setFormErrors(errors);
@@ -117,12 +207,8 @@ const ExpensePage = () => {
 
   const handleUpdateExpense = async (e) => {
     e.preventDefault();
-    const errors = {};
-    if (!editExpense.title.trim()) errors.title = 'Title is required';
-    if (!editExpense.amount || editExpense.amount <= 0) errors.amount = 'Amount must be a positive number';
-    if (!editExpense.category) errors.category = 'Category is required';
-    if (!editExpense.date) errors.date = 'Date is required';
-    if (!editExpense.description.trim()) errors.description = 'Description is required';
+
+    const errors = validateForm(editExpense);
 
     if (Object.keys(errors).length > 0) {
       setFormErrors(errors);
@@ -478,7 +564,7 @@ const ExpensePage = () => {
                 {expenseList.map((expense) => (
                   <tr key={expense._id}>
                     <td>{expense.category}</td>
-                    <td>${expense.amount.toFixed(2)}</td>
+                    <td>LKR {expense.amount.toFixed(2)}</td>
                     <td>{expense.expenseCategory || '-'}</td>
                     <td>{expense.description || '-'}</td>
                     <td>{new Date(expense.date).toLocaleDateString()}</td>
