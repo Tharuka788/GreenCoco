@@ -10,6 +10,8 @@ import TransactionsPage from './components/financial/TransactionsPage';
 import InventoryManagement from './components/Inventory/InventoryManagement';
 import InventoryForm from './components/Inventory/InventoryForm';
 import InventoryDetails from './components/Inventory/InventoryDetails';
+import Register from './components/User/Register';
+import Login from './components/User/Login'; // Import the Login component
 import { FinanceProvider } from './FinanceContext';
 import { ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
@@ -20,7 +22,7 @@ const PlaceholderPage = ({ title, description }) => {
     @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap');
 
     .placeholder-page {
-      margin-top: 80px; /* Space for the fixed MainNavbar */
+      margin-top: 80px;
       padding: 40px;
       min-height: 100vh;
       background: linear-gradient(135deg, #f5f7fa 0%, #e6f0ea 100%);
@@ -44,7 +46,7 @@ const PlaceholderPage = ({ title, description }) => {
     @media (max-width: 768px) {
       .placeholder-page {
         padding: 20px;
-        margin-top: 120px; /* Adjust for taller MainNavbar */
+        margin-top: 120px;
       }
 
       .placeholder-page h1 {
@@ -93,12 +95,12 @@ function App() {
   const appStyles = `
     .app {
       min-height: 100vh;
-      padding-top: 80px; /* Space for the fixed MainNavbar */
+      padding-top: 80px;
     }
 
     @media (max-width: 768px) {
       .app {
-        padding-top: 120px; /* Adjust for taller navbar on smaller screens */
+        padding-top: 120px;
       }
     }
   `;
@@ -113,6 +115,10 @@ function App() {
             <Routes>
               {/* Root route for the homepage */}
               <Route path="/" element={<HomePage />} />
+
+              {/* Registration and Login routes */}
+              <Route path="/register" element={<Register />} />
+              <Route path="/login" element={<Login />} />
 
               {/* Nested finance routes */}
               <Route path="/finance">
