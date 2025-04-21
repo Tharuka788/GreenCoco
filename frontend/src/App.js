@@ -10,6 +10,7 @@ import TransactionsPage from './components/financial/TransactionsPage';
 import InventoryManagement from './components/Inventory/InventoryManagement';
 import InventoryForm from './components/Inventory/InventoryForm';
 import InventoryDetails from './components/Inventory/InventoryDetails';
+import LowStockReport from './components/Inventory/LowStockReport'; // Import the new component
 import { FinanceProvider } from './FinanceContext';
 import { ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
@@ -129,6 +130,7 @@ function App() {
                 <Route path="add" element={<InventoryForm />} />
                 <Route path="details/:id" element={<InventoryDetails />} />
                 <Route path="edit/:id" element={<InventoryDetails />} />
+                <Route path="low-stock" element={<LowStockReport />} /> {/* New route */}
               </Route>
 
               {/* Placeholder routes for other main functions */}

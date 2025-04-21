@@ -232,13 +232,30 @@ const MainNavbar = () => {
               </Link>
             </div>
           </li>
-          <li>
-            <Link
-              to="/inventory"
-              className={location.pathname === '/inventory' ? 'active' : ''}
-            >
+          <li className="dropdown">
+            <div className="dropdown-toggle">
               Inventory Management
-            </Link>
+            </div>
+            <div className="dropdown-menu">
+              <Link
+                to="/inventory"
+                className={location.pathname === '/inventory' ? 'active' : ''}
+              >
+                Inventory List
+              </Link>
+              <Link
+                to="/inventory/add"
+                className={location.pathname === '/inventory/add' ? 'active' : ''}
+              >
+                Add Inventory
+              </Link>
+              <Link
+                to="/inventory/low-stock"
+                className={location.pathname === '/inventory/low-stock' ? 'active' : ''}
+              >
+                Low Stock Report
+              </Link>
+            </div>
           </li>
           <li>
             <Link

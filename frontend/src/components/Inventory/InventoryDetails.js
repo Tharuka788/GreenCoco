@@ -22,8 +22,10 @@ const InventoryDetails = () => {
   });
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
+  const [lowStockMessage, setLowStockMessage] = useState(''); // New state for low stock message
 
-  // Fetch inventory item details
+  const LOW_STOCK_THRESHOLD = 10;
+
   useEffect(() => {
     const fetchInventory = async () => {
       try {
@@ -39,7 +41,7 @@ const InventoryDetails = () => {
         setInventory(data.inventory);
         setFormData({
           batchId: data.inventory.batchId,
-          collectionDate: data.inventory.collectionDate.split('T')[0], // Format for input type="date"
+          collectionDate: data.inventory.collectionDate.split('T')[0],
           sourceLocation: data.inventory.sourceLocation,
           totalWeight: data.inventory.totalWeight,
           wasteType: data.inventory.wasteType,
@@ -64,6 +66,7 @@ const InventoryDetails = () => {
     e.preventDefault();
     setError('');
     setSuccess('');
+    setLowStockMessage('');
 
     try {
       const response = await fetch(`http://localhost:5000/inventory/update/${id}`, {
@@ -78,7 +81,13 @@ const InventoryDetails = () => {
         throw new Error('Failed to update inventory');
       }
 
+      const data = await response.json();
       setSuccess('Inventory updated successfully!');
+
+      if (data.lowStock) {
+        setLowStockMessage('This item is low on stock. A notification email has been sent to the admin.');
+      }
+
       setTimeout(() => navigate('/inventory'), 2000);
     } catch (err) {
       setError(err.message);
@@ -107,6 +116,16 @@ const InventoryDetails = () => {
       text-align: center;
       color: #2a7458;
       margin-bottom: 20px;
+    }
+
+    .low-stock-warning,
+    .low-stock-message {
+      background: #f8d7da;
+      color: #721c24;
+      padding: 10px;
+      border-radius: 4px;
+      margin-bottom: 20px;
+      text-align: center;
     }
 
     .detail-field,
@@ -214,8 +233,15 @@ const InventoryDetails = () => {
         <div className="inventory-details">
           <h1>{isEditMode ? 'Edit Inventory' : 'Inventory Details'}</h1>
           
+          {inventory.totalWeight < LOW_STOCK_THRESHOLD && (
+            <div className="low-stock-warning">
+              Warning: This item is low on stock (below {LOW_STOCK_THRESHOLD} kg)!
+            </div>
+          )}
+
           {error && <div className="error">{error}</div>}
           {success && <div className="success">{success}</div>}
+          {lowStockMessage && <div className="low-stock-message">{lowStockMessage}</div>}
 
           {isEditMode ? (
             <form onSubmit={handleSubmit}>
