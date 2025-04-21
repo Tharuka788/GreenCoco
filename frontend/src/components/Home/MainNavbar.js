@@ -797,10 +797,7 @@ const MainNavbar = () => {
               <FontAwesomeIcon icon={faTruck} /> Delivery
             </Link>
           </li>
-          <li role="none">
-            <Link to="/order-supplier" className={location.pathname === '/order-supplier' ? 'active' : ''} role="menuitem">
-              <FontAwesomeIcon icon={faBox} /> Order & Supplier
-            </Link>
+
           </li>
           <li role="none">
             <Link to="/employee" className={location.pathname === '/employee' ? 'active' : ''} role="menuitem">

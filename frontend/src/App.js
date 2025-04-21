@@ -36,13 +36,6 @@ const DeliveryPage = () => (
   />
 );
 
-const OrderSupplierPage = () => (
-  <PlaceholderPage
-    title="Order & Supplier Management"
-    description="Order & Supplier Management - Coming Soon"
-  />
-);
-
 const EmployeePage = () => (
   <PlaceholderPage
     title="Employee Management"
@@ -77,66 +70,6 @@ const LoadingSpinner = () => (
 
 function App() {
   return (
-    <Router>
-      <FinanceProvider>
-        <MainNavbar />
-        <main className="container mt-2" role="main">
-          <Suspense fallback={<LoadingSpinner />}>
-            <TransitionGroup>
-              <CSSTransition timeout={300} classNames="fade">
-                <Routes location={window.location}>
-                  {/* Root route for the homepage */}
-                  <Route path="/" element={<HomePage />} />
-
-                  {/* Registration and Login routes */}
-                  <Route path="/register" element={<Register />} />
-                  <Route path="/login" element={<Login />} />
-
-                  {/* Nested finance routes */}
-                  <Route path="/finance">
-                    <Route index element={<Dashboard />} />
-                    <Route path="income" element={<IncomePage />} />
-                    <Route path="expense" element={<ExpensePage />} />
-                    <Route path="salary" element={<SalaryPage />} />
-                    <Route path="transactions" element={<TransactionsPage />} />
-                  </Route>
-
-                  {/* Inventory routes */}
-                  <Route path="/inventory">
-                    <Route index element={<InventoryManagement />} />
-                    <Route path="add" element={<InventoryForm />} />
-                    <Route path="details/:id" element={<InventoryDetails />} />
-                    <Route path="edit/:id" element={<InventoryDetails />} />
-                    <Route path="low-stock" element={<LowStockReport />} />
-                  </Route>
-
-                  {/* Placeholder routes for other main functions */}
-                  <Route path="/delivery" element={<DeliveryPage />} />
-                  <Route path="/order-supplier" element={<OrderSupplierPage />} />
-                  <Route path="/employee" element={<EmployeePage />} />
-
-                  {/* Catch-all route for 404 */}
-                  <Route path="*" element={<PlaceholderPage title="404 - Page Not Found" description="The page you are looking for does not exist." />} />
-                </Routes>
-              </CSSTransition>
-            </TransitionGroup>
-          </Suspense>
-        </main>
-        <Footer />
-        <ToastContainer
-          position="top-right"
-          autoClose={3000}
-          hideProgressBar={false}
-          newestOnTop={false}
-          closeOnClick
-          rtl={false}
-          pauseOnFocusLoss
-          draggable
-          pauseOnHover
-          theme="light"
-        />
-      </FinanceProvider>
-    </Router>
   );
 }
 
