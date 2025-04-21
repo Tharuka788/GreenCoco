@@ -5,7 +5,10 @@ import MainNavbar from '../Home/MainNavbar';
 const InventoryManagement = () => {
   const [inventoryItems, setInventoryItems] = useState([]);
   const [error, setError] = useState('');
+  const [lowStockItems, setLowStockItems] = useState([]); // Track low stock items
   const navigate = useNavigate();
+
+  const LOW_STOCK_THRESHOLD = 10; // Define low stock threshold (in kg)
 
   // Fetch all inventory items on component mount
   useEffect(() => {
@@ -21,6 +24,10 @@ const InventoryManagement = () => {
 
         const data = await response.json();
         setInventoryItems(data);
+
+        // Identify low stock items
+        const lowStock = data.filter(item => item.totalWeight < LOW_STOCK_THRESHOLD);
+        setLowStockItems(lowStock);
       } catch (err) {
         setError(err.message);
       }
@@ -42,6 +49,7 @@ const InventoryManagement = () => {
         }
 
         setInventoryItems(inventoryItems.filter((item) => item._id !== id));
+        setLowStockItems(lowStockItems.filter((item) => item._id !== id));
         alert('Inventory item deleted successfully!');
       } catch (err) {
         setError(err.message);
@@ -90,6 +98,15 @@ const InventoryManagement = () => {
       margin-bottom: 10px;
     }
 
+    .low-stock-alert {
+      background: #f8d7da;
+      color: #721c24;
+      padding: 10px;
+      border-radius: 4px;
+      margin-bottom: 20px;
+      text-align: center;
+    }
+
     .inventory-table {
       width: 100%;
       border-collapse: collapse;
@@ -113,6 +130,11 @@ const InventoryManagement = () => {
 
     .inventory-table tr:hover {
       background: #f9f9f9;
+    }
+
+    .low-stock {
+      color: #721c24;
+      font-weight: bold;
     }
 
     .action-buttons button,
@@ -176,6 +198,12 @@ const InventoryManagement = () => {
           
           {error && <div className="error">{error}</div>}
 
+          {lowStockItems.length > 0 && (
+            <div className="low-stock-alert">
+              Warning: {lowStockItems.length} item(s) are low on stock (below {LOW_STOCK_THRESHOLD} kg)!
+            </div>
+          )}
+
           <Link to="/inventory/add" className="add-button">Add New Inventory</Link>
 
           {inventoryItems.length === 0 ? (
@@ -189,6 +217,7 @@ const InventoryManagement = () => {
                   <th>Source Location</th>
                   <th>Total Weight (kg)</th>
                   <th>Waste Type</th>
+                  <th>Stock Status</th>
                   <th>Actions</th>
                 </tr>
               </thead>
@@ -200,6 +229,9 @@ const InventoryManagement = () => {
                     <td>{item.sourceLocation}</td>
                     <td>{item.totalWeight}</td>
                     <td>{item.wasteType}</td>
+                    <td className={item.totalWeight < LOW_STOCK_THRESHOLD ? 'low-stock' : ''}>
+                      {item.totalWeight < LOW_STOCK_THRESHOLD ? 'Low Stock' : 'In Stock'}
+                    </td>
                     <td className="action-buttons">
                       <Link to={`/inventory/details/${item._id}`} className="view-btn">View</Link>
                       <Link to={`/inventory/edit/${item._id}`} className="edit-btn">Edit</Link>

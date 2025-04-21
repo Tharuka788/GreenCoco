@@ -15,9 +15,9 @@ const InventoryForm = () => {
     processingMethod: '',
     notes: ''
   });
-
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
+  const [lowStockMessage, setLowStockMessage] = useState(''); // New state for low stock message
 
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
@@ -27,9 +27,10 @@ const InventoryForm = () => {
     e.preventDefault();
     setError('');
     setSuccess('');
+    setLowStockMessage('');
 
     try {
-      const response = await fetch('http://localhost:5000/inventory/add', { // Updated port to 5000
+      const response = await fetch('http://localhost:5000/inventory/add', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -41,7 +42,14 @@ const InventoryForm = () => {
         throw new Error('Failed to add inventory');
       }
 
+      const data = await response.json();
       setSuccess('Inventory added successfully!');
+
+      // Check if the item is low on stock and show a message
+      if (data.lowStock) {
+        setLowStockMessage('This item is low on stock. A notification email has been sent to the admin.');
+      }
+
       setFormData({
         batchId: '',
         collectionDate: '',
@@ -135,6 +143,15 @@ const InventoryForm = () => {
       margin-bottom: 10px;
     }
 
+    .low-stock-message {
+      color: #721c24;
+      background: #f8d7da;
+      padding: 10px;
+      border-radius: 4px;
+      text-align: center;
+      margin-bottom: 10px;
+    }
+
     @media (max-width: 768px) {
       .inventory-form {
         padding: 15px;
@@ -156,6 +173,7 @@ const InventoryForm = () => {
           
           {error && <div className="error">{error}</div>}
           {success && <div className="success">{success}</div>}
+          {lowStockMessage && <div className="low-stock-message">{lowStockMessage}</div>}
 
           <div className="form-group">
             <label htmlFor="batchId">Batch ID</label>
