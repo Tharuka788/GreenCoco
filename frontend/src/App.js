@@ -1,5 +1,6 @@
 import React from 'react';
 import { BrowserRouter as Router, Route, Routes } from 'react-router-dom';
+import InventoryDashboard from './components/Inventory/InventoryDashboard';
 import HomePage from './components/Home/HomePage';
 import MainNavbar from './components/Home/MainNavbar';
 import Dashboard from './components/financial/Dashboard';
@@ -129,6 +130,7 @@ function App() {
               {/* Inventory routes */}
               <Route path="/inventory">
                 <Route index element={<InventoryManagement />} />
+                <Route path="dashboard" element={<InventoryDashboard />} />
                 <Route path="add" element={<InventoryForm />} />
                 <Route path="details/:id" element={<InventoryDetails />} />
                 <Route path="edit/:id" element={<InventoryDetails />} />

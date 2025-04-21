@@ -10,25 +10,37 @@ import {
   faBars,
   faTimes,
   faChevronDown,
+  faChartBar,
+  faPlus,
+  faExclamationTriangle
 } from '@fortawesome/free-solid-svg-icons';
 
 const MainNavbar = () => {
   const location = useLocation();
   const [isOpen, setIsOpen] = useState(false);
   const [isFinanceDropdownOpen, setIsFinanceDropdownOpen] = useState(false);
+  const [isInventoryDropdownOpen, setIsInventoryDropdownOpen] = useState(false);
 
   const toggleMenu = () => {
     setIsOpen(!isOpen);
-    if (isFinanceDropdownOpen) setIsFinanceDropdownOpen(false); // Close dropdown when toggling main menu
+    if (isFinanceDropdownOpen) setIsFinanceDropdownOpen(false);
+    if (isInventoryDropdownOpen) setIsInventoryDropdownOpen(false);
   };
 
   const closeMenu = () => {
     setIsOpen(false);
-    setIsFinanceDropdownOpen(false); // Close dropdown when navigating
+    setIsFinanceDropdownOpen(false);
+    setIsInventoryDropdownOpen(false);
   };
 
   const toggleFinanceDropdown = () => {
     setIsFinanceDropdownOpen(!isFinanceDropdownOpen);
+    setIsInventoryDropdownOpen(false); // Close other dropdown
+  };
+
+  const toggleInventoryDropdown = () => {
+    setIsInventoryDropdownOpen(!isInventoryDropdownOpen);
+    setIsFinanceDropdownOpen(false); // Close other dropdown
   };
 
   const isFinanceActive = [
@@ -38,6 +50,15 @@ const MainNavbar = () => {
     '/finance/salary',
     '/finance/transactions',
   ].includes(location.pathname);
+
+  const isInventoryActive = [
+    '/inventory',
+    '/inventory/add',
+    '/inventory/details',
+    '/inventory/edit',
+    '/inventory/low-stock',
+    '/inventory/dashboard'
+  ].some(path => location.pathname.startsWith(path));
 
   const navbarStyles = `
     @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap');
@@ -80,7 +101,7 @@ const MainNavbar = () => {
 
     .navbar-menu li {
       margin-left: 20px;
-      position: relative; /* For positioning dropdown */
+      position: relative;
     }
 
     .navbar-menu a {
@@ -106,7 +127,6 @@ const MainNavbar = () => {
       font-weight: 600;
     }
 
-    /* Dropdown Styles */
     .dropdown-toggle {
       display: flex;
       align-items: center;
@@ -145,11 +165,11 @@ const MainNavbar = () => {
     }
 
     .navbar-menu li:hover .dropdown-menu {
-      display: block; /* Show dropdown on hover for desktop */
+      display: block;
     }
 
     .dropdown-menu.active {
-      display: block; /* Show dropdown when active on mobile */
+      display: block;
     }
 
     .dropdown-menu li {
@@ -238,18 +258,18 @@ const MainNavbar = () => {
       }
 
       .navbar-menu li:hover .dropdown-menu {
-        display: none; /* Disable hover on mobile */
+        display: none;
       }
 
       .dropdown-menu {
         position: static;
         box-shadow: none;
-        background: #328e6e; /* Slightly darker shade for contrast */
+        background: #328e6e;
         width: 100%;
       }
 
       .dropdown-menu a {
-        padding-left: 30px; /* Indent dropdown items */
+        padding-left: 30px;
         font-size: 1rem;
       }
     }
@@ -335,14 +355,61 @@ const MainNavbar = () => {
               </ul>
             </li>
             <li role="none">
-              <Link
-                to="/inventory"
-                className={location.pathname === '/inventory' ? 'active' : ''}
+              <div
+                className={`dropdown-toggle ${isInventoryActive ? 'active' : ''}`}
+                onClick={toggleInventoryDropdown}
                 role="menuitem"
-                onClick={closeMenu}
+                aria-haspopup="true"
+                aria-expanded={isInventoryDropdownOpen}
               >
                 <FontAwesomeIcon icon={faBox} /> Inventory
-              </Link>
+                <FontAwesomeIcon icon={faChevronDown} style={{ marginLeft: '5px' }} />
+              </div>
+              <ul
+                className={`dropdown-menu ${isInventoryDropdownOpen ? 'active' : ''}`}
+                role="menu"
+              >
+                <li role="none">
+                  <Link
+                    to="/inventory"
+                    className={location.pathname === '/inventory' ? 'active' : ''}
+                    role="menuitem"
+                    onClick={closeMenu}
+                  >
+                    Manage Inventory
+                  </Link>
+                </li>
+                <li role="none">
+                  <Link
+                    to="/inventory/add"
+                    className={location.pathname === '/inventory/add' ? 'active' : ''}
+                    role="menuitem"
+                    onClick={closeMenu}
+                  >
+                    <FontAwesomeIcon icon={faPlus} /> Add Inventory
+                  </Link>
+                </li>
+                <li role="none">
+                  <Link
+                    to="/inventory/low-stock"
+                    className={location.pathname === '/inventory/low-stock' ? 'active' : ''}
+                    role="menuitem"
+                    onClick={closeMenu}
+                  >
+                    <FontAwesomeIcon icon={faExclamationTriangle} /> Low Stock Report
+                  </Link>
+                </li>
+                <li role="none">
+                  <Link
+                    to="/inventory/dashboard"
+                    className={location.pathname === '/inventory/dashboard' ? 'active' : ''}
+                    role="menuitem"
+                    onClick={closeMenu}
+                  >
+                    <FontAwesomeIcon icon={faChartBar} /> Dashboard
+                  </Link>
+                </li>
+              </ul>
             </li>
             <li role="none">
               <Link
