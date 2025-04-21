@@ -1,77 +1,33 @@
-import React from 'react';
+import React, { Suspense, lazy } from 'react';
 import { BrowserRouter as Router, Route, Routes } from 'react-router-dom';
-import HomePage from './components/Home/HomePage';
+import { CSSTransition, TransitionGroup } from 'react-transition-group';
+import './App.css';
 import MainNavbar from './components/Home/MainNavbar';
-import Dashboard from './components/financial/Dashboard';
-import IncomePage from './components/financial/IncomePage';
-import ExpensePage from './components/financial/ExpensePage';
-import SalaryPage from './components/financial/SalaryPage';
-import TransactionsPage from './components/financial/TransactionsPage';
-import InventoryManagement from './components/Inventory/InventoryManagement';
-import InventoryForm from './components/Inventory/InventoryForm';
-import InventoryDetails from './components/Inventory/InventoryDetails';
-import LowStockReport from './components/Inventory/LowStockReport';
-import Login from './components/User/Login';
-import Register from './components/User/Register';
-import OrdersDashboard from './components/supplier/OrdersDashboard';
-import SupplierDashboard from './components/supplier/SupplierDashboard';
 import { FinanceProvider } from './FinanceContext';
 import { ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 
-// Placeholder components for other main functions with styling
-const PlaceholderPage = ({ title, description }) => {
-  const styles = `
-    @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap');
+// Lazy-loaded components for better performance
+const HomePage = lazy(() => import('./components/Home/HomePage'));
+const Dashboard = lazy(() => import('./components/financial/Dashboard'));
+const IncomePage = lazy(() => import('./components/financial/IncomePage'));
+const ExpensePage = lazy(() => import('./components/financial/ExpensePage'));
+const SalaryPage = lazy(() => import('./components/financial/SalaryPage'));
+const TransactionsPage = lazy(() => import('./components/financial/TransactionsPage'));
+const InventoryManagement = lazy(() => import('./components/Inventory/InventoryManagement'));
+const InventoryForm = lazy(() => import('./components/Inventory/InventoryForm'));
+const InventoryDetails = lazy(() => import('./components/Inventory/InventoryDetails'));
+const LowStockReport = lazy(() => import('./components/Inventory/LowStockReport'));
+const Login = lazy(() => import('./components/User/Login'));
+const Register = lazy(() => import('./components/User/Register'));
 
-    .placeholder-page {
-      margin-top: 80px;
-      padding: 40px;
-      min-height: 100vh;
-      background: linear-gradient(135deg, #f5f7fa 0%, #e6f0ea 100%);
-      font-family: 'Poppins', sans-serif;
-      text-align: center;
-    }
-
-    .placeholder-page h1 {
-      font-size: 2.5rem;
-      font-weight: 600;
-      color: #2a7458;
-      margin-bottom: 20px;
-      text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.1);
-    }
-
-    .placeholder-page p {
-      font-size: 1.2rem;
-      color: #5e6d55;
-    }
-
-    @media (max-width: 768px) {
-      .placeholder-page {
-        padding: 20px;
-        margin-top: 120px;
-      }
-
-      .placeholder-page h1 {
-        font-size: 2rem;
-      }
-
-      .placeholder-page p {
-        font-size: 1rem;
-      }
-    }
-  `;
-
-  return (
-    <>
-      <style dangerouslySetInnerHTML={{ __html: styles }} />
-      <div className="placeholder-page">
-        <h1>{title}</h1>
-        <p>{description}</p>
-      </div>
-    </>
-  );
-};
+// Placeholder component with global App.css styles
+const PlaceholderPage = ({ title, description }) => (
+  <div className="container mt-2 p-2 text-center">
+    <h1>{title}</h1>
+    <p>{description}</p>
+  </div>
+);
 
 const DeliveryPage = () => (
   <PlaceholderPage
@@ -87,78 +43,72 @@ const EmployeePage = () => (
   />
 );
 
+// Footer component using App.css styles
+const Footer = () => (
+  <footer className="mt-2 p-2 text-center" style={{ background: 'linear-gradient(90deg, var(--primary-color), var(--secondary-color))', color: '#ffffff' }}>
+    <div className="container">
+      <p>&copy; {new Date().getFullYear()} GreenCoco. All rights reserved.</p>
+      <div className="d-flex justify-center gap-1">
+        <a href="/about" className="btn">About</a>
+        <a href="/contact" className="btn">Contact</a>
+        <a href="/privacy" className="btn">Privacy Policy</a>
+      </div>
+      {/* Placeholder for theme toggle */}
+      <button className="btn mt-1" onClick={() => alert('Theme toggle coming soon!')}>
+        Toggle Theme
+      </button>
+    </div>
+  </footer>
+);
+
+// Loading fallback component
+const LoadingSpinner = () => (
+  <div className="container d-flex justify-center align-center" style={{ minHeight: '100vh' }}>
+    <div className="loading-spinner"></div>
+  </div>
+);
+
 function App() {
-  const appStyles = `
-    .app {
-      min-height: 100vh;
-      padding-top: 80px;
-    }
-
-    @media (max-width: 768px) {
-      .app {
-        padding-top: 120px;
-      }
-    }
-  `;
-
   return (
-    <>
-      <style dangerouslySetInnerHTML={{ __html: appStyles }} />
-      <Router>
-        <FinanceProvider>
-          <MainNavbar />
-          <div className="app">
-            <Routes>
-              {/* Root route for the homepage */}
-              <Route path="/" element={<HomePage />} />
-
-              {/* Registration and Login routes */}
-              <Route path="/register" element={<Register />} />
-              <Route path="/login" element={<Login />} />
-
-              {/* Nested finance routes */}
-              <Route path="/finance">
-                <Route index element={<Dashboard />} />
-                <Route path="income" element={<IncomePage />} />
-                <Route path="expense" element={<ExpensePage />} />
-                <Route path="salary" element={<SalaryPage />} />
-                <Route path="transactions" element={<TransactionsPage />} />
-              </Route>
-
-              {/* Inventory routes */}
-              <Route path="/inventory">
-                <Route index element={<InventoryManagement />} />
-                <Route path="add" element={<InventoryForm />} />
-                <Route path="details/:id" element={<InventoryDetails />} />
-                <Route path="edit/:id" element={<InventoryDetails />} />
-                <Route path="low-stock" element={<LowStockReport />} />
-              </Route>
-
-              {/* Order and Supplier routes */}
-              <Route path="/orders" element={<OrdersDashboard />} />
-              <Route path="/suppliers" element={<SupplierDashboard />} />
-
-              {/* Placeholder routes for other main functions */}
-              <Route path="/delivery" element={<DeliveryPage />} />
-              <Route path="/employee" element={<EmployeePage />} />
-            </Routes>
-          </div>
-          <ToastContainer
-            position="top-right"
-            autoClose={3000}
-            hideProgressBar={false}
-            newestOnTop={false}
-            closeOnClick
-            rtl={false}
-            pauseOnFocusLoss
-            draggable
-            pauseOnHover
-            theme="light"
-          />
-        </FinanceProvider>
-      </Router>
-    </>
   );
 }
+
+// Global transition styles
+const transitionStyles = `
+  .fade-enter {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  .fade-enter-active {
+    opacity: 1;
+    transform: translateY(0);
+    transition: opacity 300ms ease, transform 300ms ease;
+  }
+  .fade-exit {
+    opacity: 1;
+    transform: translateY(0);
+  }
+  .fade-exit-active {
+    opacity: 0;
+    transform: translateY(20px);
+    transition: opacity 300ms ease, transform 300ms ease;
+  }
+
+  .loading-spinner {
+    border: 4px solid var(--border-color);
+    border-top: 4px solid var(--secondary-color);
+    border-radius: 50%;
+    width: 40px;
+    height: 40px;
+    animation: spin 1s linear infinite;
+  }
+
+  @keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+  }
+`;
+
+document.head.insertAdjacentHTML('beforeend', `<style>${transitionStyles}</style>`);
 
 export default App;

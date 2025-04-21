@@ -1,5 +1,20 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link, useLocation } from 'react-router-dom';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import {
+  faHome,
+  faMoneyBillWave,
+  faBox,
+  faTruck,
+  faUsers,
+  faUser,
+  faSignOutAlt,
+  faSignInAlt,
+  faUserCircle,
+  faLock,
+  faSignature
+} from '@fortawesome/free-solid-svg-icons';
+import { faFacebookF, faGoogle, faTwitter } from '@fortawesome/free-brands-svg-icons';
 
 const MainNavbar = () => {
   const location = useLocation();
@@ -14,8 +29,17 @@ const MainNavbar = () => {
   });
   const [formErrors, setFormErrors] = useState({});
   const [rememberPassword, setRememberPassword] = useState(false);
-
   const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
+  const [authError, setAuthError] = useState('');
+
+  // Check localStorage for authentication state on mount
+  useEffect(() => {
+    const authState = localStorage.getItem('isAuthenticated');
+    if (authState === 'true') {
+      setIsAuthenticated(true);
+    }
+  }, []);
 
   const toggleMobileMenu = () => {
     setIsMobileMenuOpen(!isMobileMenuOpen);
@@ -26,16 +50,18 @@ const MainNavbar = () => {
     setFormErrors({});
     setFormData({ username: '', password: '', name: '', confirmPassword: '' });
     setIsLoginForm(true);
+    setAuthError('');
   };
 
   const switchForm = (formType) => {
     setIsLoginForm(formType === 'login');
     setFormErrors({});
     setFormData({ username: '', password: '', name: '', confirmPassword: '' });
+    setAuthError('');
   };
 
   const handleLogout = () => {
-    console.log('Logged out');
+    localStorage.removeItem('isAuthenticated');
     setIsAuthenticated(false);
     window.location.href = '/';
   };
@@ -48,7 +74,9 @@ const MainNavbar = () => {
 
     if (name === 'username') {
       if (!value) {
-        errors.username = 'Username is required';
+        errors.username = 'Email is required';
+      } else if (!/\S+@\S+\.\S+/.test(value)) {
+        errors.username = 'Please enter a valid email address';
       } else {
         delete errors.username;
       }
@@ -57,8 +85,8 @@ const MainNavbar = () => {
     if (name === 'password') {
       if (!value) {
         errors.password = 'Password is required';
-      } else if (value.length < 6) {
-        errors.password = 'Password must be at least 6 characters long';
+      } else if (value.length < 8 || !/[A-Z]/.test(value) || !/[0-9]/.test(value)) {
+        errors.password = 'Password must be 8+ characters with an uppercase letter and a number';
       } else {
         delete errors.password;
       }
@@ -67,6 +95,8 @@ const MainNavbar = () => {
     if (name === 'name' && !isLoginForm) {
       if (!value) {
         errors.name = 'Name is required';
+      } else if (value.length < 2) {
+        errors.name = 'Name must be at least 2 characters';
       } else {
         delete errors.name;
       }
@@ -89,18 +119,22 @@ const MainNavbar = () => {
     const errors = {};
 
     if (!formData.username) {
-      errors.username = 'Username is required';
+      errors.username = 'Email is required';
+    } else if (!/\S+@\S+\.\S+/.test(formData.username)) {
+      errors.username = 'Please enter a valid email address';
     }
 
     if (!formData.password) {
       errors.password = 'Password is required';
-    } else if (formData.password.length < 6) {
-      errors.password = 'Password must be at least 6 characters long';
+    } else if (formData.password.length < 8 || !/[A-Z]/.test(formData.password) || !/[0-9]/.test(formData.password)) {
+      errors.password = 'Password must be 8+ characters with an uppercase letter and a number';
     }
 
     if (!isLoginForm) {
       if (!formData.name) {
         errors.name = 'Name is required';
+      } else if (formData.name.length < 2) {
+        errors.name = 'Name must be at least 2 characters';
       }
 
       if (!formData.confirmPassword) {
@@ -113,31 +147,50 @@ const MainNavbar = () => {
     return errors;
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
+    setAuthError('');
 
     const errors = validateForm();
-
     if (Object.keys(errors).length > 0) {
       setFormErrors(errors);
       return;
     }
 
-    if (isLoginForm) {
-      alert('Login submitted! Username: ' + formData.username);
-      setIsAuthenticated(true);
-    } else {
-      alert('Registration submitted! Name: ' + formData.name + ', Username: ' + formData.username);
-      setIsAuthenticated(true);
+    setIsLoading(true);
+    try {
+      // Mock API call
+      await new Promise((resolve) => setTimeout(resolve, 1000));
+      if (isLoginForm) {
+        // Simulate login API call
+        if (formData.username === 'test@example.com' && formData.password === 'Password123') {
+          localStorage.setItem('isAuthenticated', 'true');
+          setIsAuthenticated(true);
+          toggleModal();
+        } else {
+          throw new Error('Invalid email or password');
+        }
+      } else {
+        // Simulate register API call
+        localStorage.setItem('isAuthenticated', 'true');
+        setIsAuthenticated(true);
+        toggleModal();
+      }
+    } catch (err) {
+      setAuthError(err.message || 'An error occurred. Please try again.');
+    } finally {
+      setIsLoading(false);
     }
-
-    toggleModal();
   };
 
   const handleSocialLogin = (platform) => {
-    alert(`Logging in with ${platform}`);
-    setIsAuthenticated(true);
-    toggleModal();
+    setIsLoading(true);
+    setTimeout(() => {
+      localStorage.setItem('isAuthenticated', 'true');
+      setIsAuthenticated(true);
+      toggleModal();
+      setIsLoading(false);
+    }, 1000);
   };
 
   const navStyles = `
@@ -148,16 +201,21 @@ const MainNavbar = () => {
       top: 0;
       left: 0;
       width: 100%;
-      background: #1a4d38;
+      background: linear-gradient(90deg, #00796b, #26a69a);
       color: white;
       padding: 15px 30px;
       display: flex;
       align-items: center;
       justify-content: space-between;
       font-family: 'Poppins', sans-serif;
-      box-shadow: 0 4px 30px rgba(0, 0, 0, 0.2);
+      box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
       z-index: 2000;
-      border-bottom: 1px solid rgba(255, 255, 255, 0.3);
+      animation: slideIn 0.5s ease;
+    }
+
+    @keyframes slideIn {
+      from { transform: translateY(-100%); opacity: 0; }
+      to { transform: translateY(0); opacity: 1; }
     }
 
     .main-navbar-logo {
@@ -180,7 +238,7 @@ const MainNavbar = () => {
       font-size: 1.5rem;
       font-weight: 600;
       color: #ffffff;
-      background: linear-gradient(90deg, #46b38a, #2a7458);
+      background: linear-gradient(90deg, #26a69a, #009688);
       -webkit-background-clip: text;
       -webkit-text-fill-color: transparent;
     }
@@ -209,46 +267,28 @@ const MainNavbar = () => {
       padding: 8px 15px;
       border-radius: 25px;
       transition: all 0.3s ease;
-      position: relative;
-      overflow: hidden;
+      display: flex;
+      align-items: center;
     }
 
-    .main-nav-links a::after,
-    .dropdown-toggle::after,
-    .login-button::after,
-    .logout-button::after {
-      content: '';
-      position: absolute;
-      bottom: 0;
-      left: 0;
-      width: 100%;
-      height: 2px;
-      background: #46b38a;
-      transform: scaleX(0);
-      transform-origin: bottom right;
-      transition: transform 0.3s ease;
-    }
-
-    .main-nav-links a:hover::after,
-    .dropdown-toggle:hover::after,
-    .login-button:hover::after,
-    .logout-button:hover::after {
-      transform: scaleX(1);
-      transform-origin: bottom left;
+    .main-nav-links a svg,
+    .dropdown-toggle svg,
+    .login-button svg,
+    .logout-button svg {
+      margin-right: 8px;
     }
 
     .main-nav-links a:hover,
     .dropdown-toggle:hover,
     .login-button:hover,
     .logout-button:hover {
-      color: #ffffff;
-      background: #2a7458;
+      background: #009688;
       transform: translateY(-2px);
       box-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
     }
 
     .main-nav-links a.active {
-      background: #46b38a;
+      background: #26a69a;
       color: #ffffff;
       font-weight: 600;
     }
@@ -266,8 +306,6 @@ const MainNavbar = () => {
     }
 
     .dropdown-toggle {
-      display: flex;
-      align-items: center;
       cursor: pointer;
     }
 
@@ -286,11 +324,10 @@ const MainNavbar = () => {
       position: absolute;
       top: 100%;
       left: 0;
-      background: #1a4d38;
+      background: #00796b;
       min-width: 220px;
       border-radius: 10px;
-      box-shadow: 0 4px 30px rgba(0, 0, 0, 0.3);
-      border: 1px solid rgba(255, 255, 255, 0.3);
+      box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
       max-height: 0;
       overflow: hidden;
       transition: max-height 0.3s ease-in-out, opacity 0.3s ease-in-out;
@@ -303,23 +340,25 @@ const MainNavbar = () => {
     }
 
     .dropdown-menu a {
-      display: block;
+      display: flex;
+      align-items: center;
       padding: 12px 15px;
       color: #ffffff;
-      text-decoration: none;
       font-size: 0.95rem;
       transition: all 0.3s ease;
     }
 
+    .dropdown-menu a svg {
+      margin-right: 8px;
+    }
+
     .dropdown-menu a:hover {
-      background: #2a7458;
-      color: #ffffff;
+      background: #009688;
       transform: translateX(5px);
     }
 
     .dropdown-menu a.active {
-      background: #46b38a;
-      color: #ffffff;
+      background: #26a69a;
       font-weight: 600;
     }
 
@@ -359,7 +398,7 @@ const MainNavbar = () => {
       left: 0;
       width: 100%;
       height: 100%;
-      background: rgba(0, 0, 0, 0.5);
+      background: rgba(0, 0, 0, 0.6);
       justify-content: center;
       align-items: center;
       z-index: 3000;
@@ -372,19 +411,12 @@ const MainNavbar = () => {
       box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
       width: 100%;
       max-width: 400px;
-      position: relative;
-      animation: slideIn 0.3s ease;
+      animation: slideInModal 0.3s ease;
     }
 
-    @keyframes slideIn {
-      from {
-        transform: translateY(-20px);
-        opacity: 0;
-      }
-      to {
-        transform: translateY(0);
-        opacity: 1;
-      }
+    @keyframes slideInModal {
+      from { transform: translateY(-20px); opacity: 0; }
+      to { transform: translateY(0); opacity: 1; }
     }
 
     .modal-tabs {
@@ -400,14 +432,14 @@ const MainNavbar = () => {
       text-align: center;
       font-size: 1rem;
       font-weight: 500;
-      color: #333;
+      color: #004d40;
       background: #f0f0f0;
       cursor: pointer;
       transition: all 0.3s ease;
     }
 
     .modal-tab.active {
-      background: linear-gradient(90deg, #328e6e, #46b38a);
+      background: linear-gradient(90deg, #00796b, #26a69a);
       color: #ffffff;
     }
 
@@ -423,8 +455,22 @@ const MainNavbar = () => {
       background: none;
       border: none;
       font-size: 1.5rem;
-      color: #333;
+      color: #004d40;
       cursor: pointer;
+      transition: color 0.3s ease;
+    }
+
+    .modal .close-button:hover {
+      color: #d32f2f;
+    }
+
+    .auth-error {
+      color: #d32f2f;
+      text-align: center;
+      margin-bottom: 15px;
+      background: #ffebee;
+      padding: 10px;
+      border-radius: 4px;
     }
 
     .social-buttons {
@@ -446,6 +492,7 @@ const MainNavbar = () => {
       color: #ffffff;
       cursor: pointer;
       transition: transform 0.3s ease;
+      position: relative;
     }
 
     .social-button:hover {
@@ -464,40 +511,67 @@ const MainNavbar = () => {
       background: #1da1f2;
     }
 
+    .social-button .tooltip {
+      visibility: hidden;
+      width: 120px;
+      background: #37474f;
+      color: white;
+      text-align: center;
+      padding: 5px;
+      border-radius: 4px;
+      position: absolute;
+      z-index: 1;
+      bottom: 125%;
+      left: 50%;
+      transform: translateX(-50%);
+      opacity: 0;
+      transition: opacity 0.3s;
+    }
+
+    .social-button:hover .tooltip {
+      visibility: visible;
+      opacity: 1;
+    }
+
     .modal label {
-      display: block;
+      display: flex;
+      align-items: center;
       margin-bottom: 8px;
-      color: #2a7458;
-      font-weight: 400;
+      color: #004d40;
+      font-weight: 500;
       font-size: 1rem;
-      text-align: left;
+    }
+
+    .modal label svg {
+      margin-right: 8px;
+      color: #26a69a;
     }
 
     .modal input[type="text"],
     .modal input[type="password"] {
       width: 100%;
-      padding: 10px;
+      padding: 10px 12px;
       margin-bottom: 15px;
-      border: 1px solid #ddd;
+      border: 2px solid #b0bec5;
       border-radius: 6px;
       font-size: 1rem;
       font-family: 'Poppins', sans-serif;
-      transition: border-color 0.3s ease;
-      box-sizing: border-box;
+      transition: all 0.3s ease;
+      background: #f5f5f5;
     }
 
     .modal input:focus {
       outline: none;
-      border-color: #46b38a;
-      box-shadow: 0 0 5px rgba(70, 179, 138, 0.3);
+      border-color: #26a69a;
+      background: white;
+      box-shadow: 0 0 8px rgba(38, 166, 154, 0.2);
     }
 
     .modal .error {
-      color: #e74c3c;
+      color: #d32f2f;
       font-size: 0.85rem;
       margin-top: -10px;
       margin-bottom: 10px;
-      text-align: left;
     }
 
     .modal .checkbox-label {
@@ -505,7 +579,7 @@ const MainNavbar = () => {
       align-items: center;
       margin-bottom: 15px;
       font-size: 0.9rem;
-      color: #2a7458;
+      color: #004d40;
     }
 
     .modal input[type="checkbox"] {
@@ -516,23 +590,44 @@ const MainNavbar = () => {
       display: block;
       width: 100%;
       padding: 12px;
-      background: linear-gradient(90deg, #328e6e, #46b38a);
+      background: linear-gradient(90deg, #00796b, #26a69a);
       color: white;
       border: none;
-      border-radius: 25px;
+      border-radius: 6px;
       cursor: pointer;
       font-size: 1rem;
       font-family: 'Poppins', sans-serif;
-      transition: background 0.3s ease, transform 0.1s ease;
+      transition: all 0.3s ease;
+      position: relative;
     }
 
     .modal button[type="submit"]:hover {
-      background: linear-gradient(90deg, #46b38a, #328e6e);
-      transform: scale(1.02);
+      background: linear-gradient(90deg, #009688, #26a69a);
+      transform: translateY(-2px);
+      box-shadow: 0 4px 10px rgba(0, 150, 136, 0.3);
     }
 
-    .modal button[type="submit"]:active {
-      transform: scale(0.98);
+    .modal button[type="submit"]:disabled {
+      background: #b0bec5;
+      cursor: not-allowed;
+    }
+
+    .loading-spinner {
+      display: inline-block;
+      border: 3px solid #ffffff;
+      border-top: 3px solid transparent;
+      border-radius: 50%;
+      width: 20px;
+      height: 20px;
+      animation: spin 1s linear infinite;
+      position: absolute;
+      left: 50%;
+      transform: translateX(-50%);
+    }
+
+    @keyframes spin {
+      0% { transform: translateX(-50%) rotate(0deg); }
+      100% { transform: translateX(-50%) rotate(360deg); }
     }
 
     @media (max-width: 768px) {
@@ -559,9 +654,14 @@ const MainNavbar = () => {
         top: 60px;
         left: 0;
         width: 100%;
-        background: #1a4d38;
-        border-top: 1px solid rgba(255, 255, 255, 0.3);
+        background: linear-gradient(90deg, #00796b, #26a69a);
         padding: 10px 0;
+        animation: slideInMobile 0.3s ease;
+      }
+
+      @keyframes slideInMobile {
+        from { transform: translateY(-10px); opacity: 0; }
+        to { transform: translateY(0); opacity: 1; }
       }
 
       .main-nav-links li {
@@ -570,26 +670,12 @@ const MainNavbar = () => {
         text-align: center;
       }
 
-      .main-nav-links a,
-      .dropdown-toggle,
-      .login-button,
-      .logout-button {
-        padding: 10px;
-        font-size: 1rem;
-        display: block;
-      }
-
       .dropdown-menu {
         position: static;
         width: 100%;
-        background: #2a7458;
+        background: #009688;
         border: none;
         box-shadow: none;
-      }
-
-      .dropdown:hover .dropdown-menu {
-        max-height: 400px;
-        opacity: 1;
       }
 
       .modal {
@@ -624,13 +710,6 @@ const MainNavbar = () => {
         font-size: 1rem;
       }
 
-      .main-nav-links a,
-      .dropdown-toggle,
-      .login-button,
-      .logout-button {
-        font-size: 0.9rem;
-      }
-
       .modal-content {
         padding: 10px;
       }
@@ -650,8 +729,8 @@ const MainNavbar = () => {
   return (
     <>
       <style dangerouslySetInnerHTML={{ __html: navStyles }} />
-      <nav className="main-navbar">
-        <Link to="/" className="main-navbar-logo">
+      <nav className="main-navbar" aria-label="Main navigation">
+        <Link to="/" className="main-navbar-logo" aria-label="Green Coco Home">
           <img
             src="/logo.png"
             alt="Green Coco Logo"
@@ -667,214 +746,191 @@ const MainNavbar = () => {
         <button
           className={`hamburger ${isMobileMenuOpen ? 'open' : ''}`}
           onClick={toggleMobileMenu}
-          aria-label="Toggle menu"
+          aria-label="Toggle mobile menu"
+          aria-expanded={isMobileMenuOpen}
         >
           <span></span>
           <span></span>
           <span></span>
         </button>
-        <ul className="main-nav-links">
-          <li className="dropdown">
-            <div className="dropdown-toggle">
-              Financial Management
+        <ul className="main-nav-links" role="menubar">
+          <li className="dropdown" role="none">
+            <div className="dropdown-toggle" role="menuitem" aria-haspopup="true" aria-expanded="false" tabIndex="0">
+              <FontAwesomeIcon icon={faMoneyBillWave} /> Financial Management
             </div>
-            <div className="dropdown-menu">
-              <Link
-                to="/finance"
-                className={location.pathname === '/finance' ? 'active' : ''}
-              >
+            <div className="dropdown-menu" role="menu">
+              <Link to="/finance" className={location.pathname === '/finance' ? 'active' : ''} role="menuitem">
                 Dashboard
               </Link>
-              <Link
-                to="/finance/income"
-                className={location.pathname === '/finance/income' ? 'active' : ''}
-              >
+              <Link to="/finance/income" className={location.pathname === '/finance/income' ? 'active' : ''} role="menuitem">
                 Income
               </Link>
-              <Link
-                to="/finance/expense"
-                className={location.pathname === '/finance/expense' ? 'active' : ''}
-              >
+              <Link to="/finance/expense" className={location.pathname === '/finance/expense' ? 'active' : ''} role="menuitem">
                 Expenses
               </Link>
-              <Link
-                to="/finance/salary"
-                className={location.pathname === '/finance/salary' ? 'active' : ''}
-              >
+              <Link to="/finance/salary" className={location.pathname === '/finance/salary' ? 'active' : ''} role="menuitem">
                 Salaries
               </Link>
-              <Link
-                to="/finance/transactions"
-                className={location.pathname === '/finance/transactions' ? 'active' : ''}
-              >
+              <Link to="/finance/transactions" className={location.pathname === '/finance/transactions' ? 'active' : ''} role="menuitem">
                 View Transactions
               </Link>
             </div>
           </li>
-          <li className="dropdown">
-            <div className="dropdown-toggle">
-              Inventory Management
+          <li className="dropdown" role="none">
+            <div className="dropdown-toggle" role="menuitem" aria-haspopup="true" aria-expanded="false" tabIndex="0">
+              <FontAwesomeIcon icon={faBox} /> Inventory Management
             </div>
-            <div className="dropdown-menu">
-              <Link
-                to="/inventory"
-                className={location.pathname === '/inventory' ? 'active' : ''}
-              >
+            <div className="dropdown-menu" role="menu">
+              <Link to="/inventory" className={location.pathname === '/inventory' ? 'active' : ''} role="menuitem">
                 Inventory List
               </Link>
-              <Link
-                to="/inventory/add"
-                className={location.pathname === '/inventory/add' ? 'active' : ''}
-              >
+              <Link to="/inventory/add" className={location.pathname === '/inventory/add' ? 'active' : ''} role="menuitem">
                 Add Inventory
               </Link>
-              <Link
-                to="/inventory/low-stock"
-                className={location.pathname === '/inventory/low-stock' ? 'active' : ''}
-              >
+              <Link to="/inventory/low-stock" className={location.pathname === '/inventory/low-stock' ? 'active' : ''} role="menuitem">
                 Low Stock Report
               </Link>
             </div>
           </li>
-          <li>
-            <Link
-              to="/delivery"
-              className={location.pathname === '/delivery' ? 'active' : ''}
-            >
-              Delivery
+          <li role="none">
+            <Link to="/delivery" className={location.pathname === '/delivery' ? 'active' : ''} role="menuitem">
+              <FontAwesomeIcon icon={faTruck} /> Delivery
             </Link>
           </li>
-          <li className="dropdown">
-            <div className="dropdown-toggle">
-              Order & Supplier
-            </div>
-            <div className="dropdown-menu">
-              <Link
-                to="/orders"
-                className={location.pathname === '/orders' ? 'active' : ''}
-              >
-                Orders
-              </Link>
-              <Link
-                to="/suppliers"
-                className={location.pathname === '/suppliers' ? 'active' : ''}
-              >
-                Suppliers
-              </Link>
-            </div>
+
           </li>
-          <li>
-            <Link
-              to="/employee"
-              className={location.pathname === '/employee' ? 'active' : ''}
-            >
-              Employee Management
+          <li role="none">
+            <Link to="/employee" className={location.pathname === '/employee' ? 'active' : ''} role="menuitem">
+              <FontAwesomeIcon icon={faUsers} /> Employee Management
             </Link>
           </li>
           {isAuthenticated ? (
             <>
-              <li>
-                <Link
-                  to="/profile"
-                  className={location.pathname === '/profile' ? 'active' : ''}
-                >
-                  Profile
+              <li role="none">
+                <Link to="/profile" className={location.pathname === '/profile' ? 'active' : ''} role="menuitem">
+                  <FontAwesomeIcon icon={faUser} /> Profile
                 </Link>
               </li>
-              <li>
-                <button onClick={handleLogout} className="logout-button">
-                  Logout
+              <li role="none">
+                <button onClick={handleLogout} className="logout-button" role="menuitem">
+                  <FontAwesomeIcon icon={faSignOutAlt} /> Logout
                 </button>
               </li>
             </>
           ) : (
-            <li>
-              <button onClick={toggleModal} className="login-button">
-                Login
+            <li role="none">
+              <button onClick={toggleModal} className="login-button" role="menuitem" aria-label="Open login modal">
+                <FontAwesomeIcon icon={faSignInAlt} /> Login
               </button>
             </li>
           )}
         </ul>
       </nav>
 
-      <div className="modal-overlay">
+      <div className="modal-overlay" role="dialog" aria-modal="true" aria-labelledby="auth-modal-title">
         <div className="modal">
           <div className="modal-tabs">
             <div
               className={`modal-tab ${isLoginForm ? 'active' : ''}`}
               onClick={() => switchForm('login')}
+              role="tab"
+              aria-selected={isLoginForm}
+              tabIndex="0"
             >
               Log in
             </div>
             <div
               className={`modal-tab ${!isLoginForm ? 'active' : ''}`}
               onClick={() => switchForm('register')}
+              role="tab"
+              aria-selected={!isLoginForm}
+              tabIndex="0"
             >
               Register
             </div>
           </div>
           <div className="modal-content">
-            <button onClick={toggleModal} className="close-button" aria-label="Close modal">
+            <button
+              onClick={toggleModal}
+              className="close-button"
+              aria-label="Close authentication modal"
+            >
               ×
             </button>
+            <h2 id="auth-modal-title" style={{ display: 'none' }}>
+              {isLoginForm ? 'Login' : 'Register'}
+            </h2>
+            {authError && <div className="auth-error">{authError}</div>}
             <div className="social-buttons">
               <button
                 className="social-button facebook"
                 onClick={() => handleSocialLogin('Facebook')}
                 aria-label="Login with Facebook"
+                disabled={isLoading}
               >
-                f
+                <FontAwesomeIcon icon={faFacebookF} />
+                <span className="tooltip">Login with Facebook</span>
               </button>
               <button
                 className="social-button google"
                 onClick={() => handleSocialLogin('Google')}
                 aria-label="Login with Google"
+                disabled={isLoading}
               >
-                G+
+                <FontAwesomeIcon icon={faGoogle} />
+                <span className="tooltip">Login with Google</span>
               </button>
               <button
                 className="social-button twitter"
                 onClick={() => handleSocialLogin('Twitter')}
                 aria-label="Login with Twitter"
+                disabled={isLoading}
               >
-                🐦
+                <FontAwesomeIcon icon={faTwitter} />
+                <span className="tooltip">Login with Twitter</span>
               </button>
             </div>
             <form onSubmit={handleSubmit}>
               {!isLoginForm && (
                 <label>
-                  Name:
+                  <FontAwesomeIcon icon={faSignature} /> Name:
                   <input
                     type="text"
                     name="name"
                     value={formData.name}
                     onChange={handleInputChange}
                     required={!isLoginForm}
+                    aria-invalid={!!formErrors.name}
+                    aria-describedby={formErrors.name ? 'name-error' : undefined}
                   />
-                  {formErrors.name && <div className="error">{formErrors.name}</div>}
+                  {formErrors.name && <div className="error" id="name-error">{formErrors.name}</div>}
                 </label>
               )}
               <label>
-                User Name:
+                <FontAwesomeIcon icon={faUserCircle} /> Email:
                 <input
                   type="text"
                   name="username"
                   value={formData.username}
                   onChange={handleInputChange}
                   required
+                  aria-invalid={!!formErrors.username}
+                  aria-describedby={formErrors.username ? 'username-error' : undefined}
                 />
-                {formErrors.username && <div className="error">{formErrors.username}</div>}
+                {formErrors.username && <div className="error" id="username-error">{formErrors.username}</div>}
               </label>
               <label>
-                {isLoginForm ? 'Enter Password:' : 'Password:'}
+                <FontAwesomeIcon icon={faLock} /> Password:
                 <input
                   type="password"
                   name="password"
                   value={formData.password}
                   onChange={handleInputChange}
                   required
+                  aria-invalid={!!formErrors.password}
+                  aria-describedby={formErrors.password ? 'password-error' : undefined}
                 />
-                {formErrors.password && <div className="error">{formErrors.password}</div>}
+                {formErrors.password && <div className="error" id="password-error">{formErrors.password}</div>}
               </label>
               {isLoginForm && (
                 <label className="checkbox-label">
@@ -888,20 +944,24 @@ const MainNavbar = () => {
               )}
               {!isLoginForm && (
                 <label>
-                  Confirm Password:
+                  <FontAwesomeIcon icon={faLock} /> Confirm Password:
                   <input
                     type="password"
                     name="confirmPassword"
                     value={formData.confirmPassword}
                     onChange={handleInputChange}
                     required={!isLoginForm}
+                    aria-invalid={!!formErrors.confirmPassword}
+                    aria-describedby={formErrors.confirmPassword ? 'confirm-password-error' : undefined}
                   />
                   {formErrors.confirmPassword && (
-                    <div className="error">{formErrors.confirmPassword}</div>
+                    <div className="error" id="confirm-password-error">{formErrors.confirmPassword}</div>
                   )}
                 </label>
               )}
-              <button type="submit">{isLoginForm ? 'Log in' : 'Register'}</button>
+              <button type="submit" disabled={isLoading}>
+                {isLoading ? <span className="loading-spinner"></span> : (isLoginForm ? 'Log in' : 'Register')}
+              </button>
             </form>
           </div>
         </div>
