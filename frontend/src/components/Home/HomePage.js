@@ -122,15 +122,15 @@ const HomePage = () => {
     /* Welcome Message on Slider */
     .welcome-message {
       position: absolute;
-      top: 50%;
+      top: 30%;
       left: 50%;
       transform: translate(-50%, -50%);
       color: white;
       font-size: 3rem;
-      font-weight: 600;
+      font-weight: 500;
       text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
       background: rgba(0, 0, 0, 0.3);
-      padding: 10px 20px;
+      padding: 90vh;
       border-radius: 8px;
     }
 
