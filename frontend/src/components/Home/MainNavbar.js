@@ -3,6 +3,15 @@ import { Link, useLocation } from 'react-router-dom';
 
 const MainNavbar = () => {
   const location = useLocation();
+  // Simulate authentication state (replace with proper auth logic later)
+  const isAuthenticated = false; // Change to true to test logged-in state
+
+  const handleLogout = () => {
+    // Simulate logout (clear token, redirect, etc.)
+    // In a real app, you'd clear the token from localStorage and update auth state
+    console.log('Logged out');
+    window.location.href = '/'; // Redirect to homepage
+  };
 
   const navStyles = `
     @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap');
@@ -30,7 +39,7 @@ const MainNavbar = () => {
     }
 
     .main-navbar-logo img {
-      height: 80px; /* Adjust the height of the logo */
+      height: 80px;
       width: auto;
     }
 
@@ -54,7 +63,8 @@ const MainNavbar = () => {
     }
 
     .main-nav-links a,
-    .dropdown-toggle {
+    .dropdown-toggle,
+    .logout-button {
       color: #e6f0ea;
       text-decoration: none;
       font-size: 1rem;
@@ -65,7 +75,8 @@ const MainNavbar = () => {
     }
 
     .main-nav-links a:hover,
-    .dropdown-toggle:hover {
+    .dropdown-toggle:hover,
+    .logout-button:hover {
       background: #46b38a;
       color: #ffffff;
     }
@@ -74,6 +85,13 @@ const MainNavbar = () => {
       background: #ffffff;
       color: #2a7458;
       font-weight: 600;
+    }
+
+    .logout-button {
+      background: none;
+      border: none;
+      cursor: pointer;
+      font-family: 'Poppins', sans-serif;
     }
 
     .dropdown {
@@ -140,7 +158,7 @@ const MainNavbar = () => {
       }
 
       .main-navbar-logo img {
-        height: 30px; /* Smaller logo on mobile */
+        height: 30px;
       }
 
       .logo-fallback {
@@ -159,7 +177,8 @@ const MainNavbar = () => {
       }
 
       .main-nav-links a,
-      .dropdown-toggle {
+      .dropdown-toggle,
+      .logout-button {
         padding: 8px 10px;
         font-size: 0.9rem;
       }
@@ -186,8 +205,8 @@ const MainNavbar = () => {
             src="/logo.png"
             alt="Green Coco Logo"
             onError={(e) => {
-              e.target.style.display = 'none'; // Hide the image if it fails to load
-              e.target.nextSibling.style.display = 'block'; // Show the fallback text
+              e.target.style.display = 'none';
+              e.target.nextSibling.style.display = 'block';
             }}
           />
           <span className="logo-fallback" style={{ display: 'none' }}>
@@ -264,6 +283,42 @@ const MainNavbar = () => {
               Employee Management
             </Link>
           </li>
+          {isAuthenticated ? (
+            <>
+              <li>
+                <Link
+                  to="/profile"
+                  className={location.pathname === '/profile' ? 'active' : ''}
+                >
+                  Profile
+                </Link>
+              </li>
+              <li>
+                <button onClick={handleLogout} className="logout-button">
+                  Logout
+                </button>
+              </li>
+            </>
+          ) : (
+            <>
+              <li>
+                <Link
+                  to="/register"
+                  className={location.pathname === '/register' ? 'active' : ''}
+                >
+                  Register
+                </Link>
+              </li>
+              <li>
+                <Link
+                  to="/login"
+                  className={location.pathname === '/login' ? 'active' : ''}
+                >
+                  Login
+                </Link>
+              </li>
+            </>
+          )}
         </ul>
       </nav>
     </>
