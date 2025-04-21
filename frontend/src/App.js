@@ -14,6 +14,7 @@ import LowStockReport from './components/Inventory/LowStockReport';
 import Login from './components/User/Login';
 import Register from './components/User/Register';
 import OrdersDashboard from './components/supplier/OrdersDashboard';
+import AddOrder from './components/supplier/AddOrder'; // Added import for AddOrder
 import SupplierDashboard from './components/supplier/SupplierDashboard';
 import { FinanceProvider } from './FinanceContext';
 import { ToastContainer } from 'react-toastify';
@@ -135,7 +136,10 @@ function App() {
               </Route>
 
               {/* Order and Supplier routes */}
-              <Route path="/orders" element={<OrdersDashboard />} />
+              <Route path="/orders">
+                <Route index element={<OrdersDashboard />} />
+                <Route path="add" element={<AddOrder />} />
+              </Route>
               <Route path="/suppliers" element={<SupplierDashboard />} />
 
               {/* Placeholder routes for other main functions */}
