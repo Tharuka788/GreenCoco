@@ -6,7 +6,7 @@ const SalaryCard = ({ salaries }) => {
   return (
     <div>
       <h3>Total Salaries</h3>
-      <p>${totalSalaries.toFixed(2)}</p>
+      <p>LKR{totalSalaries.toFixed(2)}</p>
     </div>
   );
 };

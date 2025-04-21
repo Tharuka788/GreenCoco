@@ -6,7 +6,7 @@ const ExpenseCard = ({ expenses }) => {
   return (
     <div>
       <h3>Total Expenses</h3>
-      <p>${totalExpenses.toFixed(2)}</p>
+      <p>LKR{totalExpenses.toFixed(2)}</p>
     </div>
   );
 };

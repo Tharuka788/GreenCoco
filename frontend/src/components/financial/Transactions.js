@@ -7,7 +7,7 @@ const Transactions = ({ transactions }) => {
       <ul>
         {transactions.slice(0, 5).map((trans) => (
           <li key={trans._id}>
-            {trans.type} - ${trans.amount} - {new Date(trans.date).toLocaleDateString()}
+            {trans.type} - LKR {trans.amount} - {new Date(trans.date).toLocaleDateString()}
           </li>
         ))}
       </ul>
