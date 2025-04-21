@@ -13,6 +13,9 @@ import InventoryDetails from './components/Inventory/InventoryDetails';
 import LowStockReport from './components/Inventory/LowStockReport';
 import Login from './components/User/Login';
 import Register from './components/User/Register';
+import OrdersDashboard from './components/supplier/OrdersDashboard';
+import AddOrder from './components/supplier/AddOrder'; // Import AddOrder
+import SupplierDashboard from './components/supplier/SupplierDashboard';
 import { FinanceProvider } from './FinanceContext';
 import { ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
@@ -78,13 +81,6 @@ const DeliveryPage = () => (
   />
 );
 
-const OrderSupplierPage = () => (
-  <PlaceholderPage
-    title="Order & Supplier Management"
-    description="Order & Supplier Management - Coming Soon"
-  />
-);
-
 const EmployeePage = () => (
   <PlaceholderPage
     title="Employee Management"
@@ -136,12 +132,18 @@ function App() {
                 <Route path="add" element={<InventoryForm />} />
                 <Route path="details/:id" element={<InventoryDetails />} />
                 <Route path="edit/:id" element={<InventoryDetails />} />
-                <Route path="low-stock" element={<LowStockReport />} /> {/* New route */}
+                <Route path="low-stock" element={<LowStockReport />} />
               </Route>
+
+              {/* Order and Supplier routes */}
+              <Route path="/orders">
+                <Route index element={<OrdersDashboard />} />
+                <Route path="add" element={<AddOrder />} />
+              </Route>
+              <Route path="/suppliers" element={<SupplierDashboard />} />
 
               {/* Placeholder routes for other main functions */}
               <Route path="/delivery" element={<DeliveryPage />} />
-              <Route path="/order-supplier" element={<OrderSupplierPage />} />
               <Route path="/employee" element={<EmployeePage />} />
             </Routes>
           </div>

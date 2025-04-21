@@ -744,13 +744,24 @@ const MainNavbar = () => {
               Delivery
             </Link>
           </li>
-          <li>
-            <Link
-              to="/order-supplier"
-              className={location.pathname === '/order-supplier' ? 'active' : ''}
-            >
+          <li className="dropdown">
+            <div className="dropdown-toggle">
               Order & Supplier
-            </Link>
+            </div>
+            <div className="dropdown-menu">
+              <Link
+                to="/orders"
+                className={location.pathname === '/orders' ? 'active' : ''}
+              >
+                Orders
+              </Link>
+              <Link
+                to="/suppliers"
+                className={location.pathname === '/suppliers' ? 'active' : ''}
+              >
+                Suppliers
+              </Link>
+            </div>
           </li>
           <li>
             <Link
