@@ -8,7 +8,7 @@ const EmployeeList = () => {
 
   const fetchEmployees = async () => {
     try {
-      const response = await axios.get('http://localhost:5001/api/employees');
+      const response = await axios.get('http://localhost:5000/api/employees');
       setEmployees(response.data);
     } catch (error) {
       console.error('Error fetching employees:', error);
@@ -21,7 +21,7 @@ const EmployeeList = () => {
 
   const deleteEmployee = async (id) => {
     try {
-      await axios.delete(`http://localhost:5001/api/employees/${id}`);
+      await axios.delete(`http://localhost:5000/api/employees/${id}`);
       fetchEmployees();
     } catch (error) {
       console.error('Error deleting employee:', error);

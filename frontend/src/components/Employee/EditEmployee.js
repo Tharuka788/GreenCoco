@@ -25,7 +25,7 @@ const EditEmployee = () => {
 
   const fetchEmployee = async () => {
     try {
-      const response = await axios.get(`http://localhost:5001/api/employees/${id}`);
+      const response = await axios.get(`http://localhost:5000/api/employees/${id}`);
       setEmployee(response.data);
     } catch (error) {
       console.error('Error fetching employee:', error);
@@ -97,7 +97,7 @@ const EditEmployee = () => {
     e.preventDefault();
     if (!validate()) return;
     try {
-      await axios.put(`http://localhost:5001/api/employees/${id}`, employee);
+      await axios.put(`http://localhost:5000/api/employees/${id}`, employee);
       alert('Employee updated successfully!');
       navigate('/');
     } catch (error) {

@@ -110,7 +110,7 @@ const AddEmployee = () => {
     }
 
     try {
-      await axios.post('http://localhost:5001/api/employees/', employee, {
+      await axios.post('http://localhost:5000/api/employees/', employee, {
         headers: {
           'Content-Type': 'application/json',
         },
