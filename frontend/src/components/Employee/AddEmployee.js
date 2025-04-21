@@ -1,8 +1,7 @@
 import React, { useState } from 'react';
 import axios from 'axios';
-import { useNavigate } from 'react-router-dom';
 
-const AddEmployee = () => {
+const AddEmployeeForm = () => {
   const [employee, setEmployee] = useState({
     EmployeeName: '',
     DepartmentName: '',
@@ -11,314 +10,373 @@ const AddEmployee = () => {
     Email: '',
     JobRole: '',
     BasicSalary: '',
-    Bonus: '',
-    OverTimeHours: '',
+    Bonus: 0,
+    OverTimeHours: 0,
+    OverTimePayment: 0,
+    EPF_ETF: 0,
+    NetSalary: 0
   });
 
-  const [errors, setErrors] = useState({});
-  const navigate = useNavigate();
+  const [successMessage, setSuccessMessage] = useState('');
+  const [errorMessage, setErrorMessage] = useState('');
 
   const handleChange = (e) => {
     const { name, value } = e.target;
+    setEmployee(prev => ({
+      ...prev,
+      [name]: value
+    }));
 
-    // Restrict EmployeeName, DepartmentName, and JobRole to letters and spaces only
-    if (name === 'EmployeeName' || name === 'DepartmentName' || name === 'JobRole') {
-      if (!/^[a-zA-Z\s]*$/.test(value)) return; // Allow only letters and spaces
-    }
-
-    // Restrict PhoneNumber to 10 digits
-    if (name === 'PhoneNumber') {
-      if (!/^\d*$/.test(value)) return; // Allow only digits
-      if (value.length > 10) return; // Prevent more than 10 digits
-    }
-
-    setEmployee({ ...employee, [name]: value });
-    // Clear the error for the field when the user starts typing
-    if (errors[name]) {
-      setErrors({ ...errors, [name]: '' });
+    // Recalculate salary components if relevant fields change
+    if (['BasicSalary', 'Bonus', 'OverTimeHours'].includes(name)) {
+      calculateSalary({
+        ...employee,
+        [name]: value
+      });
     }
   };
 
-  const validateForm = () => {
-    let newErrors = {};
+  const calculateSalary = (empData) => {
+    const basicSalary = parseFloat(empData.BasicSalary) || 0;
+    const bonus = parseFloat(empData.Bonus) || 0;
+    const overtimeHours = parseFloat(empData.OverTimeHours) || 0;
+    const overtimeRate = 500; // LKR per hour
 
-    // Validate Employee Name
-    if (!employee.EmployeeName.trim()) {
-      // newErrors.EmployeeName = 'Employee Name is required';
-    } else if (!/^[a-zA-Z\s]+$/.test(employee.EmployeeName)) {
-      newErrors.EmployeeName = 'Employee Name must contain only letters and spaces';
-    }
+    // Calculate EPF (8%) and ETF (3%)
+    const epf = basicSalary * 0.08;
+    const etf = basicSalary * 0.03;
+    const totalEpfEtf = epf + etf;
 
-    // Validate Department Name
-    if (!employee.DepartmentName.trim()) {
-      newErrors.DepartmentName = 'Department Name is required';
-    } else if (!/^[a-zA-Z\s]+$/.test(employee.DepartmentName)) {
-      newErrors.DepartmentName = 'Department Name must contain only letters and spaces';
-    }
+    // Calculate overtime payment
+    const overtimePayment = overtimeHours * overtimeRate;
 
-    // Validate Employee ID
-    if (!employee.EmployeeId.trim()) {
-      newErrors.EmployeeId = 'Employee ID is required';
-    }
+    // Calculate net salary
+    const netSalary = basicSalary + bonus + overtimePayment - totalEpfEtf;
 
-    // Validate Phone Number
-    if (!employee.PhoneNumber.trim()) {
-      newErrors.PhoneNumber = 'Phone Number is required';
-    } else if (!/^\d{10}$/.test(employee.PhoneNumber)) {
-      newErrors.PhoneNumber = 'Phone Number must be exactly 10 digits';
-    }
-
-    // Validate Email
-    if (!employee.Email.trim()) {
-      newErrors.Email = 'Email is required';
-    } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(employee.Email)) {
-      newErrors.Email = 'Invalid email format';
-    }
-
-    // Validate Job Role
-    if (!employee.JobRole.trim()) {
-      newErrors.JobRole = 'Job Role is required';
-    } else if (!/^[a-zA-Z\s]+$/.test(employee.JobRole)) {
-      newErrors.JobRole = 'Job Role must contain only letters and spaces';
-    }
-
-    // Validate Basic Salary
-    if (!employee.BasicSalary || employee.BasicSalary <= 0) {
-      newErrors.BasicSalary = 'Basic Salary must be greater than 0';
-    }
-
-    // Validate Bonus (optional, but must be non-negative if provided)
-    if (employee.Bonus && employee.Bonus < 0) {
-      newErrors.Bonus = 'Bonus cannot be negative';
-    }
-
-    // Validate OverTimeHours (optional, but must be non-negative if provided)
-    if (employee.OverTimeHours && employee.OverTimeHours < 0) {
-      newErrors.OverTimeHours = 'Overtime Hours cannot be negative';
-    }
-
-    setErrors(newErrors);
-    return Object.keys(newErrors).length === 0; // Return true if no errors
+    setEmployee(prev => ({
+      ...prev,
+      EPF_ETF: totalEpfEtf,
+      OverTimePayment: overtimePayment,
+      NetSalary: netSalary
+    }));
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-
-    if (!validateForm()) {
-      alert('Please fix the errors before submitting.');
-      return;
-    }
+    setErrorMessage('');
+    setSuccessMessage('');
 
     try {
-      await axios.post('http://localhost:5000/api/employees/', employee, {
-        headers: {
-          'Content-Type': 'application/json',
-        },
+      // Convert number fields to actual numbers
+      const employeeToSend = {
+        ...employee,
+        PhoneNumber: parseInt(employee.PhoneNumber),
+        BasicSalary: parseFloat(employee.BasicSalary),
+        Bonus: parseFloat(employee.Bonus),
+        OverTimeHours: parseFloat(employee.OverTimeHours)
+      };
+
+      const response = await axios.post('/employees', employeeToSend);
+      
+      setSuccessMessage('Employee added successfully!');
+      // Reset form
+      setEmployee({
+        EmployeeName: '',
+        DepartmentName: '',
+        EmployeeId: '',
+        PhoneNumber: '',
+        Email: '',
+        JobRole: '',
+        BasicSalary: '',
+        Bonus: 0,
+        OverTimeHours: 0,
+        OverTimePayment: 0,
+        EPF_ETF: 0,
+        NetSalary: 0
       });
-      alert('Employee added successfully!');
-      navigate('/');
+
+      setTimeout(() => setSuccessMessage(''), 3000);
     } catch (error) {
-      alert('Error adding employee: ' + (error.response?.data || error.message));
+      setErrorMessage(error.response?.data?.message || 'Error adding employee');
     }
   };
 
   return (
-    <div className="employee-form">
-      <style jsx>{`
-        /* Container for the form */
-        .employee-form {
-          max-width: 800px;
-          margin: 2rem auto;
-          padding: 20px;
-          background: #f5f5f5;
-          border-radius: 10px;
-          box-shadow: 0 2px 1px rgba(0, 0, 0, 0.1);
-          border: 1px solid #e0e0e0;
-          transition: transform 0.3s ease, box-shadow 0.3s ease;
-        }
-
-        .employee-form:hover {
-          transform: translateY(-5px);
-          box-shadow: 0 6px 20px rgba(0, 0, 0, 0.15);
-        }
-
-        /* Title styling */
-        .employee-form h2 {
-          color: #2c3e50;
-          text-align: center;
-          margin-bottom: 1.5rem;
-          font-size: 2rem;
-          font-weight: 600;
-        }
-
-        /* Fieldset styling */
-        fieldset {
-          border: 1px solid #ddd;
-          border-radius: 4px;
-          margin-bottom: 1rem;
-          padding: 1rem;
-        }
-
-        legend {
-          padding: 0 0.5rem;
-          color: #34495e;
-          font-weight: 600;
-        }
-
-        /* Form group styling */
-        .form-group {
-          margin-bottom: 1rem;
-        }
-
-        .form-group label {
-          display: block;
-          margin-bottom: 0.5rem;
-          color: #4a5568;
-        }
-
-        /* Input fields styling */
-        input[type="text"],
-        input[type="email"],
-        input[type="number"],
-        select,
-        textarea {
-          width: 100%;
-          padding: 0.5rem;
-          border: 1px solid #cbd5e0;
-          border-radius: 4px;
-          font-size: 1rem;
-          transition: border-color 0.3s ease;
-        }
-
-        input:focus,
-        select:focus,
-        textarea:focus {
-          border-color: #007bff;
-          outline: none;
-          box-shadow: 0 0 5px rgba(0, 123, 255, 0.5);
-        }
-
-        /* Error message styling */
-        .error-text {
-          color: #e53e3e;
-          font-size: 0.875rem;
-          margin-top: 0.25rem;
-          display: block;
-        }
-
-        /* Form actions container */
-        .form-actions {
-          display: flex;
-          gap: 1rem;
-          justify-content: flex-end;
-          margin-top: 1.5rem;
-        }
-
-        /* Button styling */
-        button {
-          padding: 0.5rem 1.5rem;
-          border: none;
-          border-radius: 4px;
-          cursor: pointer;
-          font-size: 1rem;
-          transition: background-color 0.3s ease;
-        }
-
-        .submit-btn {
-          background-color: #48bb78;
-          color: white;
-        }
-
-        .submit-btn:hover {
-          background-color: #3aa76d;
-        }
-
-        .cancel-btn {
-          background-color: #e2e8f0;
-          color: #4a5568;
-        }
-
-        .cancel-btn:hover {
-          background-color: #cbd5e0;
-        }
-      `}</style>
-
-      <h2>Add Employee Details</h2>
-      <form onSubmit={handleSubmit}>
-        <fieldset>
-          <legend>Personal Information</legend>
-          <div className="form-group">
-            <label>Employee Name</label>
-            <input type="text" name="EmployeeName" value={employee.EmployeeName} onChange={handleChange} required />
-            {errors.EmployeeName && <span className="error-text">{errors.EmployeeName}</span>}
-          </div>
-          <div className="form-group">
-            <label>Department Name</label>
-            <input type="text" name="DepartmentName" value={employee.DepartmentName} onChange={handleChange} required />
-            {errors.DepartmentName && <span className="error-text">{errors.DepartmentName}</span>}
-          </div>
-        </fieldset>
-
-        <fieldset>
-          <legend>Contact Details</legend>
-          <div className="form-group">
-            <label>Phone Number</label>
+    <div style={styles.container}>
+      <h1 style={styles.heading}>Add New Employee</h1>
+      
+      {successMessage && (
+        <div style={styles.successMessage}>
+          {successMessage}
+        </div>
+      )}
+      
+      {errorMessage && (
+        <div style={styles.errorMessage}>
+          {errorMessage}
+        </div>
+      )}
+      
+      <form onSubmit={handleSubmit} style={styles.form}>
+        <div style={styles.formRow}>
+          <div style={styles.formGroup}>
+            <label htmlFor="EmployeeName" style={styles.label}>Employee Name</label>
             <input
               type="text"
+              id="EmployeeName"
+              name="EmployeeName"
+              value={employee.EmployeeName}
+              onChange={handleChange}
+              required
+              style={styles.input}
+            />
+          </div>
+          <div style={styles.formGroup}>
+            <label htmlFor="EmployeeId" style={styles.label}>Employee ID</label>
+            <input
+              type="text"
+              id="EmployeeId"
+              name="EmployeeId"
+              value={employee.EmployeeId}
+              onChange={handleChange}
+              required
+              style={styles.input}
+            />
+          </div>
+        </div>
+        
+        <div style={styles.formRow}>
+          <div style={styles.formGroup}>
+            <label htmlFor="DepartmentName" style={styles.label}>Department</label>
+            <select
+              id="DepartmentName"
+              name="DepartmentName"
+              value={employee.DepartmentName}
+              onChange={handleChange}
+              required
+              style={styles.input}
+            >
+              <option value="">Select Department</option>
+              <option value="HR">Human Resources</option>
+              <option value="IT">Information Technology</option>
+              <option value="Finance">Finance</option>
+              <option value="Marketing">Marketing</option>
+              <option value="Operations">Operations</option>
+            </select>
+          </div>
+          <div style={styles.formGroup}>
+            <label htmlFor="JobRole" style={styles.label}>Job Role</label>
+            <input
+              type="text"
+              id="JobRole"
+              name="JobRole"
+              value={employee.JobRole}
+              onChange={handleChange}
+              required
+              style={styles.input}
+            />
+          </div>
+        </div>
+        
+        <div style={styles.formRow}>
+          <div style={styles.formGroup}>
+            <label htmlFor="PhoneNumber" style={styles.label}>Phone Number</label>
+            <input
+              type="text"
+              id="PhoneNumber"
               name="PhoneNumber"
               value={employee.PhoneNumber}
               onChange={handleChange}
-              maxLength="10"
               required
+              style={styles.input}
+              pattern="[0-9]{10}"
+              title="10-digit phone number"
             />
-            {errors.PhoneNumber && <span className="error-text">{errors.PhoneNumber}</span>}
           </div>
-          <div className="form-group">
-            <label>Email</label>
-            <input type="email" name="Email" value={employee.Email} onChange={handleChange} required />
-            {errors.Email && <span className="error-text">{errors.Email}</span>}
+          <div style={styles.formGroup}>
+            <label htmlFor="Email" style={styles.label}>Email</label>
+            <input
+              type="email"
+              id="Email"
+              name="Email"
+              value={employee.Email}
+              onChange={handleChange}
+              required
+              style={styles.input}
+            />
           </div>
-        </fieldset>
-
-        <fieldset>
-          <legend>Job Information</legend>
-          <div className="form-group">
-            <label>Employee ID</label>
-            <input type="text" name="EmployeeId" value={employee.EmployeeId} onChange={handleChange} required />
-            {errors.EmployeeId && <span className="error-text">{errors.EmployeeId}</span>}
-          </div>
-          <div className="form-group">
-            <label>Job Role</label>
-            <input type="text" name="JobRole" value={employee.JobRole} onChange={handleChange} required />
-            {errors.JobRole && <span className="error-text">{errors.JobRole}</span>}
-          </div>
-        </fieldset>
-
-        <fieldset>
-          <legend>Salary & Benefits</legend>
-          <div className="form-group">
-            <label>Basic Salary</label>
-            <input type="number" name="BasicSalary" value={employee.BasicSalary} onChange={handleChange} required />
-            {errors.BasicSalary && <span className="error-text">{errors.BasicSalary}</span>}
-          </div>
-          <div className="form-group">
-            <label>Bonus</label>
-            <input type="number" name="Bonus" value={employee.Bonus} onChange={handleChange} />
-            {errors.Bonus && <span className="error-text">{errors.Bonus}</span>}
-          </div>
-          <div className="form-group">
-            <label>Overtime Hours</label>
-            <input type="number" name="OverTimeHours" value={employee.OverTimeHours} onChange={handleChange} />
-            {errors.OverTimeHours && <span className="error-text">{errors.OverTimeHours}</span>}
-          </div>
-        </fieldset>
-
-        <div className="form-actions">
-          <button type="submit" className="submit-btn">Add Employee</button>
         </div>
+        
+        <div style={styles.salarySection}>
+          <h3 style={styles.sectionHeading}>Salary Information</h3>
+          <div style={styles.formRow}>
+            <div style={styles.formGroup}>
+              <label htmlFor="BasicSalary" style={styles.label}>Basic Salary (LKR)</label>
+              <input
+                type="number"
+                id="BasicSalary"
+                name="BasicSalary"
+                value={employee.BasicSalary}
+                onChange={handleChange}
+                required
+                style={styles.input}
+                min="0"
+                step="0.01"
+              />
+            </div>
+            <div style={styles.formGroup}>
+              <label htmlFor="Bonus" style={styles.label}>Bonus (LKR)</label>
+              <input
+                type="number"
+                id="Bonus"
+                name="Bonus"
+                value={employee.Bonus}
+                onChange={handleChange}
+                style={styles.input}
+                min="0"
+                step="0.01"
+              />
+            </div>
+          </div>
+          
+          <div style={styles.formRow}>
+            <div style={styles.formGroup}>
+              <label htmlFor="OverTimeHours" style={styles.label}>Overtime Hours</label>
+              <input
+                type="number"
+                id="OverTimeHours"
+                name="OverTimeHours"
+                value={employee.OverTimeHours}
+                onChange={handleChange}
+                style={styles.input}
+                min="0"
+              />
+            </div>
+            <div style={styles.formGroup}>
+              <label htmlFor="OverTimePayment" style={styles.label}>Overtime Payment (LKR)</label>
+              <input
+                type="number"
+                id="OverTimePayment"
+                name="OverTimePayment"
+                value={employee.OverTimePayment.toFixed(2)}
+                readOnly
+                style={styles.input}
+              />
+            </div>
+          </div>
+          
+          <div style={styles.formRow}>
+            <div style={styles.formGroup}>
+              <label htmlFor="EPF_ETF" style={styles.label}>EPF + ETF (LKR)</label>
+              <input
+                type="number"
+                id="EPF_ETF"
+                name="EPF_ETF"
+                value={employee.EPF_ETF.toFixed(2)}
+                readOnly
+                style={styles.input}
+              />
+            </div>
+            <div style={styles.formGroup}>
+              <label htmlFor="NetSalary" style={styles.label}>Net Salary (LKR)</label>
+              <input
+                type="number"
+                id="NetSalary"
+                name="NetSalary"
+                value={employee.NetSalary.toFixed(2)}
+                readOnly
+                style={styles.input}
+              />
+            </div>
+          </div>
+        </div>
+        
+        <button type="submit" style={styles.submitButton}>Add Employee</button>
       </form>
     </div>
   );
 };
 
-export default AddEmployee;
+// Internal CSS styles
+const styles = {
+  container: {
+    maxWidth: '800px',
+    margin: '0 auto',
+    padding: '20px',
+    backgroundColor: '#fff',
+    borderRadius: '8px',
+    boxShadow: '0 0 10px rgba(0, 0, 0, 0.1)',
+    fontFamily: "'Segoe UI', Tahoma, Geneva, Verdana, sans-serif",
+  },
+  heading: {
+    textAlign: 'center',
+    color: '#2c3e50',
+    marginBottom: '30px',
+  },
+  form: {
+    display: 'flex',
+    flexDirection: 'column',
+  },
+  formRow: {
+    display: 'flex',
+    gap: '20px',
+    marginBottom: '20px',
+  },
+  formGroup: {
+    flex: '1',
+  },
+  label: {
+    display: 'block',
+    marginBottom: '8px',
+    fontWeight: '600',
+    color: '#2c3e50',
+  },
+  input: {
+    width: '100%',
+    padding: '12px',
+    border: '1px solid #ddd',
+    borderRadius: '4px',
+    fontSize: '16px',
+    boxSizing: 'border-box',
+  },
+  salarySection: {
+    backgroundColor: '#f8f9fa',
+    padding: '15px',
+    borderRadius: '4px',
+    marginBottom: '20px',
+    borderLeft: '4px solid #3498db',
+  },
+  sectionHeading: {
+    marginTop: '0',
+    color: '#2c3e50',
+  },
+  submitButton: {
+    backgroundColor: '#3498db',
+    color: 'white',
+    border: 'none',
+    padding: '12px 20px',
+    fontSize: '16px',
+    borderRadius: '4px',
+    cursor: 'pointer',
+    fontWeight: '600',
+    transition: 'background-color 0.3s',
+  },
+  successMessage: {
+    backgroundColor: '#2ecc71',
+    color: 'white',
+    padding: '15px',
+    borderRadius: '4px',
+    marginBottom: '20px',
+    textAlign: 'center',
+  },
+  errorMessage: {
+    backgroundColor: '#e74c3c',
+    color: 'white',
+    padding: '15px',
+    borderRadius: '4px',
+    marginBottom: '20px',
+    textAlign: 'center',
+  },
+};
+
+export default AddEmployeeForm;

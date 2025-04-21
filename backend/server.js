@@ -3,7 +3,7 @@ const dotenv = require('dotenv');
 const connectDB = require('./config/db');
 const financeRoutes = require('./routes/financeRoutes');
 const inventorys = require('./routes/inventorys');
-const Employee = require("../models/Employee");
+const employeeRoutes = require('./routes/EmployeeRoutes');
 const errorHandler = require('./middleware/errorHandler');
 const cors = require('cors'); // Ensure CORS is included
 
