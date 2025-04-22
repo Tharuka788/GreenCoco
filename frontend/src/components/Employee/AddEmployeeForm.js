@@ -1,13 +1,13 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import axios from 'axios';
-import { ToastContainer, toast } from 'react-toastify';
+import { toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 
 // Set axios base URL
 axios.defaults.baseURL = 'http://localhost:5000';
 
-const AddEmployeeForm = () => {
-  const [employee, setEmployee] = useState({
+const AddEmployeeForm = ({ onSuccess, editingEmployee, onUpdate }) => {
+  const initialState = {
     EmployeeName: '',
     DepartmentName: '',
     EmployeeId: '',
@@ -20,9 +20,69 @@ const AddEmployeeForm = () => {
     OverTimePayment: 0,
     EPF_ETF: 0,
     NetSalary: 0,
-  });
+  };
 
+  const [employee, setEmployee] = useState(initialState);
   const [submitting, setSubmitting] = useState(false);
+  const [errors, setErrors] = useState({});
+
+  useEffect(() => {
+    if (editingEmployee) {
+      setEmployee(editingEmployee);
+      setErrors({}); // Clear any existing errors when editing
+    } else {
+      setEmployee(initialState);
+    }
+  }, [editingEmployee]);
+
+  const resetForm = () => {
+    setEmployee(initialState);
+    setErrors({});
+    setSubmitting(false);
+  };
+
+  const handleCancel = () => {
+    resetForm();
+    onUpdate(null); // Notify parent component to exit edit mode
+  };
+
+  const validateForm = () => {
+    const newErrors = {};
+    
+    if (!employee.EmployeeName.trim()) {
+      newErrors.EmployeeName = 'Employee name is required';
+    }
+
+    if (!employee.EmployeeId.trim()) {
+      newErrors.EmployeeId = 'Employee ID is required';
+    }
+
+    if (!employee.DepartmentName) {
+      newErrors.DepartmentName = 'Department is required';
+    }
+
+    if (!employee.JobRole.trim()) {
+      newErrors.JobRole = 'Job role is required';
+    }
+
+    if (!employee.PhoneNumber) {
+      newErrors.PhoneNumber = 'Phone number is required';
+    } else if (!/^\d{10}$/.test(employee.PhoneNumber)) {
+      newErrors.PhoneNumber = 'Phone number must be 10 digits';
+    }
+
+    if (!employee.Email.trim()) {
+      newErrors.Email = 'Email is required';
+    } else if (!/\S+@\S+\.\S+/.test(employee.Email)) {
+      newErrors.Email = 'Invalid email format';
+    }
+
+    if (!employee.BasicSalary || employee.BasicSalary <= 0) {
+      newErrors.BasicSalary = 'Basic salary must be greater than 0';
+    }
+
+    return newErrors;
+  };
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -67,38 +127,44 @@ const AddEmployeeForm = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    const formErrors = validateForm();
+
+    if (Object.keys(formErrors).length > 0) {
+      setErrors(formErrors);
+      return;
+    }
+
     setSubmitting(true);
+    setErrors({});
 
     try {
-      // Convert number fields to actual numbers
-      const employeeToSend = {
+      const employeeData = {
         ...employee,
-        PhoneNumber: parseInt(employee.PhoneNumber) || 0,
-        BasicSalary: parseFloat(employee.BasicSalary) || 0,
-        Bonus: parseFloat(employee.Bonus) || 0,
-        OverTimeHours: parseFloat(employee.OverTimeHours) || 0,
+        PhoneNumber: parseInt(employee.PhoneNumber),
+        BasicSalary: parseFloat(employee.BasicSalary),
+        Bonus: parseFloat(employee.Bonus),
+        OverTimeHours: parseFloat(employee.OverTimeHours),
       };
 
-      await axios.post('/employees', employeeToSend);
-      
-      toast.success('Employee added successfully!');
-      // Reset form
-      setEmployee({
-        EmployeeName: '',
-        DepartmentName: '',
-        EmployeeId: '',
-        PhoneNumber: '',
-        Email: '',
-        JobRole: '',
-        BasicSalary: '',
-        Bonus: 0,
-        OverTimeHours: 0,
-        OverTimePayment: 0,
-        EPF_ETF: 0,
-        NetSalary: 0,
-      });
+      let response;
+      if (editingEmployee) {
+        response = await axios.put(`/employees/${editingEmployee._id}`, employeeData);
+        onUpdate(response.data);
+        toast.success('Employee updated successfully!');
+      } else {
+        response = await axios.post('/employees', employeeData);
+        onSuccess(response.data);
+      }
+
+      setEmployee(initialState);
     } catch (error) {
-      toast.error(error.response?.data?.message || 'Error adding employee');
+      console.error('API Error:', error);
+      const errorMessage = error.response?.data?.message || 
+                          (error.response?.data?.code === 11000 ? 'Employee ID or Email already exists' : 'Failed to save employee');
+      toast.error(errorMessage);
+      if (error.response?.data?.errors) {
+        setErrors(error.response.data.errors);
+      }
     } finally {
       setSubmitting(false);
     }
@@ -181,19 +247,28 @@ const AddEmployeeForm = () => {
       margin-bottom: 16px;
     }
 
-    .submit-button {
-      display: block;
+    .form-actions {
+      display: flex;
+      gap: 16px;
+      justify-content: center;
+      margin-top: 24px;
+    }
+
+    .submit-button,
+    .cancel-button {
       width: 200px;
-      margin: 0 auto;
       padding: 12px;
-      background: #2a7458;
-      color: white;
       border: none;
       border-radius: 4px;
       font-size: 1rem;
       font-weight: 500;
       cursor: pointer;
-      transition: background 0.3s;
+      transition: all 0.3s;
+    }
+
+    .submit-button {
+      background: #2a7458;
+      color: white;
     }
 
     .submit-button:hover {
@@ -203,6 +278,15 @@ const AddEmployeeForm = () => {
     .submit-button:disabled {
       background: #a0a0a0;
       cursor: not-allowed;
+    }
+
+    .cancel-button {
+      background: #e74c3c;
+      color: white;
+    }
+
+    .cancel-button:hover {
+      background: #c0392b;
     }
 
     @media (max-width: 768px) {
@@ -219,7 +303,12 @@ const AddEmployeeForm = () => {
         font-size: 1.5rem;
       }
 
-      .submit-button {
+      .form-actions {
+        flex-direction: column;
+      }
+
+      .submit-button,
+      .cancel-button {
         width: 100%;
       }
     }
@@ -229,7 +318,9 @@ const AddEmployeeForm = () => {
     <>
       <style dangerouslySetInnerHTML={{ __html: styles }} />
       <div className="add-employee-form">
-        <h2 className="form-heading">Add New Employee</h2>
+        <h2 className="form-heading">
+          {editingEmployee ? 'Edit Employee' : 'Add New Employee'}
+        </h2>
         
         <form onSubmit={handleSubmit}>
           <div className="form-grid">
@@ -243,10 +334,13 @@ const AddEmployeeForm = () => {
                 name="EmployeeName"
                 value={employee.EmployeeName}
                 onChange={handleChange}
-                required
-                className="form-input"
+                className={`form-input ${errors.EmployeeName ? 'error' : ''}`}
               />
+              {errors.EmployeeName && (
+                <div className="error-message">{errors.EmployeeName}</div>
+              )}
             </div>
+
             <div className="form-group">
               <label htmlFor="EmployeeId" className="form-label">
                 Employee ID
@@ -257,9 +351,11 @@ const AddEmployeeForm = () => {
                 name="EmployeeId"
                 value={employee.EmployeeId}
                 onChange={handleChange}
-                required
-                className="form-input"
+                className={`form-input ${errors.EmployeeId ? 'error' : ''}`}
               />
+              {errors.EmployeeId && (
+                <div className="error-message">{errors.EmployeeId}</div>
+              )}
             </div>
           </div>
 
@@ -273,8 +369,7 @@ const AddEmployeeForm = () => {
                 name="DepartmentName"
                 value={employee.DepartmentName}
                 onChange={handleChange}
-                required
-                className="form-select"
+                className={`form-select ${errors.DepartmentName ? 'error' : ''}`}
               >
                 <option value="">Select Department</option>
                 <option value="HR">Human Resources</option>
@@ -283,7 +378,11 @@ const AddEmployeeForm = () => {
                 <option value="Marketing">Marketing</option>
                 <option value="Operations">Operations</option>
               </select>
+              {errors.DepartmentName && (
+                <div className="error-message">{errors.DepartmentName}</div>
+              )}
             </div>
+
             <div className="form-group">
               <label htmlFor="JobRole" className="form-label">
                 Job Role
@@ -294,9 +393,11 @@ const AddEmployeeForm = () => {
                 name="JobRole"
                 value={employee.JobRole}
                 onChange={handleChange}
-                required
-                className="form-input"
+                className={`form-input ${errors.JobRole ? 'error' : ''}`}
               />
+              {errors.JobRole && (
+                <div className="error-message">{errors.JobRole}</div>
+              )}
             </div>
           </div>
 
@@ -311,12 +412,15 @@ const AddEmployeeForm = () => {
                 name="PhoneNumber"
                 value={employee.PhoneNumber}
                 onChange={handleChange}
-                required
                 pattern="[0-9]{10}"
                 title="10-digit phone number"
-                className="form-input"
+                className={`form-input ${errors.PhoneNumber ? 'error' : ''}`}
               />
+              {errors.PhoneNumber && (
+                <div className="error-message">{errors.PhoneNumber}</div>
+              )}
             </div>
+
             <div className="form-group">
               <label htmlFor="Email" className="form-label">
                 Email
@@ -327,9 +431,11 @@ const AddEmployeeForm = () => {
                 name="Email"
                 value={employee.Email}
                 onChange={handleChange}
-                required
-                className="form-input"
+                className={`form-input ${errors.Email ? 'error' : ''}`}
               />
+              {errors.Email && (
+                <div className="error-message">{errors.Email}</div>
+              )}
             </div>
           </div>
 
@@ -346,12 +452,15 @@ const AddEmployeeForm = () => {
                   name="BasicSalary"
                   value={employee.BasicSalary}
                   onChange={handleChange}
-                  required
                   min="0"
                   step="0.01"
-                  className="form-input"
+                  className={`form-input ${errors.BasicSalary ? 'error' : ''}`}
                 />
+                {errors.BasicSalary && (
+                  <div className="error-message">{errors.BasicSalary}</div>
+                )}
               </div>
+
               <div className="form-group">
                 <label htmlFor="Bonus" className="form-label">
                   Bonus (LKR)
@@ -384,6 +493,7 @@ const AddEmployeeForm = () => {
                   className="form-input"
                 />
               </div>
+
               <div className="form-group">
                 <label htmlFor="OverTimePayment" className="form-label">
                   Overtime Payment (LKR)
@@ -413,6 +523,7 @@ const AddEmployeeForm = () => {
                   className="form-input"
                 />
               </div>
+
               <div className="form-group">
                 <label htmlFor="NetSalary" className="form-label">
                   Net Salary (LKR)
@@ -429,27 +540,25 @@ const AddEmployeeForm = () => {
             </div>
           </div>
 
-          <button
-            type="submit"
-            disabled={submitting}
-            className="submit-button"
-          >
-            {submitting ? 'Adding...' : 'Add Employee'}
-          </button>
+          <div className="form-actions">
+            <button
+              type="submit"
+              disabled={submitting}
+              className="submit-button"
+            >
+              {submitting ? 'Saving...' : editingEmployee ? 'Update Employee' : 'Add Employee'}
+            </button>
+            {editingEmployee && (
+              <button
+                type="button"
+                className="cancel-button"
+                onClick={handleCancel}
+              >
+                Cancel
+              </button>
+            )}
+          </div>
         </form>
-
-        <ToastContainer
-          position="top-right"
-          autoClose={3000}
-          hideProgressBar={false}
-          newestOnTop={false}
-          closeOnClick
-          rtl={false}
-          pauseOnFocusLoss
-          draggable
-          pauseOnHover
-          theme="light"
-        />
       </div>
     </>
   );
