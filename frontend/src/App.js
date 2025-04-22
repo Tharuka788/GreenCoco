@@ -21,6 +21,7 @@ import OrdersDashboard from './components/supplier/OrdersDashboard';
 import AddOrder from './components/supplier/AddOrder';
 import SupplierDashboard from './components/supplier/SupplierDashboard';
 import EmployeeDashboard from './components/Employee/EmployeeDashboard';
+import AttendanceManagement from './components/Employee/AttendanceManagement';
 import { FinanceProvider } from './FinanceContext';
 import { ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
@@ -218,6 +219,7 @@ function App() {
                 <Route path="/admin/employees" element={<AdminEmployees />} />
                 <Route path="/admin/deliveries" element={<AdminDeliveries />} />
               </Route>
+
             </Routes>
           </div>
           <ToastContainer
