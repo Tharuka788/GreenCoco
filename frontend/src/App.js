@@ -15,13 +15,14 @@ import LowStockReport from './components/Inventory/LowStockReport';
 import Login from './components/User/Login';
 import Register from './components/User/Register';
 import OrdersDashboard from './components/supplier/OrdersDashboard';
-import AddOrder from './components/supplier/AddOrder'; // Added import for AddOrder
+import AddOrder from './components/supplier/AddOrder';
 import SupplierDashboard from './components/supplier/SupplierDashboard';
+import EmployeeDashboard from './components/Employee/EmployeeDashboard';
 import { FinanceProvider } from './FinanceContext';
 import { ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 
-// Placeholder components for other main functions with styling
+// Placeholder components for other main functions
 const PlaceholderPage = ({ title, description }) => {
   const styles = `
     @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap');
@@ -82,13 +83,6 @@ const DeliveryPage = () => (
   />
 );
 
-const EmployeePage = () => (
-  <PlaceholderPage
-    title="Employee Management"
-    description="Employee Management - Coming Soon"
-  />
-);
-
 function App() {
   const appStyles = `
     .app {
@@ -144,9 +138,11 @@ function App() {
               </Route>
               <Route path="/suppliers" element={<SupplierDashboard />} />
 
-              {/* Placeholder routes for other main functions */}
+              {/* Employee route */}
+              <Route path="/employee" element={<EmployeeDashboard />} />
+
+              {/* Placeholder route for delivery */}
               <Route path="/delivery" element={<DeliveryPage />} />
-              <Route path="/employee" element={<EmployeePage />} />
             </Routes>
           </div>
           <ToastContainer
