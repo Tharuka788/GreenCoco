@@ -35,15 +35,34 @@ const EmployeeDashboard = () => {
 
   const handleDelete = async (id) => {
     if (window.confirm('Are you sure you want to delete this employee?')) {
+      const toastId = toast.loading('Deleting employee...');
+  
       try {
         await axios.delete(`/employees/${id}`);
-        setEmployees(employees.filter((employee) => employee._id !== id));
-        toast.success('Employee deleted successfully');
+        setEmployees((prevEmployees) =>
+          prevEmployees.filter((employee) => employee._id !== id)
+        );
+        toast.update(toastId, {
+          render: 'Employee deleted successfully',
+          type: 'success',
+          isLoading: false,
+          autoClose: 3000,
+          closeButton: true,
+          closeOnClick: true,
+        });
       } catch (err) {
-        toast.error('Failed to delete employee');
+        toast.update(toastId, {
+          render: 'Failed to delete employee',
+          type: 'error',
+          isLoading: false,
+          autoClose: 3000,
+          closeButton: true,
+          closeOnClick: true,
+        });
       }
     }
   };
+  
 
   const toggleAddForm = () => {
     setShowAddForm(!showAddForm);
