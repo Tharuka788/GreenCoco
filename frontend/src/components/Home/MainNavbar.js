@@ -20,6 +20,7 @@ import {
   faExchangeAlt,
   faPeopleCarry,
   faSignInAlt,
+  faUserPlus, // Added for Admin Register
 } from '@fortawesome/free-solid-svg-icons';
 
 const MainNavbar = () => {
@@ -94,6 +95,9 @@ const MainNavbar = () => {
   const isSupplierActive = ['/suppliers'].includes(location.pathname);
 
   const isOrdersActive = ['/orders', '/orders/add'].includes(location.pathname);
+
+  const isAdminLoginActive = location.pathname === '/admin/login';
+  const isAdminRegisterActive = location.pathname === '/admin/register';
 
   const navbarStyles = `
     @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap');
@@ -538,6 +542,16 @@ const MainNavbar = () => {
                 onClick={closeMenu}
               >
                 <FontAwesomeIcon icon={faSignInAlt} /> Login
+              </Link>
+            </li>
+            <li role="none">
+              <Link
+                to="/admin/login"
+                className={isAdminLoginActive ? 'active' : ''}
+                role="menuitem"
+                onClick={closeMenu}
+              >
+                <FontAwesomeIcon icon={faSignInAlt} /> Admin Login
               </Link>
             </li>
           </ul>

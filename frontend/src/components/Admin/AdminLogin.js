@@ -1,23 +1,36 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { toast } from 'react-toastify';
 import { useNavigate, Link } from 'react-router-dom';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faFacebookF, faTwitter, faGoogle } from '@fortawesome/free-brands-svg-icons';
 
-const Register = () => {
+const AdminLogin = () => {
   const [formData, setFormData] = useState({
-    name: '',
     email: '',
-    phoneNumber: '',
-    gender: '',
     password: '',
-    confirmPassword: '',
-    role: 'user',
   });
+  const [isLoading, setIsLoading] = useState(false);
 
-  const { name, email, phoneNumber, gender, password, confirmPassword, role } = formData;
+  const { email, password } = formData;
   const navigate = useNavigate();
+
+  useEffect(() => {
+    const token = localStorage.getItem('token');
+    if (token) {
+      try {
+        const decoded = JSON.parse(atob(token.split('.')[1]));
+        if (decoded.role === 'admin') {
+          console.log('Admin already logged in, navigating to /admin');
+          navigate('/admin', { replace: true });
+        }
+      } catch (error) {
+        console.error('Error decoding token:', error);
+        toast.error('Invalid token. Please log in again.');
+        localStorage.removeItem('token');
+      }
+    }
+  }, [navigate]);
 
   const onChange = (e) =>
     setFormData({ ...formData, [e.target.name]: e.target.value });
@@ -25,46 +38,43 @@ const Register = () => {
   const onSubmit = async (e) => {
     e.preventDefault();
 
-    if (!name || !email || !phoneNumber || !gender || !password || !confirmPassword) {
+    if (!email || !password) {
       toast.error('Please fill in all fields');
       return;
     }
 
-    if (password !== confirmPassword) {
-      toast.error('Passwords do not match');
+    const emailRegex = /^\w+([.-]?\w+)*@\w+([.-]?\w+)*(\.\w{2,3})+$/;
+    if (!emailRegex.test(email)) {
+      toast.error('Please enter a valid email address');
       return;
     }
 
-    if (password.length < 6) {
-      toast.error('Password must be at least 6 characters long');
-      return;
-    }
-
-    if (phoneNumber.length !== 10 || !/^\d+$/.test(phoneNumber)) {
-      toast.error('Please enter a valid 10-digit phone number');
-      return;
-    }
-
-    if (!['male', 'female', 'other'].includes(gender)) {
-      toast.error('Please select a valid gender');
-      return;
-    }
-
+    setIsLoading(true);
     try {
-      const res = await axios.post('http://localhost:5000/api/users/register', formData);
-      toast.success('Registration successful! You can now log in.');
-      setFormData({
-        name: '',
-        email: '',
-        phoneNumber: '',
-        gender: '',
-        password: '',
-        confirmPassword: '',
-        role: 'user',
-      });
-      navigate('/login');
+      console.log('Attempting to log in admin with email:', email);
+      const res = await axios.post('http://localhost:5000/api/admins/login', formData);
+      console.log('Login response:', res.data);
+
+      if (!res.data.token) {
+        throw new Error('No token received from server');
+      }
+
+      toast.success('Admin login successful!');
+      localStorage.setItem('token', res.data.token);
+      console.log('Token stored in localStorage:', localStorage.getItem('token'));
+      console.log('Navigating to /admin');
+      navigate('/admin', { replace: true });
     } catch (err) {
-      toast.error(err.response?.data?.message || 'Registration failed');
+      console.error('Login error:', err);
+      if (err.response) {
+        toast.error(err.response.data.message || 'Admin login failed');
+      } else if (err.request) {
+        toast.error('Server not responding. Please try again later.');
+      } else {
+        toast.error(err.message || 'An unexpected error occurred');
+      }
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -151,8 +161,7 @@ const Register = () => {
       margin-bottom: 20px;
     }
 
-    .form-group input,
-    .form-group select {
+    .form-group input {
       width: 100%;
       padding: 12px;
       font-size: 1rem;
@@ -163,18 +172,26 @@ const Register = () => {
       transition: border-color 0.3s;
     }
 
-    .form-group input:focus,
-    .form-group select:focus {
+    .form-group input:focus {
       border-color: #34D399;
     }
 
-    .auth-checkbox {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      margin-bottom: 20px;
+    .form-group input:disabled {
+      background: #f0f0f0;
+      cursor: not-allowed;
+    }
+
+    .forgot-password {
+      display: block;
+      text-align: right;
       font-size: 0.9rem;
-      color: #666666;
+      color: #34D399;
+      text-decoration: none;
+      margin-bottom: 20px;
+    }
+
+    .forgot-password:hover {
+      text-decoration: underline;
     }
 
     .auth-button {
@@ -194,20 +211,25 @@ const Register = () => {
       background: linear-gradient(90deg, #059669 0%, #34D399 100%);
     }
 
-    .login-link {
+    .auth-button:disabled {
+      background: #cccccc;
+      cursor: not-allowed;
+    }
+
+    .signup-link {
       text-align: center;
       margin-top: 20px;
       font-size: 0.9rem;
       color: #666666;
     }
 
-    .login-link a {
+    .signup-link a {
       color: #34D399;
       text-decoration: none;
       font-weight: 500;
     }
 
-    .login-link a:hover {
+    .signup-link a:hover {
       text-decoration: underline;
     }
 
@@ -242,6 +264,11 @@ const Register = () => {
 
     .social-icon:hover {
       transform: scale(1.1);
+    }
+
+    .social-icon:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
     }
 
     .social-icon.facebook {
@@ -281,22 +308,12 @@ const Register = () => {
       <style dangerouslySetInnerHTML={{ __html: styles }} />
       <div className="auth-page">
         <form className="auth-form" onSubmit={onSubmit}>
-          <h2>Register Form</h2>
+          <h2>Admin Login Form</h2>
           <div className="auth-tabs">
-            <Link to="/login">
-              <button type="button" className="auth-tab">Login</button>
+            <button type="button" className="auth-tab active">Login</button>
+            <Link to="/admin/register">
+              <button type="button" className="auth-tab">Signup</button>
             </Link>
-            <button type="button" className="auth-tab active">Signup</button>
-          </div>
-          <div className="form-group">
-            <input
-              type="text"
-              name="name"
-              value={name}
-              onChange={onChange}
-              placeholder="Name"
-              required
-            />
           </div>
           <div className="form-group">
             <input
@@ -306,30 +323,8 @@ const Register = () => {
               onChange={onChange}
               placeholder="Email Address"
               required
+              disabled={isLoading}
             />
-          </div>
-          <div className="form-group">
-            <input
-              type="text"
-              name="phoneNumber"
-              value={phoneNumber}
-              onChange={onChange}
-              placeholder="Phone No"
-              required
-            />
-          </div>
-          <div className="form-group">
-            <select
-              name="gender"
-              value={gender}
-              onChange={onChange}
-              required
-            >
-              <option value="">Select Gender</option>
-              <option value="male">Male</option>
-              <option value="female">Female</option>
-              <option value="other">Other</option>
-            </select>
           </div>
           <div className="form-group">
             <input
@@ -339,48 +334,28 @@ const Register = () => {
               onChange={onChange}
               placeholder="Password"
               required
+              disabled={isLoading}
             />
           </div>
-          <div className="form-group">
-            <input
-              type="password"
-              name="confirmPassword"
-              value={confirmPassword}
-              onChange={onChange}
-              placeholder="Confirm Password"
-              required
-            />
-          </div>
-          <div className="form-group">
-            <select
-              name="role"
-              value={role}
-              onChange={onChange}
-            >
-              <option value="user">User</option>
-              <option value="supplier">Supplier</option>
-            </select>
-          </div>
-          <div className="auth-checkbox">
-            <input type="checkbox" id="terms" required />
-            <label htmlFor="terms">Accept terms and conditions & privacy policy</label>
-          </div>
-          <button type="submit" className="auth-button">
-            REGISTER NOW
+          <Link to="#" className="forgot-password">
+            Forget password?
+          </Link>
+          <button type="submit" className="auth-button" disabled={isLoading}>
+            {isLoading ? 'Logging in...' : 'LOGIN NOW'}
           </button>
-          <div className="login-link">
-            Already have an account? <Link to="/login">Sign in now</Link>
+          <div className="signup-link">
+            Not a member? <Link to="/admin/register">Signup now</Link>
           </div>
           <div className="social-login">
             <p>Login with social</p>
             <div className="social-icons">
-              <button className="social-icon facebook" aria-label="Login with Facebook">
+              <button className="social-icon facebook" aria-label="Login with Facebook" disabled={isLoading}>
                 <FontAwesomeIcon icon={faFacebookF} />
               </button>
-              <button className="social-icon twitter" aria-label="Login with Twitter">
+              <button className="social-icon twitter" aria-label="Login with Twitter" disabled={isLoading}>
                 <FontAwesomeIcon icon={faTwitter} />
               </button>
-              <button className="social-icon google" aria-label="Login with Google">
+              <button className="social-icon google" aria-label="Login with Google" disabled={isLoading}>
                 <FontAwesomeIcon icon={faGoogle} />
               </button>
             </div>
@@ -391,4 +366,4 @@ const Register = () => {
   );
 };
 
-export default Register;
+export default AdminLogin;
