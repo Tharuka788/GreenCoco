@@ -5,9 +5,10 @@ const financeRoutes = require('./routes/financeRoutes');
 const inventorys = require('./routes/inventorys');
 const userRoutes = require('./routes/userRoutes');
 const supplierRoutes = require('./routes/supplierRoutes');
-const orderRoutes = require('./routes/orderRoutes'); // Add order routes
+const orderRoutes = require('./routes/orderRoutes');
 const employeeRoutes = require('./routes/EmployeeRoutes');
 const attendanceRoutes = require('./routes/AttendanceRoutes');
+const adminRoutes = require('./routes/adminRoutes'); // Add admin routes
 const errorHandler = require('./middleware/errorHandler');
 const cors = require('cors');
 
@@ -34,9 +35,11 @@ app.use('/api/finance', financeRoutes);
 app.use('/inventory', inventorys);
 app.use('/api/users', userRoutes);
 app.use('/api/suppliers', supplierRoutes);
-app.use('/api/orders', orderRoutes); // Add order routes
+app.use('/api/orders', orderRoutes);
 app.use('/employees', employeeRoutes);
 app.use('/attendance', attendanceRoutes);
+app.use('/api/admins', adminRoutes); // Add admin routes
+
 
 // Error Handler
 app.use(errorHandler);
