@@ -6,14 +6,16 @@ import { faUsers, faPlus, faEdit, faTrash } from '@fortawesome/free-solid-svg-ic
 import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 
-// Set axios base URL to avoid 404 errors
+// Set axios base URL and default headers
 axios.defaults.baseURL = 'http://localhost:5000';
+axios.defaults.headers.common['Content-Type'] = 'application/json';
 
 const EmployeeDashboard = () => {
   const [employees, setEmployees] = useState([]);
   const [showAddForm, setShowAddForm] = useState(false);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+  const [editingEmployee, setEditingEmployee] = useState(null);
 
   useEffect(() => {
     fetchEmployees();
@@ -21,15 +23,16 @@ const EmployeeDashboard = () => {
 
   const fetchEmployees = async () => {
     try {
-      console.log('Fetching employees...');
+      setLoading(true);
+      setError('');
       const response = await axios.get('/employees');
       setEmployees(response.data);
-      setLoading(false);
     } catch (err) {
       console.error('Fetch error:', err);
-      setError('Failed to fetch employees');
-      setLoading(false);
+      setError('Failed to fetch employees. Please try again later.');
       toast.error('Failed to fetch employees');
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -51,8 +54,9 @@ const EmployeeDashboard = () => {
           closeOnClick: true,
         });
       } catch (err) {
+        console.error('Delete error:', err);
         toast.update(toastId, {
-          render: 'Failed to delete employee',
+          render: err.response?.data?.message || 'Failed to delete employee',
           type: 'error',
           isLoading: false,
           autoClose: 3000,
@@ -62,9 +66,35 @@ const EmployeeDashboard = () => {
       }
     }
   };
-  
+
+  const handleEdit = (employee) => {
+    setEditingEmployee(employee);
+    setShowAddForm(true);
+  };
+
+  const handleEmployeeUpdate = (updatedEmployee) => {
+    if (updatedEmployee) {
+      setEmployees(prevEmployees =>
+        prevEmployees.map(emp =>
+          emp._id === updatedEmployee._id ? updatedEmployee : emp
+        )
+      );
+      toast.success('Employee updated successfully!');
+    }
+    setEditingEmployee(null);
+    setShowAddForm(false);
+  };
+
+  const handleAddSuccess = (newEmployee) => {
+    setEmployees(prev => [...prev, newEmployee]);
+    setShowAddForm(false);
+    toast.success('Employee added successfully!');
+  };
 
   const toggleAddForm = () => {
+    if (showAddForm) {
+      setEditingEmployee(null);
+    }
     setShowAddForm(!showAddForm);
   };
 
@@ -197,7 +227,13 @@ const EmployeeDashboard = () => {
           </button>
         </div>
 
-        {showAddForm && <AddEmployeeForm />}
+        {showAddForm && (
+          <AddEmployeeForm 
+            onSuccess={handleAddSuccess}
+            editingEmployee={editingEmployee}
+            onUpdate={handleEmployeeUpdate}
+          />
+        )}
 
         {loading && <div className="loading">Loading employees...</div>}
         {error && <div className="error">{error}</div>}
@@ -219,7 +255,7 @@ const EmployeeDashboard = () => {
                 <tr>
                   <td colSpan="6" style={{ textAlign: 'center' }}>
                     No employees found
-                </td>
+                  </td>
                 </tr>
               ) : (
                 employees.map((employee) => (
@@ -228,9 +264,13 @@ const EmployeeDashboard = () => {
                     <td>{employee.EmployeeId}</td>
                     <td>{employee.DepartmentName}</td>
                     <td>{employee.JobRole}</td>
-                    <td>{employee.NetSalary.toFixed(2)}</td>
+                    <td>{employee.NetSalary?.toFixed(2) || '0.00'}</td>
                     <td className="action-buttons">
-                      <button className="edit" title="Edit Employee">
+                      <button 
+                        className="edit" 
+                        title="Edit Employee"
+                        onClick={() => handleEdit(employee)}
+                      >
                         <FontAwesomeIcon icon={faEdit} />
                       </button>
                       <button

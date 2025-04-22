@@ -3,7 +3,7 @@ const router = express.Router();
 const Employee = require("../models/Employee");
 
 // Create a new employee
-router.post("/employees", async (req, res) => {
+router.post("/", async (req, res) => {
   try {
     const employee = new Employee(req.body);
     await employee.save();
@@ -14,7 +14,7 @@ router.post("/employees", async (req, res) => {
 });
 
 // Get all employees
-router.get("/employees", async (req, res) => {
+router.get("/", async (req, res) => {
   try {
     const employees = await Employee.find();
     res.status(200).send(employees);
@@ -24,7 +24,7 @@ router.get("/employees", async (req, res) => {
 });
 
 // Get a single employee by ID
-router.get("/employees/:id", async (req, res) => {
+router.get("/:id", async (req, res) => {
   try {
     const employee = await Employee.findById(req.params.id);
     if (!employee) {
@@ -37,7 +37,7 @@ router.get("/employees/:id", async (req, res) => {
 });
 
 // Update an employee by ID
-router.put("/employees/:id", async (req, res) => {
+router.put("/:id", async (req, res) => {
   try {
     const employee = await Employee.findByIdAndUpdate(req.params.id, req.body, {
       new: true,
@@ -52,7 +52,7 @@ router.put("/employees/:id", async (req, res) => {
 });
 
 // Delete an employee by ID
-router.delete("/employees/:id", async (req, res) => {
+router.delete("/:id", async (req, res) => {
   try {
     const employee = await Employee.findByIdAndDelete(req.params.id);
     
