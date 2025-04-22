@@ -20,7 +20,7 @@ import {
   faExchangeAlt,
   faPeopleCarry,
   faSignInAlt,
-
+  faUserClock, // Add this import
 } from '@fortawesome/free-solid-svg-icons';
 
 const MainNavbar = () => {
@@ -55,6 +55,7 @@ const MainNavbar = () => {
     setIsInventoryDropdownOpen(false);
     setIsSupplierDropdownOpen(false);
     setIsOrdersDropdownOpen(false);
+    setIsEmployeeDropdownOpen(false);
   };
 
   const toggleInventoryDropdown = () => {
@@ -62,6 +63,7 @@ const MainNavbar = () => {
     setIsFinanceDropdownOpen(false);
     setIsSupplierDropdownOpen(false);
     setIsOrdersDropdownOpen(false);
+    setIsEmployeeDropdownOpen(false);
   };
 
   const toggleSupplierDropdown = () => {
@@ -69,6 +71,7 @@ const MainNavbar = () => {
     setIsFinanceDropdownOpen(false);
     setIsInventoryDropdownOpen(false);
     setIsOrdersDropdownOpen(false);
+    setIsEmployeeDropdownOpen(false);
   };
 
   const toggleOrdersDropdown = () => {
@@ -76,6 +79,7 @@ const MainNavbar = () => {
     setIsFinanceDropdownOpen(false);
     setIsInventoryDropdownOpen(false);
     setIsSupplierDropdownOpen(false);
+    setIsEmployeeDropdownOpen(false);
   };
 
   const toggleEmployeeDropdown = () => {
@@ -107,6 +111,9 @@ const MainNavbar = () => {
 
   const isOrdersActive = ['/orders', '/orders/add'].includes(location.pathname);
 
+  const isEmployeeActive = ['/employee', '/attendance'].includes(location.pathname);
+
+  const isAdminLoginActive = ['/admin/login'].includes(location.pathname);
 
   const navbarStyles = `
     @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap');
@@ -593,7 +600,7 @@ const MainNavbar = () => {
                 </li>
                 <li>
                   <Link to="/employee" onClick={() => { closeMenu(); /* Add any additional logic to show the form */ }}>
-                    <FontAwesomeIcon icon={faUserPlus} /> Add Employee
+                    <FontAwesomeIcon icon={faPlus} /> Add Employee
                   </Link>
                 </li>
                 <li>
