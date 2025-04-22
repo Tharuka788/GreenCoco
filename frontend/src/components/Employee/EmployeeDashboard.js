@@ -2,9 +2,10 @@ import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import AddEmployeeForm from './AddEmployeeForm';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faUsers, faPlus, faEdit, faTrash } from '@fortawesome/free-solid-svg-icons';
+import { faUsers, faPlus, faEdit, faTrash, faFileExport, faUserClock } from '@fortawesome/free-solid-svg-icons';
 import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
+import { Link } from 'react-router-dom';
 
 // Set axios base URL and default headers
 axios.defaults.baseURL = 'http://localhost:5000';
@@ -16,6 +17,9 @@ const EmployeeDashboard = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [editingEmployee, setEditingEmployee] = useState(null);
+  const [searchTerm, setSearchTerm] = useState('');
+  const [filterDepartment, setFilterDepartment] = useState('');
+  const [sortConfig, setSortConfig] = useState({ key: '', direction: '' });
 
   useEffect(() => {
     fetchEmployees();
@@ -97,6 +101,66 @@ const EmployeeDashboard = () => {
     }
     setShowAddForm(!showAddForm);
   };
+
+  const handleSearch = (e) => {
+    setSearchTerm(e.target.value);
+  };
+
+  const handleDepartmentFilter = (e) => {
+    setFilterDepartment(e.target.value);
+  };
+
+  const handleSort = (key) => {
+    let direction = 'ascending';
+    if (sortConfig.key === key && sortConfig.direction === 'ascending') {
+      direction = 'descending';
+    }
+    setSortConfig({ key, direction });
+  };
+
+  const exportToCSV = () => {
+    const headers = ['Name', 'Employee ID', 'Department', 'Job Role', 'Net Salary'];
+    const data = filteredEmployees.map(emp => [
+      emp.EmployeeName,
+      emp.EmployeeId,
+      emp.DepartmentName,
+      emp.JobRole,
+      emp.NetSalary.toFixed(2)
+    ]);
+    
+    const csvContent = [
+      headers.join(','),
+      ...data.map(row => row.join(','))
+    ].join('\n');
+
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const link = document.createElement('a');
+    const url = URL.createObjectURL(blob);
+    link.setAttribute('href', url);
+    link.setAttribute('download', 'employees.csv');
+    link.style.visibility = 'hidden';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
+
+  const filteredEmployees = employees
+    .filter(employee => {
+      const matchesSearch = employee.EmployeeName.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                          employee.EmployeeId.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                          employee.JobRole.toLowerCase().includes(searchTerm.toLowerCase());
+      const matchesDepartment = filterDepartment === '' || employee.DepartmentName === filterDepartment;
+      return matchesSearch && matchesDepartment;
+    })
+    .sort((a, b) => {
+      if (!sortConfig.key) return 0;
+      
+      const direction = sortConfig.direction === 'ascending' ? 1 : -1;
+      if (sortConfig.key === 'NetSalary') {
+        return (a[sortConfig.key] - b[sortConfig.key]) * direction;
+      }
+      return a[sortConfig.key].localeCompare(b[sortConfig.key]) * direction;
+    });
 
   const styles = `
     @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap');
@@ -212,6 +276,61 @@ const EmployeeDashboard = () => {
         font-size: 0.9rem;
       }
     }
+
+    .search-filter-container {
+      display: flex;
+      gap: 16px;
+      margin-bottom: 20px;
+      flex-wrap: wrap;
+    }
+
+    .search-input,
+    .filter-select {
+      padding: 8px 12px;
+      border: 1px solid #ddd;
+      border-radius: 4px;
+      font-size: 1rem;
+      min-width: 200px;
+    }
+
+    .search-input:focus,
+    .filter-select:focus {
+      outline: none;
+      border-color: #2a7458;
+      box-shadow: 0 0 0 2px rgba(42, 116, 88, 0.2);
+    }
+
+    .export-button {
+      background-color: #3498db;
+      color: white;
+      border: none;
+      padding: 10px 20px;
+      font-size: 1rem;
+      border-radius: 4px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      transition: background-color 0.3s;
+    }
+
+    .export-button:hover {
+      background-color: #2980b9;
+    }
+
+    .sortable {
+      cursor: pointer;
+      user-select: none;
+    }
+
+    .sortable:hover {
+      background-color: rgba(42, 116, 88, 0.1);
+    }
+
+    .sort-indicator {
+      display: inline-block;
+      margin-left: 4px;
+    }
   `;
 
   return (
@@ -222,9 +341,39 @@ const EmployeeDashboard = () => {
           <h1>
             <FontAwesomeIcon icon={faUsers} /> Employee Dashboard
           </h1>
-          <button className="add-button" onClick={toggleAddForm}>
-            <FontAwesomeIcon icon={faPlus} /> {showAddForm ? 'Close Form' : 'Add Employee'}
-          </button>
+          <div>
+            <Link to="/attendance" className="attendance-button" style={{ marginRight: '10px' }}>
+              <FontAwesomeIcon icon={faUserClock} /> Attendance
+            </Link>
+            <button className="export-button" onClick={exportToCSV} style={{ marginRight: '10px' }}>
+              <FontAwesomeIcon icon={faFileExport} /> Export to CSV
+            </button>
+            <button className="add-button" onClick={toggleAddForm}>
+              <FontAwesomeIcon icon={faPlus} /> {showAddForm ? 'Close Form' : 'Add Employee'}
+            </button>
+          </div>
+        </div>
+
+        <div className="search-filter-container">
+          <input
+            type="text"
+            placeholder="Search employees..."
+            className="search-input"
+            value={searchTerm}
+            onChange={handleSearch}
+          />
+          <select
+            className="filter-select"
+            value={filterDepartment}
+            onChange={handleDepartmentFilter}
+          >
+            <option value="">All Departments</option>
+            <option value="HR">Human Resources</option>
+            <option value="IT">Information Technology</option>
+            <option value="Finance">Finance</option>
+            <option value="Marketing">Marketing</option>
+            <option value="Operations">Operations</option>
+          </select>
         </div>
 
         {showAddForm && (
@@ -238,55 +387,88 @@ const EmployeeDashboard = () => {
         {loading && <div className="loading">Loading employees...</div>}
         {error && <div className="error">{error}</div>}
 
-        {!loading && !error && (
-          <table className="employee-table">
-            <thead>
+        <table className="employee-table">
+          <thead>
+            <tr>
+              <th className="sortable" onClick={() => handleSort('EmployeeName')}>
+                Name
+                {sortConfig.key === 'EmployeeName' && (
+                  <span className="sort-indicator">
+                    {sortConfig.direction === 'ascending' ? ' ↑' : ' ↓'}
+                  </span>
+                )}
+              </th>
+              <th className="sortable" onClick={() => handleSort('EmployeeId')}>
+                Employee ID
+                {sortConfig.key === 'EmployeeId' && (
+                  <span className="sort-indicator">
+                    {sortConfig.direction === 'ascending' ? ' ↑' : ' ↓'}
+                  </span>
+                )}
+              </th>
+              <th className="sortable" onClick={() => handleSort('DepartmentName')}>
+                Department
+                {sortConfig.key === 'DepartmentName' && (
+                  <span className="sort-indicator">
+                    {sortConfig.direction === 'ascending' ? ' ↑' : ' ↓'}
+                  </span>
+                )}
+              </th>
+              <th className="sortable" onClick={() => handleSort('JobRole')}>
+                Job Role
+                {sortConfig.key === 'JobRole' && (
+                  <span className="sort-indicator">
+                    {sortConfig.direction === 'ascending' ? ' ↑' : ' ↓'}
+                  </span>
+                )}
+              </th>
+              <th className="sortable" onClick={() => handleSort('NetSalary')}>
+                Net Salary (LKR)
+                {sortConfig.key === 'NetSalary' && (
+                  <span className="sort-indicator">
+                    {sortConfig.direction === 'ascending' ? ' ↑' : ' ↓'}
+                  </span>
+                )}
+              </th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            {filteredEmployees.length === 0 ? (
               <tr>
-                <th>Name</th>
-                <th>Employee ID</th>
-                <th>Department</th>
-                <th>Job Role</th>
-                <th>Net Salary (LKR)</th>
-                <th>Actions</th>
+                <td colSpan="6" style={{ textAlign: 'center' }}>
+                  No employees found
+                </td>
               </tr>
-            </thead>
-            <tbody>
-              {employees.length === 0 ? (
-                <tr>
-                  <td colSpan="6" style={{ textAlign: 'center' }}>
-                    No employees found
+            ) : (
+              filteredEmployees.map((employee) => (
+                <tr key={employee._id}>
+                  <td>{employee.EmployeeName}</td>
+                  <td>{employee.EmployeeId}</td>
+                  <td>{employee.DepartmentName}</td>
+                  <td>{employee.JobRole}</td>
+                  <td>{employee.NetSalary?.toFixed(2) || '0.00'}</td>
+                  <td className="action-buttons">
+                    <button 
+                      className="edit" 
+                      title="Edit Employee"
+                      onClick={() => handleEdit(employee)}
+                    >
+                      <FontAwesomeIcon icon={faEdit} />
+                    </button>
+                    <button
+                      className="delete"
+                      title="Delete Employee"
+                      onClick={() => handleDelete(employee._id)}
+                    >
+                      <FontAwesomeIcon icon={faTrash} />
+                    </button>
                   </td>
                 </tr>
-              ) : (
-                employees.map((employee) => (
-                  <tr key={employee._id}>
-                    <td>{employee.EmployeeName}</td>
-                    <td>{employee.EmployeeId}</td>
-                    <td>{employee.DepartmentName}</td>
-                    <td>{employee.JobRole}</td>
-                    <td>{employee.NetSalary?.toFixed(2) || '0.00'}</td>
-                    <td className="action-buttons">
-                      <button 
-                        className="edit" 
-                        title="Edit Employee"
-                        onClick={() => handleEdit(employee)}
-                      >
-                        <FontAwesomeIcon icon={faEdit} />
-                      </button>
-                      <button
-                        className="delete"
-                        title="Delete Employee"
-                        onClick={() => handleDelete(employee._id)}
-                      >
-                        <FontAwesomeIcon icon={faTrash} />
-                      </button>
-                    </td>
-                  </tr>
-                ))
-              )}
-            </tbody>
-          </table>
-        )}
+              ))
+            )}
+          </tbody>
+        </table>
         <ToastContainer
           position="top-right"
           autoClose={3000}

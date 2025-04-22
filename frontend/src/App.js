@@ -18,6 +18,7 @@ import OrdersDashboard from './components/supplier/OrdersDashboard';
 import AddOrder from './components/supplier/AddOrder';
 import SupplierDashboard from './components/supplier/SupplierDashboard';
 import EmployeeDashboard from './components/Employee/EmployeeDashboard';
+import AttendanceManagement from './components/Employee/AttendanceManagement';
 import { FinanceProvider } from './FinanceContext';
 import { ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
@@ -138,8 +139,9 @@ function App() {
               </Route>
               <Route path="/suppliers" element={<SupplierDashboard />} />
 
-              {/* Employee route */}
+              {/* Employee routes */}
               <Route path="/employee" element={<EmployeeDashboard />} />
+              <Route path="/attendance" element={<AttendanceManagement />} />
 
               {/* Placeholder route for delivery */}
               <Route path="/delivery" element={<DeliveryPage />} />

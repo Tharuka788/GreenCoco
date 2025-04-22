@@ -20,6 +20,8 @@ import {
   faExchangeAlt,
   faPeopleCarry,
   faSignInAlt,
+  faUserPlus,
+  faUserClock,
 } from '@fortawesome/free-solid-svg-icons';
 
 const MainNavbar = () => {
@@ -29,6 +31,7 @@ const MainNavbar = () => {
   const [isInventoryDropdownOpen, setIsInventoryDropdownOpen] = useState(false);
   const [isSupplierDropdownOpen, setIsSupplierDropdownOpen] = useState(false);
   const [isOrdersDropdownOpen, setIsOrdersDropdownOpen] = useState(false);
+  const [isEmployeeDropdownOpen, setIsEmployeeDropdownOpen] = useState(false);
 
   const toggleMenu = () => {
     setIsOpen(!isOpen);
@@ -36,6 +39,7 @@ const MainNavbar = () => {
     if (isInventoryDropdownOpen) setIsInventoryDropdownOpen(false);
     if (isSupplierDropdownOpen) setIsSupplierDropdownOpen(false);
     if (isOrdersDropdownOpen) setIsOrdersDropdownOpen(false);
+    if (isEmployeeDropdownOpen) setIsEmployeeDropdownOpen(false);
   };
 
   const closeMenu = () => {
@@ -44,6 +48,7 @@ const MainNavbar = () => {
     setIsInventoryDropdownOpen(false);
     setIsSupplierDropdownOpen(false);
     setIsOrdersDropdownOpen(false);
+    setIsEmployeeDropdownOpen(false);
   };
 
   const toggleFinanceDropdown = () => {
@@ -74,6 +79,14 @@ const MainNavbar = () => {
     setIsSupplierDropdownOpen(false);
   };
 
+  const toggleEmployeeDropdown = () => {
+    setIsEmployeeDropdownOpen(!isEmployeeDropdownOpen);
+    setIsFinanceDropdownOpen(false);
+    setIsInventoryDropdownOpen(false);
+    setIsSupplierDropdownOpen(false);
+    setIsOrdersDropdownOpen(false);
+  };
+
   const isFinanceActive = [
     '/finance',
     '/finance/income',
@@ -94,6 +107,11 @@ const MainNavbar = () => {
   const isSupplierActive = ['/suppliers'].includes(location.pathname);
 
   const isOrdersActive = ['/orders', '/orders/add'].includes(location.pathname);
+
+  const isEmployeeActive = [
+    '/employee',
+    '/attendance'
+  ].includes(location.pathname);
 
   const navbarStyles = `
     @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap');
@@ -170,7 +188,7 @@ const MainNavbar = () => {
       padding: 10px 15px;
       color: #e6f0ea;
       border-radius: 5px;
-      transition: background 0.3s ease, color 0.3s ease;
+      transition: all 0.3s ease;
     }
 
     .dropdown-toggle:hover {
@@ -189,44 +207,51 @@ const MainNavbar = () => {
       top: 100%;
       left: 0;
       background: rgba(59, 156, 115, 0.9);
+      backdrop-filter: blur(10px);
       list-style: none;
-      padding: 0;
+      padding: 8px 0;
       margin: 0;
       border-radius: 5px;
       box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
-      display: none;
+      opacity: 0;
+      visibility: hidden;
+      transform: translateY(-10px);
+      transition: all 0.3s ease;
       min-width: 200px;
       z-index: 1001;
     }
 
-    .navbar-menu li:hover .dropdown-menu {
-      display: block;
-    }
-
-    .dropdown-menu.active {
-      display: block;
+    .dropdown-menu.show {
+      opacity: 1;
+      visibility: visible;
+      transform: translateY(0);
     }
 
     .dropdown-menu li {
       margin: 0;
+      padding: 0;
     }
 
     .dropdown-menu a {
-      padding: 10px 15px;
-      color: #e6f0ea;
-      display: block;
-      border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+      padding: 10px 20px;
+      color: #ffffff;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      transition: background 0.3s ease;
     }
 
     .dropdown-menu a:hover {
       background: rgba(255, 255, 255, 0.1);
-      color: #ffffff;
     }
 
-    .dropdown-menu a.active {
-      background: rgba(255, 255, 255, 0.15);
-      color: #ffffff;
-      font-weight: 600;
+    .dropdown-arrow {
+      font-size: 0.8em;
+      transition: transform 0.3s ease;
+    }
+
+    .dropdown-arrow.open {
+      transform: rotate(180deg);
     }
 
     .navbar-toggle {
@@ -243,7 +268,7 @@ const MainNavbar = () => {
         height: auto;
         flex-direction: column;
         align-items: flex-start;
-        padding: 10px 20px;
+        padding: 0 15px;
       }
 
       .navbar-logo {
@@ -259,53 +284,72 @@ const MainNavbar = () => {
       }
 
       .navbar-menu {
-        display: ${isOpen ? 'flex' : 'none'};
+        position: absolute;
+        top: 80px;
+        left: 0;
+        right: 0;
+        background: rgba(42, 116, 88, 0.95);
+        backdrop-filter: blur(10px);
+        padding: 20px;
         flex-direction: column;
-        width: 100%;
-        background: #2a7458;
-        padding: 10px 0;
+        gap: 10px;
+        transform: translateY(-100%);
+        opacity: 0;
+        visibility: hidden;
+        transition: all 0.3s ease;
+      }
+
+      .navbar-menu.active {
+        transform: translateY(0);
+        opacity: 1;
+        visibility: visible;
       }
 
       .navbar-menu li {
         margin: 0;
-      }
-
-      .navbar-menu a {
-        padding: 15px 20px;
-        font-size: 1.1rem;
-        border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-      }
-
-      .navbar-menu a.active {
-        background: rgba(255, 255, 255, 0.3);
-        color: #ffffff;
-      }
-
-      .dropdown-toggle {
-        padding: 15px 20px;
-        font-size: 1.1rem;
-        border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-      }
-
-      .dropdown-toggle.active {
-        background: rgba(255, 255, 255, 0.3);
-        color: #ffffff;
-      }
-
-      .navbar-menu li:hover .dropdown-menu {
-        display: none;
+        width: 100%;
       }
 
       .dropdown-menu {
         position: static;
+        background: rgba(59, 156, 115, 0.5);
+        margin-top: 5px;
+        transform: none;
         box-shadow: none;
-        background: rgba(50, 142, 110, 0.9);
         width: 100%;
+        padding: 0;
+      }
+
+      .dropdown-menu.show {
+        opacity: 1;
+        visibility: visible;
+        transform: none;
+      }
+
+      .dropdown-toggle {
+        width: 100%;
+        justify-content: space-between;
+        padding: 15px 20px;
+        font-size: 1.1rem;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.1);
       }
 
       .dropdown-menu a {
-        padding-left: 30px;
+        padding: 12px 30px;
         font-size: 1rem;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+      }
+
+      .dropdown-menu a:last-child {
+        border-bottom: none;
+      }
+
+      .dropdown-menu li {
+        margin: 0;
+      }
+
+      .dropdown-arrow {
+        margin-left: auto;
       }
     }
   `;
@@ -341,10 +385,13 @@ const MainNavbar = () => {
                 aria-expanded={isFinanceDropdownOpen}
               >
                 <FontAwesomeIcon icon={faWallet} /> Finance
-                <FontAwesomeIcon icon={faChevronDown} style={{ marginLeft: '5px' }} />
+                <FontAwesomeIcon 
+                  icon={faChevronDown} 
+                  className={`dropdown-arrow ${isFinanceDropdownOpen ? 'open' : ''}`}
+                />
               </div>
               <ul
-                className={`dropdown-menu ${isFinanceDropdownOpen ? 'active' : ''}`}
+                className={`dropdown-menu ${isFinanceDropdownOpen ? 'show' : ''}`}
                 role="menu"
               >
                 <li role="none">
@@ -408,10 +455,13 @@ const MainNavbar = () => {
                 aria-expanded={isInventoryDropdownOpen}
               >
                 <FontAwesomeIcon icon={faBox} /> Inventory
-                <FontAwesomeIcon icon={faChevronDown} style={{ marginLeft: '5px' }} />
+                <FontAwesomeIcon 
+                  icon={faChevronDown} 
+                  className={`dropdown-arrow ${isInventoryDropdownOpen ? 'open' : ''}`}
+                />
               </div>
               <ul
-                className={`dropdown-menu ${isInventoryDropdownOpen ? 'active' : ''}`}
+                className={`dropdown-menu ${isInventoryDropdownOpen ? 'show' : ''}`}
                 role="menu"
               >
                 <li role="none">
@@ -465,10 +515,13 @@ const MainNavbar = () => {
                 aria-expanded={isSupplierDropdownOpen}
               >
                 <FontAwesomeIcon icon={faPeopleCarry} /> Supplier
-                <FontAwesomeIcon icon={faChevronDown} style={{ marginLeft: '5px' }} />
+                <FontAwesomeIcon 
+                  icon={faChevronDown} 
+                  className={`dropdown-arrow ${isSupplierDropdownOpen ? 'open' : ''}`}
+                />
               </div>
               <ul
-                className={`dropdown-menu ${isSupplierDropdownOpen ? 'active' : ''}`}
+                className={`dropdown-menu ${isSupplierDropdownOpen ? 'show' : ''}`}
                 role="menu"
               >
                 <li role="none">
@@ -492,10 +545,13 @@ const MainNavbar = () => {
                 aria-expanded={isOrdersDropdownOpen}
               >
                 <FontAwesomeIcon icon={faTruck} /> Orders
-                <FontAwesomeIcon icon={faChevronDown} style={{ marginLeft: '5px' }} />
+                <FontAwesomeIcon 
+                  icon={faChevronDown} 
+                  className={`dropdown-arrow ${isOrdersDropdownOpen ? 'open' : ''}`}
+                />
               </div>
               <ul
-                className={`dropdown-menu ${isOrdersDropdownOpen ? 'active' : ''}`}
+                className={`dropdown-menu ${isOrdersDropdownOpen ? 'show' : ''}`}
                 role="menu"
               >
                 <li role="none">
@@ -521,14 +577,36 @@ const MainNavbar = () => {
               </ul>
             </li>
             <li role="none">
-              <Link
-                to="/employee"
-                className={location.pathname === '/employee' ? 'active' : ''}
+              <div
+                className={`dropdown-toggle ${isEmployeeActive ? 'active' : ''}`}
+                onClick={toggleEmployeeDropdown}
                 role="menuitem"
-                onClick={closeMenu}
+                aria-haspopup="true"
+                aria-expanded={isEmployeeDropdownOpen}
               >
-                <FontAwesomeIcon icon={faUsers} /> Employee Management
-              </Link>
+                <FontAwesomeIcon icon={faUsers} /> Employees
+                <FontAwesomeIcon
+                  icon={faChevronDown}
+                  className={`dropdown-arrow ${isEmployeeDropdownOpen ? 'open' : ''}`}
+                />
+              </div>
+              <ul className={`dropdown-menu ${isEmployeeDropdownOpen ? 'show' : ''}`}>
+                <li>
+                  <Link to="/employee" onClick={closeMenu}>
+                    <FontAwesomeIcon icon={faChartBar} /> Dashboard
+                  </Link>
+                </li>
+                <li>
+                  <Link to="/employee" onClick={() => { closeMenu(); /* Add any additional logic to show the form */ }}>
+                    <FontAwesomeIcon icon={faUserPlus} /> Add Employee
+                  </Link>
+                </li>
+                <li>
+                  <Link to="/attendance" onClick={closeMenu}>
+                    <FontAwesomeIcon icon={faUserClock} /> Attendance
+                  </Link>
+                </li>
+              </ul>
             </li>
             <li role="none">
               <Link
