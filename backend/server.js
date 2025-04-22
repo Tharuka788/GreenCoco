@@ -7,6 +7,7 @@ const userRoutes = require('./routes/userRoutes');
 const supplierRoutes = require('./routes/supplierRoutes');
 const orderRoutes = require('./routes/orderRoutes'); // Add order routes
 const employeeRoutes = require('./routes/EmployeeRoutes');
+const attendanceRoutes = require('./routes/AttendanceRoutes');
 const errorHandler = require('./middleware/errorHandler');
 const cors = require('cors');
 
@@ -35,6 +36,7 @@ app.use('/api/users', userRoutes);
 app.use('/api/suppliers', supplierRoutes);
 app.use('/api/orders', orderRoutes); // Add order routes
 app.use('/employees', employeeRoutes);
+app.use('/attendance', attendanceRoutes);
 
 // Error Handler
 app.use(errorHandler);
