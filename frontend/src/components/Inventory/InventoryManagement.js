@@ -12,8 +12,81 @@ const InventoryManagement = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const [sortConfig, setSortConfig] = useState({ key: 'totalWeight', direction: 'asc' });
   const [weightBreakdown, setWeightBreakdown] = useState({});
+  const [inventoryValue, setInventoryValue] = useState(0);
+  const [turnoverRate, setTurnoverRate] = useState(0);
+  const [batchTracking, setBatchTracking] = useState({});
+  const [alerts, setAlerts] = useState([]);
   const navigate = useNavigate();
   const LOW_STOCK_THRESHOLD = 10;
+
+  // Calculate inventory value (mock prices per waste type)
+  const calculateInventoryValue = (items) => {
+    const pricePerKg = {
+      'Organic': 2.5,
+      'Plastic': 1.8,
+      'Paper': 1.2,
+      'Metal': 3.5,
+      'Glass': 1.0,
+      'Electronic': 5.0
+    };
+
+    return items.reduce((total, item) => {
+      const price = pricePerKg[item.wasteType] || 1.0;
+      return total + (item.totalWeight * price);
+    }, 0);
+  };
+
+  // Calculate inventory turnover rate (mock data for demonstration)
+  const calculateTurnoverRate = (items) => {
+    const totalInventory = items.reduce((sum, item) => sum + item.totalWeight, 0);
+    // Mock annual sales data (replace with actual data in production)
+    const annualSales = totalInventory * 1.5;
+    return totalInventory > 0 ? (annualSales / totalInventory) : 0;
+  };
+
+  // Track batches and their movement
+  const trackBatches = (items) => {
+    return items.reduce((tracking, item) => {
+      if (!tracking[item.batchId]) {
+        tracking[item.batchId] = {
+          totalWeight: item.totalWeight,
+          lastUpdated: item.collectionDate,
+          location: item.sourceLocation,
+          status: item.totalWeight < LOW_STOCK_THRESHOLD ? 'Low Stock' : 'In Stock'
+        };
+      }
+      return tracking;
+    }, {});
+  };
+
+  // Generate inventory alerts
+  const generateAlerts = (items) => {
+    const alerts = [];
+    const today = new Date();
+    
+    items.forEach(item => {
+      const collectionDate = new Date(item.collectionDate);
+      const daysSinceCollection = Math.floor((today - collectionDate) / (1000 * 60 * 60 * 24));
+      
+      if (item.totalWeight < LOW_STOCK_THRESHOLD) {
+        alerts.push({
+          type: 'low_stock',
+          message: `Low stock alert for batch ${item.batchId} (${item.totalWeight} kg)`,
+          severity: 'high'
+        });
+      }
+      
+      if (daysSinceCollection > 30) {
+        alerts.push({
+          type: 'aging_inventory',
+          message: `Batch ${item.batchId} has been in inventory for ${daysSinceCollection} days`,
+          severity: 'medium'
+        });
+      }
+    });
+    
+    return alerts;
+  };
 
   // Fetch inventory items and calculate weights
   useEffect(() => {
@@ -41,6 +114,22 @@ const InventoryManagement = () => {
           return acc;
         }, {});
         setWeightBreakdown(breakdown);
+
+        // Calculate inventory value
+        const value = calculateInventoryValue(data);
+        setInventoryValue(value);
+
+        // Calculate turnover rate
+        const turnover = calculateTurnoverRate(data);
+        setTurnoverRate(turnover);
+
+        // Track batches
+        const batchData = trackBatches(data);
+        setBatchTracking(batchData);
+
+        // Generate alerts
+        const inventoryAlerts = generateAlerts(data);
+        setAlerts(inventoryAlerts);
       } catch (err) {
         setError(`Error: ${err.message}. Please try again later.`);
       }
@@ -393,6 +482,141 @@ const InventoryManagement = () => {
       margin-bottom: 10px;
     }
 
+    .alerts-section {
+      margin: 20px 0;
+      padding: 15px;
+      background: white;
+      border-radius: 8px;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+    }
+
+    .alerts-section h3 {
+      color: #004d40;
+      margin-bottom: 15px;
+      font-size: 18px;
+    }
+
+    .alert {
+      padding: 12px;
+      margin-bottom: 10px;
+      border-radius: 6px;
+      display: flex;
+      align-items: center;
+      font-size: 14px;
+      animation: slideIn 0.3s ease;
+    }
+
+    .alert-high {
+      background: #ffebee;
+      color: #d32f2f;
+      border-left: 4px solid #d32f2f;
+    }
+
+    .alert-medium {
+      background: #fff3e0;
+      color: #ef6c00;
+      border-left: 4px solid #ef6c00;
+    }
+
+    .inventory-metrics {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 20px;
+      margin: 20px 0;
+    }
+
+    .metric-card {
+      background: white;
+      padding: 20px;
+      border-radius: 8px;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+      text-align: center;
+      transition: transform 0.3s ease;
+    }
+
+    .metric-card:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 4px 15px rgba(0,0,0,0.15);
+    }
+
+    .metric-card h3 {
+      color: #004d40;
+      margin-bottom: 10px;
+      font-size: 16px;
+    }
+
+    .metric-value {
+      font-size: 24px;
+      font-weight: 600;
+      color: #00796b;
+    }
+
+    .batch-tracking {
+      margin: 20px 0;
+      padding: 15px;
+      background: white;
+      border-radius: 8px;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+    }
+
+    .batch-tracking h3 {
+      color: #004d40;
+      margin-bottom: 15px;
+      font-size: 18px;
+    }
+
+    .batch-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+      gap: 15px;
+    }
+
+    .batch-card {
+      background: #f5f5f5;
+      padding: 15px;
+      border-radius: 6px;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+      transition: transform 0.3s ease;
+    }
+
+    .batch-card:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 4px 10px rgba(0,0,0,0.15);
+    }
+
+    .batch-card h4 {
+      color: #00695c;
+      margin-bottom: 10px;
+      font-size: 16px;
+    }
+
+    .batch-card p {
+      margin: 5px 0;
+      color: #37474f;
+      font-size: 14px;
+    }
+
+    .status-badge.low-stock {
+      background: #d32f2f;
+      color: white;
+    }
+
+    .status-badge.in-stock {
+      background: #2e7d32;
+      color: white;
+    }
+
+    @keyframes slideIn {
+      from {
+        opacity: 0;
+        transform: translateY(-10px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
     @media (max-width: 768px) {
       .inventory-management-container {
         margin-top: 120px;
@@ -421,6 +645,22 @@ const InventoryManagement = () => {
 
       .weight-breakdown {
         grid-template-columns: 1fr;
+      }
+
+      .inventory-metrics {
+        grid-template-columns: 1fr;
+      }
+
+      .batch-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .metric-card {
+        padding: 15px;
+      }
+
+      .metric-value {
+        font-size: 20px;
       }
     }
   `;
@@ -567,6 +807,46 @@ const InventoryManagement = () => {
               </tbody>
             </table>
           )}
+
+          {alerts.length > 0 && (
+            <div className="alerts-section">
+              <h3>Inventory Alerts</h3>
+              {alerts.map((alert, index) => (
+                <div key={index} className={`alert alert-${alert.severity}`}>
+                  <FontAwesomeIcon icon={faExclamationTriangle} style={{ marginRight: '8px' }} />
+                  {alert.message}
+                </div>
+              ))}
+            </div>
+          )}
+
+          <div className="inventory-metrics">
+            <div className="metric-card">
+              <h3>Inventory Value</h3>
+              <p className="metric-value">${inventoryValue.toFixed(2)}</p>
+            </div>
+            <div className="metric-card">
+              <h3>Turnover Rate</h3>
+              <p className="metric-value">{turnoverRate.toFixed(2)}x per year</p>
+            </div>
+          </div>
+
+          <div className="batch-tracking">
+            <h3>Batch Tracking</h3>
+            <div className="batch-grid">
+              {Object.entries(batchTracking).map(([batchId, data]) => (
+                <div key={batchId} className="batch-card">
+                  <h4>Batch: {batchId}</h4>
+                  <p>Weight: {data.totalWeight} kg</p>
+                  <p>Location: {data.location}</p>
+                  <p>Last Updated: {new Date(data.lastUpdated).toLocaleDateString()}</p>
+                  <span className={`status-badge ${data.status.toLowerCase().replace(' ', '-')}`}>
+                    {data.status}
+                  </span>
+                </div>
+              ))}
+            </div>
+          </div>
         </div>
       </div>
     </>
