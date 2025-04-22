@@ -1,6 +1,7 @@
 // src/App.js
 import React from 'react';
 import { BrowserRouter as Router, Route, Routes } from 'react-router-dom';
+import InventoryDashboard from './components/Inventory/InventoryDashboard';
 import HomePage from './components/Home/HomePage';
 import MainNavbar from './components/Home/MainNavbar';
 import Dashboard from './components/financial/Dashboard';
@@ -11,7 +12,12 @@ import TransactionsPage from './components/financial/TransactionsPage';
 import InventoryManagement from './components/Inventory/InventoryManagement';
 import InventoryForm from './components/Inventory/InventoryForm';
 import InventoryDetails from './components/Inventory/InventoryDetails';
-import EmployeeManagement from './components/Employee/EmployeeManagement';
+import LowStockReport from './components/Inventory/LowStockReport';
+import Login from './components/User/Login';
+import Register from './components/User/Register';
+import OrdersDashboard from './components/supplier/OrdersDashboard';
+import AddOrder from './components/supplier/AddOrder'; // Added import for AddOrder
+import SupplierDashboard from './components/supplier/SupplierDashboard';
 import { FinanceProvider } from './FinanceContext';
 import { ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
@@ -22,7 +28,7 @@ const PlaceholderPage = ({ title, description }) => {
     @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap');
 
     .placeholder-page {
-      margin-top: 80px; /* Space for the fixed MainNavbar */
+      margin-top: 80px;
       padding: 40px;
       min-height: 100vh;
       background: linear-gradient(135deg, #f5f7fa 0%, #e6f0ea 100%);
@@ -46,7 +52,7 @@ const PlaceholderPage = ({ title, description }) => {
     @media (max-width: 768px) {
       .placeholder-page {
         padding: 20px;
-        margin-top: 120px; /* Adjust for taller MainNavbar */
+        margin-top: 120px;
       }
 
       .placeholder-page h1 {
@@ -77,10 +83,10 @@ const DeliveryPage = () => (
   />
 );
 
-const OrderSupplierPage = () => (
+const EmployeePage = () => (
   <PlaceholderPage
-    title="Order & Supplier Management"
-    description="Order & Supplier Management - Coming Soon"
+    title="Employee Management"
+    description="Employee Management - Coming Soon"
   />
 );
 
@@ -88,12 +94,12 @@ function App() {
   const appStyles = `
     .app {
       min-height: 100vh;
-      padding-top: 80px; /* Space for the fixed MainNavbar */
+      padding-top: 80px;
     }
 
     @media (max-width: 768px) {
       .app {
-        padding-top: 120px; /* Adjust for taller navbar on smaller screens */
+        padding-top: 120px;
       }
     }
   `;
@@ -109,6 +115,10 @@ function App() {
               {/* Root route for the homepage */}
               <Route path="/" element={<HomePage />} />
 
+              {/* Registration and Login routes */}
+              <Route path="/register" element={<Register />} />
+              <Route path="/login" element={<Login />} />
+
               {/* Nested finance routes */}
               <Route path="/finance">
                 <Route index element={<Dashboard />} />
@@ -121,21 +131,23 @@ function App() {
               {/* Inventory routes */}
               <Route path="/inventory">
                 <Route index element={<InventoryManagement />} />
+                <Route path="dashboard" element={<InventoryDashboard />} />
                 <Route path="add" element={<InventoryForm />} />
                 <Route path="details/:id" element={<InventoryDetails />} />
                 <Route path="edit/:id" element={<InventoryDetails />} />
+                <Route path="low-stock" element={<LowStockReport />} />
               </Route>
 
-              {/* Employee routes */}
-              <Route path="/employee">
-                <Route index element={<EmployeeManagement />} />
-                <Route path="add" element={<EmployeeManagement />} />
-                <Route path="list" element={<EmployeeManagement />} />
+              {/* Order and Supplier routes */}
+              <Route path="/orders">
+                <Route index element={<OrdersDashboard />} />
+                <Route path="add" element={<AddOrder />} />
               </Route>
+              <Route path="/suppliers" element={<SupplierDashboard />} />
 
               {/* Placeholder routes for other main functions */}
               <Route path="/delivery" element={<DeliveryPage />} />
-              <Route path="/order-supplier" element={<OrderSupplierPage />} />
+              <Route path="/employee" element={<EmployeePage />} />
             </Routes>
           </div>
           <ToastContainer

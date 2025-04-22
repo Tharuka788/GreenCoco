@@ -9,6 +9,8 @@ import SalaryCard from './SalaryCard';
 import PaymentsCard from './PaymentsCard';
 import Transactions from './Transactions';
 import { useFinance } from '../../FinanceContext';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { faCalendarAlt, faPlus, faEdit, faTrash } from '@fortawesome/free-solid-svg-icons';
 
 // Register Chart.js components for a line chart
 ChartJS.register(CategoryScale, LinearScale, PointElement, LineElement, Title, Tooltip, Legend);
@@ -21,21 +23,32 @@ const Dashboard = () => {
     transactions: [],
     profitLoss: {},
   });
+  const [scheduledPayments, setScheduledPayments] = useState([]);
   const [upcomingIncome, setUpcomingIncome] = useState([]);
   const [upcomingExpenses, setUpcomingExpenses] = useState([]);
   const [error, setError] = useState(null);
   const [notification, setNotification] = useState(null);
   const { refreshTrigger } = useFinance();
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [editingPayment, setEditingPayment] = useState(null);
+  const [newPayment, setNewPayment] = useState({
+    utilityType: '',
+    amount: '',
+    dueDate: '',
+    frequency: 'monthly',
+    status: 'pending',
+  });
 
   const fetchData = async () => {
     try {
       setError(null);
-      const [incomeRes, expenseRes, salaryRes, profitRes, transRes] = await Promise.all([
+      const [incomeRes, expenseRes, salaryRes, profitRes, transRes, scheduledPaymentsRes] = await Promise.all([
         axios.get('http://localhost:5000/api/finance/income'),
         axios.get('http://localhost:5000/api/finance/expense'),
         axios.get('http://localhost:5000/api/finance/salary'),
         axios.get('http://localhost:5000/api/finance/profit-loss'),
         axios.get('http://localhost:5000/api/finance/transactions'),
+        axios.get('http://localhost:5000/api/finance/scheduled-payments'),
       ]);
 
       const newFinanceData = {
@@ -47,6 +60,7 @@ const Dashboard = () => {
       };
 
       setFinanceData(newFinanceData);
+      setScheduledPayments(scheduledPaymentsRes.data);
 
       // Filter for current and past entries (up to today) for financial calculations
       const today = new Date();
@@ -117,6 +131,70 @@ const Dashboard = () => {
   useEffect(() => {
     fetchData();
   }, [refreshTrigger]);
+
+  // Handle form input changes
+  const handleInputChange = (e) => {
+    const { name, value } = e.target;
+    setNewPayment({ ...newPayment, [name]: value });
+  };
+
+  // Handle adding or updating a payment
+  const handlePaymentSubmit = async (e) => {
+    e.preventDefault();
+    if (!newPayment.utilityType || !newPayment.amount || !newPayment.dueDate) {
+      alert('Please fill in all required fields.');
+      return;
+    }
+    if (newPayment.amount <= 0) {
+      alert('Amount must be a positive number.');
+      return;
+    }
+
+    try {
+      if (editingPayment) {
+        // Update existing payment
+        const response = await axios.put(
+          `http://localhost:5000/api/finance/scheduled-payments/${editingPayment._id}`,
+          newPayment
+        );
+        setScheduledPayments(
+          scheduledPayments.map((payment) =>
+            payment._id === editingPayment._id ? response.data.scheduledPayments.find(p => p._id === editingPayment._id) : payment
+          )
+        );
+      } else {
+        // Add new payment
+        const response = await axios.post('http://localhost:5000/api/finance/scheduled-payments', newPayment);
+        setScheduledPayments(response.data.scheduledPayments);
+      }
+      setNewPayment({ utilityType: '', amount: '', dueDate: '', frequency: 'monthly', status: 'pending' });
+      setEditingPayment(null);
+      setIsModalOpen(false);
+    } catch (error) {
+      console.error('Error saving payment:', error);
+      alert('Failed to save payment.');
+    }
+  };
+
+  // Handle editing a payment
+  const handleEditPayment = (payment) => {
+    setEditingPayment(payment);
+    setNewPayment(payment);
+    setIsModalOpen(true);
+  };
+
+  // Handle deleting a payment
+  const handleDeletePayment = async (paymentId) => {
+    if (window.confirm('Are you sure you want to delete this scheduled payment?')) {
+      try {
+        const response = await axios.delete(`http://localhost:5000/api/finance/scheduled-payments/${paymentId}`);
+        setScheduledPayments(response.data.scheduledPayments);
+      } catch (error) {
+        console.error('Error deleting payment:', error);
+        alert('Failed to delete payment.');
+      }
+    }
+  };
 
   // Function to get the last 6 months' labels (e.g., "Jan 2025", "Feb 2025", etc.)
   const getLastSixMonths = () => {
@@ -306,12 +384,143 @@ const Dashboard = () => {
     }
 
     .dashboard h1 {
-      margin-bottom: 30px;
+      margin-bottom: 20px;
       color: #2a7458;
       font-weight: 600;
       font-size: clamp(1.8rem, 5vw, 2.5rem);
       text-align: center;
       text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.1);
+    }
+
+    .schedule-button {
+      display: block;
+      margin: 0 auto 20px;
+      background: #46b38a;
+      color: #ffffff;
+      padding: 12px 25px;
+      border: none;
+      border-radius: 25px;
+      cursor: pointer;
+      font-size: 1rem;
+      font-weight: 500;
+      transition: background 0.3s ease, transform 0.1s ease;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      max-width: 200px;
+    }
+
+    .schedule-button:hover {
+      background: #328e6e;
+      transform: scale(1.02);
+    }
+
+    .modal {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0, 0, 0, 0.5);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      z-index: 1000;
+    }
+
+    .modal-content {
+      background: #ffffff;
+      padding: 25px;
+      border-radius: 12px;
+      width: 90%;
+      max-width: 500px;
+      box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+      position: relative;
+      animation: slideIn 0.3s ease-out;
+    }
+
+    @keyframes slideIn {
+      from {
+        opacity: 0;
+        transform: translateY(-20px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    .modal-content h3 {
+      margin-top: 0;
+      margin-bottom: 20px;
+      color: #2a7458;
+      font-weight: 600;
+      font-size: 1.5rem;
+    }
+
+    .modal-content form {
+      display: flex;
+      flex-direction: column;
+      gap: 15px;
+    }
+
+    .form-group {
+      display: flex;
+      flex-direction: column;
+    }
+
+    .form-group label {
+      color: #2a7458;
+      font-size: 0.95rem;
+      margin-bottom: 5px;
+    }
+
+    .form-group input,
+    .form-group select {
+      padding: 10px;
+      border: 1px solid #ddd;
+      border-radius: 6px;
+      font-size: 1rem;
+      font-family: 'Poppins', sans-serif;
+    }
+
+    .form-group input:focus,
+    .form-group select:focus {
+      outline: none;
+      border-color: #46b38a;
+      box-shadow: 0 0 5px rgba(70, 179, 138, 0.3);
+    }
+
+    .modal-buttons {
+      display: flex;
+      gap: 10px;
+      margin-top: 20px;
+    }
+
+    .modal-buttons button {
+      padding: 10px 20px;
+      border: none;
+      border-radius: 25px;
+      cursor: pointer;
+      font-size: 1rem;
+      font-family: 'Poppins', sans-serif;
+      transition: background 0.3s ease, transform 0.1s ease;
+    }
+
+    .modal-buttons button.save {
+      background: #46b38a;
+      color: #ffffff;
+    }
+
+    .modal-buttons button.cancel {
+      background: #e74c3c;
+      color: #ffffff;
+    }
+
+    .modal-buttons button:hover {
+      opacity: 0.9;
+      transform: scale(1.02);
     }
 
     .chart-container {
@@ -391,6 +600,9 @@ const Dashboard = () => {
       color: #2a7458;
       font-weight: 600;
       font-size: clamp(1.1rem, 2vw, 1.3rem);
+      display: flex;
+      align-items: center;
+      gap: 8px;
     }
 
     .card h4 {
@@ -446,6 +658,56 @@ const Dashboard = () => {
 
     .card.payments {
       border-left: 5px solid #92b9a5;
+    }
+
+    .card.scheduled-payments {
+      border-left: 5px solid #92b9a5;
+    }
+
+    .scheduled-payments-table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 10px;
+      font-size: clamp(0.85rem, 1.2vw, 0.95rem);
+    }
+
+    .scheduled-payments-table th,
+    .scheduled-payments-table td {
+      padding: 8px;
+      text-align: left;
+      border-bottom: 1px solid #ddd;
+      color: #5e6d55;
+    }
+
+    .scheduled-payments-table th {
+      background: #f5f7fa;
+      color: #2a7458;
+      font-weight: 600;
+    }
+
+    .action-buttons {
+      display: flex;
+      gap: 8px;
+    }
+
+    .action-buttons button {
+      background: none;
+      border: none;
+      cursor: pointer;
+      font-size: 1rem;
+      transition: color 0.3s ease;
+    }
+
+    .action-buttons button.edit {
+      color: #46b38a;
+    }
+
+    .action-buttons button.delete {
+      color: #e74c3c;
+    }
+
+    .action-buttons button:hover {
+      opacity: 0.8;
     }
 
     .transactions {
@@ -519,6 +781,32 @@ const Dashboard = () => {
         max-width: 100%;
         padding: 15px;
       }
+
+      .schedule-button {
+        font-size: 0.9rem;
+        padding: 10px 20px;
+        max-width: 180px;
+      }
+
+      .modal-content {
+        padding: 15px;
+        width: 95%;
+      }
+
+      .modal-content h3 {
+        font-size: 1.3rem;
+      }
+
+      .modal-buttons button {
+        font-size: 0.9rem;
+        padding: 8px 15px;
+      }
+
+      .scheduled-payments-table th,
+      .scheduled-payments-table td {
+        font-size: 0.85rem;
+        padding: 6px;
+      }
     }
 
     @media (max-width: 480px) {
@@ -538,6 +826,29 @@ const Dashboard = () => {
       .transactions {
         padding: 15px;
       }
+
+      .schedule-button {
+        font-size: 0.85rem;
+        padding: 8px 15px;
+        max-width: 160px;
+      }
+
+      .modal-content form {
+        gap: 10px;
+      }
+
+      .modal-buttons {
+        flex-direction: column;
+      }
+
+      .modal-buttons button {
+        width: 100%;
+      }
+
+      .scheduled-payments-table {
+        display: block;
+        overflow-x: auto;
+      }
     }
   `;
 
@@ -553,6 +864,102 @@ const Dashboard = () => {
             {notification && (
               <div className={`notification ${notification.type}`}>
                 {notification.message}
+              </div>
+            )}
+            <button className="schedule-button" onClick={() => setIsModalOpen(true)}>
+              <FontAwesomeIcon icon={faPlus} />
+              Schedule Payment
+            </button>
+            {isModalOpen && (
+              <div className="modal">
+                <div className="modal-content">
+                  <h3>{editingPayment ? 'Edit Scheduled Payment' : 'Schedule a Payment'}</h3>
+                  <form onSubmit={handlePaymentSubmit}>
+                    <div className="form-group">
+                      <label>Utility Type:</label>
+                      <select
+                        name="utilityType"
+                        value={newPayment.utilityType}
+                        onChange={handleInputChange}
+                        required
+                      >
+                        <option value="">Select Utility</option>
+                        <option value="Electricity">Electricity</option>
+                        <option value="Water">Water</option>
+                        <option value="Internet">Internet</option>
+                        <option value="Gas">Gas</option>
+                        <option value="Other">Other</option>
+                      </select>
+                    </div>
+                    <div className="form-group">
+                      <label>Amount (LKR):</label>
+                      <input
+                        type="number"
+                        name="amount"
+                        value={newPayment.amount}
+                        onChange={handleInputChange}
+                        required
+                        min="1"
+                      />
+                    </div>
+                    <div className="form-group">
+                      <label>Due Date:</label>
+                      <input
+                        type="date"
+                        name="dueDate"
+                        value={newPayment.dueDate}
+                        onChange={handleInputChange}
+                        required
+                      />
+                    </div>
+                    <div className="form-group">
+                      <label>Frequency:</label>
+                      <select
+                        name="frequency"
+                        value={newPayment.frequency}
+                        onChange={handleInputChange}
+                      >
+                        <option value="monthly">Monthly</option>
+                        <option value="quarterly">Quarterly</option>
+                        <option value="annually">Annually</option>
+                        <option value="one-time">One-Time</option>
+                      </select>
+                    </div>
+                    <div className="form-group">
+                      <label>Status:</label>
+                      <select
+                        name="status"
+                        value={newPayment.status}
+                        onChange={handleInputChange}
+                      >
+                        <option value="pending">Pending</option>
+                        <option value="paid">Paid</option>
+                      </select>
+                    </div>
+                    <div className="modal-buttons">
+                      <button type="submit" className="save">
+                        {editingPayment ? 'Update' : 'Save'}
+                      </button>
+                      <button
+                        type="button"
+                        className="cancel"
+                        onClick={() => {
+                          setIsModalOpen(false);
+                          setEditingPayment(null);
+                          setNewPayment({
+                            utilityType: '',
+                            amount: '',
+                            dueDate: '',
+                            frequency: 'monthly',
+                            status: 'pending',
+                          });
+                        }}
+                      >
+                        Cancel
+                      </button>
+                    </div>
+                  </form>
+                </div>
               </div>
             )}
             <div className="chart-container">
@@ -573,6 +980,57 @@ const Dashboard = () => {
               </div>
               <div className="card payments">
                 <PaymentsCard upcomingIncome={upcomingIncome} upcomingExpenses={upcomingExpenses} />
+              </div>
+              <div className="card scheduled-payments">
+                <h3>
+                  <FontAwesomeIcon icon={faCalendarAlt} />
+                  Scheduled Payments
+                </h3>
+                {scheduledPayments.length > 0 ? (
+                  <table className="scheduled-payments-table">
+                    <thead>
+                      <tr>
+                        <th>Utility</th>
+                        <th>Amount</th>
+                        <th>Due Date</th>
+                        <th>Frequency</th>
+                        <th>Status</th>
+                        <th>Actions</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {scheduledPayments.map((payment) => (
+                        <tr key={payment._id}>
+                          <td>{payment.utilityType}</td>
+                          <td>LKR {payment.amount.toFixed(2)}</td>
+                          <td>{payment.dueDate}</td>
+                          <td>{payment.frequency}</td>
+                          <td>{payment.status}</td>
+                          <td>
+                            <div className="action-buttons">
+                              <button
+                                className="edit"
+                                onClick={() => handleEditPayment(payment)}
+                                aria-label="Edit payment"
+                              >
+                                <FontAwesomeIcon icon={faEdit} />
+                              </button>
+                              <button
+                                className="delete"
+                                onClick={() => handleDeletePayment(payment._id)}
+                                aria-label="Delete payment"
+                              >
+                                <FontAwesomeIcon icon={faTrash} />
+                              </button>
+                            </div>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                ) : (
+                  <p>No scheduled payments yet.</p>
+                )}
               </div>
               <div className="transactions">
                 <Transactions transactions={financeData.transactions} />
