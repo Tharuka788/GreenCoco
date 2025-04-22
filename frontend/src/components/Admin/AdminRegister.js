@@ -1,23 +1,37 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { toast } from 'react-toastify';
 import { useNavigate, Link } from 'react-router-dom';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faFacebookF, faTwitter, faGoogle } from '@fortawesome/free-brands-svg-icons';
 
-const Register = () => {
+const AdminRegister = () => {
   const [formData, setFormData] = useState({
-    name: '',
     email: '',
-    phoneNumber: '',
-    gender: '',
     password: '',
     confirmPassword: '',
-    role: 'user',
   });
+  const [isLoading, setIsLoading] = useState(false);
 
-  const { name, email, phoneNumber, gender, password, confirmPassword, role } = formData;
+  const { email, password, confirmPassword } = formData;
   const navigate = useNavigate();
+
+  useEffect(() => {
+    const token = localStorage.getItem('token');
+    if (token) {
+      try {
+        const decoded = JSON.parse(atob(token.split('.')[1]));
+        if (decoded.role === 'admin') {
+          console.log('Admin already logged in, navigating to /admin');
+          navigate('/admin', { replace: true });
+        }
+      } catch (error) {
+        console.error('Error decoding token:', error);
+        toast.error('Invalid token. Please log in again.');
+        localStorage.removeItem('token');
+      }
+    }
+  }, [navigate]);
 
   const onChange = (e) =>
     setFormData({ ...formData, [e.target.name]: e.target.value });
@@ -25,7 +39,7 @@ const Register = () => {
   const onSubmit = async (e) => {
     e.preventDefault();
 
-    if (!name || !email || !phoneNumber || !gender || !password || !confirmPassword) {
+    if (!email || !password || !confirmPassword) {
       toast.error('Please fill in all fields');
       return;
     }
@@ -40,31 +54,36 @@ const Register = () => {
       return;
     }
 
-    if (phoneNumber.length !== 10 || !/^\d+$/.test(phoneNumber)) {
-      toast.error('Please enter a valid 10-digit phone number');
+    const emailRegex = /^\w+([.-]?\w+)*@\w+([.-]?\w+)*(\.\w{2,3})+$/;
+    if (!emailRegex.test(email)) {
+      toast.error('Please enter a valid email address');
       return;
     }
 
-    if (!['male', 'female', 'other'].includes(gender)) {
-      toast.error('Please select a valid gender');
-      return;
-    }
-
+    setIsLoading(true);
     try {
-      const res = await axios.post('http://localhost:5000/api/users/register', formData);
-      toast.success('Registration successful! You can now log in.');
+      console.log('Attempting to register admin with email:', email);
+      const res = await axios.post('http://localhost:5000/api/admins/register', formData);
+      console.log('Register response:', res.data);
+      toast.success('Admin registration successful! Please log in.');
       setFormData({
-        name: '',
         email: '',
-        phoneNumber: '',
-        gender: '',
         password: '',
         confirmPassword: '',
-        role: 'user',
       });
-      navigate('/login');
+      console.log('Navigating to /admin/login');
+      navigate('/admin/login', { replace: true });
     } catch (err) {
-      toast.error(err.response?.data?.message || 'Registration failed');
+      console.error('Register error:', err);
+      if (err.response) {
+        toast.error(err.response.data.message || 'Admin registration failed');
+      } else if (err.request) {
+        toast.error('Server not responding. Please try again later.');
+      } else {
+        toast.error(err.message || 'An unexpected error occurred');
+      }
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -151,8 +170,7 @@ const Register = () => {
       margin-bottom: 20px;
     }
 
-    .form-group input,
-    .form-group select {
+    .form-group input {
       width: 100%;
       padding: 12px;
       font-size: 1rem;
@@ -163,9 +181,13 @@ const Register = () => {
       transition: border-color 0.3s;
     }
 
-    .form-group input:focus,
-    .form-group select:focus {
+    .form-group input:focus {
       border-color: #34D399;
+    }
+
+    .form-group input:disabled {
+      background: #f0f0f0;
+      cursor: not-allowed;
     }
 
     .auth-checkbox {
@@ -175,6 +197,10 @@ const Register = () => {
       margin-bottom: 20px;
       font-size: 0.9rem;
       color: #666666;
+    }
+
+    .auth-checkbox input:disabled {
+      cursor: not-allowed;
     }
 
     .auth-button {
@@ -192,6 +218,11 @@ const Register = () => {
 
     .auth-button:hover {
       background: linear-gradient(90deg, #059669 0%, #34D399 100%);
+    }
+
+    .auth-button:disabled {
+      background: #cccccc;
+      cursor: not-allowed;
     }
 
     .login-link {
@@ -244,6 +275,11 @@ const Register = () => {
       transform: scale(1.1);
     }
 
+    .social-icon:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+
     .social-icon.facebook {
       background: #3b5998;
     }
@@ -281,22 +317,12 @@ const Register = () => {
       <style dangerouslySetInnerHTML={{ __html: styles }} />
       <div className="auth-page">
         <form className="auth-form" onSubmit={onSubmit}>
-          <h2>Register Form</h2>
+          <h2>Admin Register Form</h2>
           <div className="auth-tabs">
-            <Link to="/login">
+            <Link to="/admin/login">
               <button type="button" className="auth-tab">Login</button>
             </Link>
             <button type="button" className="auth-tab active">Signup</button>
-          </div>
-          <div className="form-group">
-            <input
-              type="text"
-              name="name"
-              value={name}
-              onChange={onChange}
-              placeholder="Name"
-              required
-            />
           </div>
           <div className="form-group">
             <input
@@ -306,30 +332,8 @@ const Register = () => {
               onChange={onChange}
               placeholder="Email Address"
               required
+              disabled={isLoading}
             />
-          </div>
-          <div className="form-group">
-            <input
-              type="text"
-              name="phoneNumber"
-              value={phoneNumber}
-              onChange={onChange}
-              placeholder="Phone No"
-              required
-            />
-          </div>
-          <div className="form-group">
-            <select
-              name="gender"
-              value={gender}
-              onChange={onChange}
-              required
-            >
-              <option value="">Select Gender</option>
-              <option value="male">Male</option>
-              <option value="female">Female</option>
-              <option value="other">Other</option>
-            </select>
           </div>
           <div className="form-group">
             <input
@@ -339,6 +343,7 @@ const Register = () => {
               onChange={onChange}
               placeholder="Password"
               required
+              disabled={isLoading}
             />
           </div>
           <div className="form-group">
@@ -349,38 +354,29 @@ const Register = () => {
               onChange={onChange}
               placeholder="Confirm Password"
               required
+              disabled={isLoading}
             />
           </div>
-          <div className="form-group">
-            <select
-              name="role"
-              value={role}
-              onChange={onChange}
-            >
-              <option value="user">User</option>
-              <option value="supplier">Supplier</option>
-            </select>
-          </div>
           <div className="auth-checkbox">
-            <input type="checkbox" id="terms" required />
+            <input type="checkbox" id="terms" required disabled={isLoading} />
             <label htmlFor="terms">Accept terms and conditions & privacy policy</label>
           </div>
-          <button type="submit" className="auth-button">
-            REGISTER NOW
+          <button type="submit" className="auth-button" disabled={isLoading}>
+            {isLoading ? 'Registering...' : 'REGISTER NOW'}
           </button>
           <div className="login-link">
-            Already have an account? <Link to="/login">Sign in now</Link>
+            Already have an account? <Link to="/admin/login">Sign in now</Link>
           </div>
           <div className="social-login">
             <p>Login with social</p>
             <div className="social-icons">
-              <button className="social-icon facebook" aria-label="Login with Facebook">
+              <button className="social-icon facebook" aria-label="Login with Facebook" disabled={isLoading}>
                 <FontAwesomeIcon icon={faFacebookF} />
               </button>
-              <button className="social-icon twitter" aria-label="Login with Twitter">
+              <button className="social-icon twitter" aria-label="Login with Twitter" disabled={isLoading}>
                 <FontAwesomeIcon icon={faTwitter} />
               </button>
-              <button className="social-icon google" aria-label="Login with Google">
+              <button className="social-icon google" aria-label="Login with Google" disabled={isLoading}>
                 <FontAwesomeIcon icon={faGoogle} />
               </button>
             </div>
@@ -391,4 +387,4 @@ const Register = () => {
   );
 };
 
-export default Register;
+export default AdminRegister;
