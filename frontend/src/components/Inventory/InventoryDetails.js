@@ -56,10 +56,12 @@ const InventoryDetails = () => {
 
         // Mock weight breakdown by waste type (replace with actual API data if available)
         setWeightBreakdown({
-          Organic: data.inventory.wasteType === 'Organic' ? data.inventory.totalWeight : 0,
-          Plastic: data.inventory.wasteType === 'Plastic' ? data.inventory.totalWeight : 0,
-          Paper: data.inventory.wasteType === 'Paper' ? data.inventory.totalWeight : 0,
-          Metal: data.inventory.wasteType === 'Metal' ? data.inventory.totalWeight : 0
+          CoconutHusk: data.inventory.wasteType === 'CoconutHusk' ? data.inventory.totalWeight : 0,
+          CoconutShell: data.inventory.wasteType === 'CoconutShell' ? data.inventory.totalWeight : 0,
+          CoconutFiber: data.inventory.wasteType === 'CoconutFiber' ? data.inventory.totalWeight : 0,
+          CoconutPith: data.inventory.wasteType === 'CoconutPith' ? data.inventory.totalWeight : 0,
+          CoconutLeaves: data.inventory.wasteType === 'CoconutLeaves' ? data.inventory.totalWeight : 0,
+          CoconutTrunk: data.inventory.wasteType === 'CoconutTrunk' ? data.inventory.totalWeight : 0
         });
       } catch (err) {
         setErrors({ fetch: `Error: ${err.message}. Please try again later.` });
@@ -578,10 +580,12 @@ const InventoryDetails = () => {
                   required
                 >
                   <option value="">Select Waste Type</option>
-                  <option value="Organic">Organic</option>
-                  <option value="Plastic">Plastic</option>
-                  <option value="Paper">Paper</option>
-                  <option value="Metal">Metal</option>
+                  <option value="CoconutHusk">Coconut Husk</option>
+                  <option value="CoconutShell">Coconut Shell</option>
+                  <option value="CoconutFiber">Coconut Fiber</option>
+                  <option value="CoconutPith">Coconut Pith</option>
+                  <option value="CoconutLeaves">Coconut Leaves</option>
+                  <option value="CoconutTrunk">Coconut Trunk</option>
                 </select>
                 {errors.wasteType && <span className="form-error">{errors.wasteType}</span>}
               </div>
