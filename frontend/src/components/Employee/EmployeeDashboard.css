@@ -1,0 +1,22 @@
+.header-buttons {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+}
+
+.pdf-button {
+  background-color: #e74c3c;
+  color: white;
+  border: none;
+  padding: 8px 16px;
+  border-radius: 4px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  transition: background-color 0.3s ease;
+}
+
+.pdf-button:hover {
+  background-color: #c0392b;
+} 
