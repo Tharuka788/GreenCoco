@@ -116,27 +116,28 @@ const MainNavbar = () => {
   const isAdminLoginActive = ['/admin/login'].includes(location.pathname);
 
   const navbarStyles = `
-    @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap');
+    @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600&display=swap');
 
     .navbar {
       position: fixed;
       top: 0;
       left: 0;
       width: 100%;
-      background: linear-gradient(90deg, #2a7458 0%, #3b9c73 100%);
-      box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+      background: linear-gradient(135deg, #2a7458 0%, #3b9c73 100%);
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
       z-index: 1000;
       font-family: 'Poppins', sans-serif;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.1);
     }
 
     .navbar-container {
       display: flex;
       justify-content: space-between;
       align-items: center;
-      max-width: 1200px;
+      max-width: 1400px;
       margin: 0 auto;
-      padding: 0 20px;
-      height: 80px;
+      padding: 0 24px;
+      height: 70px;
     }
 
     .navbar-logo {
@@ -144,7 +145,12 @@ const MainNavbar = () => {
       font-weight: 600;
       color: #ffffff;
       text-decoration: none;
-      letter-spacing: 1px;
+      letter-spacing: 0.5px;
+      transition: transform 0.3s ease;
+    }
+
+    .navbar-logo:hover {
+      transform: translateY(-1px);
     }
 
     .navbar-menu {
@@ -152,10 +158,10 @@ const MainNavbar = () => {
       list-style: none;
       margin: 0;
       padding: 0;
+      gap: 8px;
     }
 
     .navbar-menu li {
-      margin-left: 20px;
       position: relative;
     }
 
@@ -163,23 +169,26 @@ const MainNavbar = () => {
       display: flex;
       align-items: center;
       gap: 8px;
-      padding: 10px 15px;
-      color: #e6f0ea;
+      padding: 8px 16px;
+      color: rgba(255, 255, 255, 0.9);
       text-decoration: none;
-      font-size: 1rem;
-      border-radius: 5px;
-      transition: background 0.3s ease, color 0.3s ease;
+      font-size: 0.95rem;
+      font-weight: 500;
+      border-radius: 6px;
+      transition: all 0.2s ease;
     }
 
     .navbar-menu a:hover {
-      background: rgba(255, 255, 255, 0.2);
+      background: rgba(255, 255, 255, 0.15);
       color: #ffffff;
+      transform: translateY(-1px);
     }
 
     .navbar-menu a.active {
       background: #ffffff;
       color: #2a7458;
       font-weight: 600;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
     }
 
     .dropdown-toggle {
@@ -187,39 +196,43 @@ const MainNavbar = () => {
       align-items: center;
       gap: 8px;
       cursor: pointer;
-      padding: 10px 15px;
-      color: #e6f0ea;
-      border-radius: 5px;
-      transition: all 0.3s ease;
+      padding: 8px 16px;
+      color: rgba(255, 255, 255, 0.9);
+      border-radius: 6px;
+      transition: all 0.2s ease;
+      font-weight: 500;
+      font-size: 0.95rem;
     }
 
     .dropdown-toggle:hover {
-      background: rgba(255, 255, 255, 0.2);
+      background: rgba(255, 255, 255, 0.15);
       color: #ffffff;
+      transform: translateY(-1px);
     }
 
     .dropdown-toggle.active {
       background: #ffffff;
       color: #2a7458;
       font-weight: 600;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
     }
 
     .dropdown-menu {
       position: absolute;
-      top: 100%;
+      top: calc(100% + 8px);
       left: 0;
-      background: rgba(59, 156, 115, 0.9);
+      background: rgba(255, 255, 255, 0.98);
       backdrop-filter: blur(10px);
       list-style: none;
-      padding: 8px 0;
+      padding: 8px;
       margin: 0;
-      border-radius: 5px;
-      box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
+      border-radius: 8px;
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
       opacity: 0;
       visibility: hidden;
-      transform: translateY(-10px);
-      transition: all 0.3s ease;
-      min-width: 200px;
+      transform: translateY(-8px);
+      transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+      min-width: 220px;
       z-index: 1001;
     }
 
@@ -235,21 +248,32 @@ const MainNavbar = () => {
     }
 
     .dropdown-menu a {
-      padding: 10px 20px;
-      color: #ffffff;
+      padding: 10px 16px;
+      color: #2a7458;
       display: flex;
       align-items: center;
       gap: 10px;
-      transition: background 0.3s ease;
+      transition: all 0.2s ease;
+      border-radius: 6px;
+      font-weight: 500;
     }
 
     .dropdown-menu a:hover {
-      background: rgba(255, 255, 255, 0.1);
+      background: rgba(42, 116, 88, 0.1);
+      color: #2a7458;
+      transform: translateX(4px);
+    }
+
+    .dropdown-menu a.active {
+      background: #2a7458;
+      color: #ffffff;
+      font-weight: 600;
     }
 
     .dropdown-arrow {
       font-size: 0.8em;
-      transition: transform 0.3s ease;
+      transition: transform 0.2s ease;
+      opacity: 0.8;
     }
 
     .dropdown-arrow.open {
@@ -263,42 +287,61 @@ const MainNavbar = () => {
       color: #ffffff;
       font-size: 1.5rem;
       cursor: pointer;
+      padding: 8px;
+      border-radius: 6px;
+      transition: background 0.2s ease;
+    }
+
+    .navbar-toggle:hover {
+      background: rgba(255, 255, 255, 0.15);
+    }
+
+    @media (max-width: 1024px) {
+      .navbar-container {
+        padding: 0 16px;
+      }
+
+      .navbar-menu a,
+      .dropdown-toggle {
+        padding: 8px 12px;
+        font-size: 0.9rem;
+      }
     }
 
     @media (max-width: 768px) {
       .navbar-container {
         height: auto;
+        padding: 16px;
         flex-direction: column;
         align-items: flex-start;
-        padding: 0 15px;
       }
 
       .navbar-logo {
-        font-size: 1.5rem;
-        padding: 10px 0;
+        font-size: 1.6rem;
+        margin-bottom: 4px;
       }
 
       .navbar-toggle {
         display: block;
         position: absolute;
-        top: 20px;
-        right: 20px;
+        top: 16px;
+        right: 16px;
       }
 
       .navbar-menu {
         position: absolute;
-        top: 80px;
+        top: 100%;
         left: 0;
         right: 0;
-        background: rgba(42, 116, 88, 0.95);
-        backdrop-filter: blur(10px);
-        padding: 20px;
+        background: #2a7458;
+        padding: 16px;
         flex-direction: column;
-        gap: 10px;
+        gap: 8px;
         transform: translateY(-100%);
         opacity: 0;
         visibility: hidden;
-        transition: all 0.3s ease;
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
       }
 
       .navbar-menu.active {
@@ -308,50 +351,64 @@ const MainNavbar = () => {
       }
 
       .navbar-menu li {
-        margin: 0;
         width: 100%;
       }
 
       .dropdown-menu {
         position: static;
-        background: rgba(59, 156, 115, 0.5);
-        margin-top: 5px;
+        background: rgba(255, 255, 255, 0.05);
+        margin-top: 8px;
         transform: none;
         box-shadow: none;
-        width: 100%;
-        padding: 0;
+        padding: 4px;
       }
 
       .dropdown-menu.show {
-        opacity: 1;
-        visibility: visible;
         transform: none;
       }
 
       .dropdown-toggle {
         width: 100%;
         justify-content: space-between;
-        padding: 15px 20px;
-        font-size: 1.1rem;
-        border-bottom: 1px solid rgba(255, 255, 255, 0.1);
       }
 
       .dropdown-menu a {
-        padding: 12px 30px;
-        font-size: 1rem;
-        border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        padding: 12px 16px;
+        color: rgba(255, 255, 255, 0.9);
       }
 
-      .dropdown-menu a:last-child {
-        border-bottom: none;
+      .dropdown-menu a:hover {
+        background: rgba(255, 255, 255, 0.1);
+        color: #ffffff;
       }
 
-      .dropdown-menu li {
-        margin: 0;
+      .dropdown-menu a.active {
+        background: rgba(255, 255, 255, 0.15);
+        color: #ffffff;
+      }
+    }
+
+    @media (max-width: 480px) {
+      .navbar-container {
+        padding: 12px;
       }
 
-      .dropdown-arrow {
-        margin-left: auto;
+      .navbar-logo {
+        font-size: 1.4rem;
+      }
+
+      .navbar-toggle {
+        top: 12px;
+        right: 12px;
+      }
+
+      .navbar-menu {
+        padding: 12px;
+      }
+
+      .dropdown-menu a {
+        padding: 10px 12px;
+        font-size: 0.9rem;
       }
     }
   `;
