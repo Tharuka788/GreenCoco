@@ -3,6 +3,8 @@ import axios from 'axios';
 import { toast } from 'react-toastify';
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { faEdit, faTrash } from '@fortawesome/free-solid-svg-icons';
 
 const TransactionsPage = () => {
   const [transactions, setTransactions] = useState([]);
@@ -12,6 +14,8 @@ const TransactionsPage = () => {
     startDate: '',
     endDate: '',
   });
+  const [editingTransaction, setEditingTransaction] = useState(null);
+  const [isModalOpen, setIsModalOpen] = useState(false);
 
   useEffect(() => {
     fetchTransactions();
@@ -26,8 +30,49 @@ const TransactionsPage = () => {
     } catch (error) {
       console.error('Error fetching transactions:', error);
       setError('Failed to fetch transactions. Please try again later.');
+      toast.error('Failed to fetch transactions');
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleEdit = (transaction) => {
+    setEditingTransaction({
+      ...transaction,
+      date: new Date(transaction.date).toISOString().split('T')[0],
+    });
+    setIsModalOpen(true);
+  };
+
+  const handleDelete = async (transactionId) => {
+    if (window.confirm('Are you sure you want to delete this transaction?')) {
+      try {
+        await axios.delete(`http://localhost:5000/api/finance/transactions/${transactionId}`);
+        setTransactions(prevTransactions => 
+          prevTransactions.filter(t => t._id !== transactionId)
+        );
+        toast.success('Transaction deleted successfully');
+      } catch (error) {
+        console.error('Error deleting transaction:', error);
+        toast.error('Failed to delete transaction');
+      }
+    }
+  };
+
+  const handleUpdate = async (e) => {
+    e.preventDefault();
+    try {
+      const response = await axios.put(
+        `http://localhost:5000/api/finance/transactions/${editingTransaction._id}`,
+        editingTransaction
+      );
+      setTransactions(response.data);
+      setIsModalOpen(false);
+      setEditingTransaction(null);
+      toast.success('Transaction updated successfully');
+    } catch (error) {
+      console.error('Error updating transaction:', error);
+      toast.error('Failed to update transaction');
     }
   };
 
@@ -292,6 +337,98 @@ const TransactionsPage = () => {
         padding: 8px;
       }
     }
+
+    .modal {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0, 0, 0, 0.5);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      z-index: 1000;
+    }
+
+    .modal-content {
+      background: #ffffff;
+      padding: 25px;
+      border-radius: 12px;
+      width: 90%;
+      max-width: 500px;
+      box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+    }
+
+    .modal-content h3 {
+      margin-top: 0;
+      margin-bottom: 20px;
+      color: #2a7458;
+      font-weight: 600;
+      font-size: 1.5rem;
+    }
+
+    .form-group {
+      margin-bottom: 15px;
+    }
+
+    .form-group label {
+      display: block;
+      margin-bottom: 5px;
+      color: #2a7458;
+    }
+
+    .form-group input,
+    .form-group select {
+      width: 100%;
+      padding: 8px;
+      border: 1px solid #ddd;
+      border-radius: 4px;
+    }
+
+    .modal-buttons {
+      display: flex;
+      gap: 10px;
+      margin-top: 20px;
+    }
+
+    .modal-buttons button {
+      padding: 8px 16px;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+    }
+
+    .modal-buttons .save {
+      background: #2a7458;
+      color: white;
+    }
+
+    .modal-buttons .cancel {
+      background: #e74c3c;
+      color: white;
+    }
+
+    .action-buttons {
+      display: flex;
+      gap: 8px;
+    }
+
+    .action-buttons button {
+      background: none;
+      border: none;
+      cursor: pointer;
+      font-size: 1rem;
+      padding: 4px;
+    }
+
+    .action-buttons .edit {
+      color: #2a7458;
+    }
+
+    .action-buttons .delete {
+      color: #e74c3c;
+    }
   `;
 
   const filteredTransactions = filterTransactions();
@@ -338,6 +475,7 @@ const TransactionsPage = () => {
                   <th>Amount (LKR)</th>
                   <th>Date</th>
                   <th>Description</th>
+                  <th>Actions</th>
                 </tr>
               </thead>
               <tbody>
@@ -348,6 +486,16 @@ const TransactionsPage = () => {
                     <td>LKR {transaction.amount.toFixed(2)}</td>
                     <td>{new Date(transaction.date).toLocaleDateString()}</td>
                     <td>{transaction.description || '-'}</td>
+                    <td>
+                      <div className="action-buttons">
+                        <button className="edit" onClick={() => handleEdit(transaction)}>
+                          <FontAwesomeIcon icon={faEdit} />
+                        </button>
+                        <button className="delete" onClick={() => handleDelete(transaction._id)}>
+                          <FontAwesomeIcon icon={faTrash} />
+                        </button>
+                      </div>
+                    </td>
                   </tr>
                 ))}
               </tbody>
@@ -356,6 +504,94 @@ const TransactionsPage = () => {
             <p>No transactions found for the selected date range.</p>
           )}
         </div>
+
+        {isModalOpen && (
+          <div className="modal">
+            <div className="modal-content">
+              <h3>Edit Transaction</h3>
+              <form onSubmit={handleUpdate}>
+                <div className="form-group">
+                  <label>Type:</label>
+                  <select
+                    value={editingTransaction.type}
+                    onChange={(e) =>
+                      setEditingTransaction({ ...editingTransaction, type: e.target.value })
+                    }
+                  >
+                    <option value="income">Income</option>
+                    <option value="expense">Expense</option>
+                    <option value="salary">Salary</option>
+                  </select>
+                </div>
+                <div className="form-group">
+                  <label>Amount:</label>
+                  <input
+                    type="number"
+                    value={editingTransaction.amount}
+                    onChange={(e) =>
+                      setEditingTransaction({
+                        ...editingTransaction,
+                        amount: parseFloat(e.target.value),
+                      })
+                    }
+                    min="0"
+                    step="0.01"
+                    required
+                  />
+                </div>
+                <div className="form-group">
+                  <label>Category:</label>
+                  <input
+                    type="text"
+                    value={editingTransaction.category || ''}
+                    onChange={(e) =>
+                      setEditingTransaction({ ...editingTransaction, category: e.target.value })
+                    }
+                  />
+                </div>
+                <div className="form-group">
+                  <label>Date:</label>
+                  <input
+                    type="date"
+                    value={editingTransaction.date}
+                    onChange={(e) =>
+                      setEditingTransaction({ ...editingTransaction, date: e.target.value })
+                    }
+                    required
+                  />
+                </div>
+                <div className="form-group">
+                  <label>Description:</label>
+                  <input
+                    type="text"
+                    value={editingTransaction.description || ''}
+                    onChange={(e) =>
+                      setEditingTransaction({
+                        ...editingTransaction,
+                        description: e.target.value,
+                      })
+                    }
+                  />
+                </div>
+                <div className="modal-buttons">
+                  <button type="submit" className="save">
+                    Save Changes
+                  </button>
+                  <button
+                    type="button"
+                    className="cancel"
+                    onClick={() => {
+                      setIsModalOpen(false);
+                      setEditingTransaction(null);
+                    }}
+                  >
+                    Cancel
+                  </button>
+                </div>
+              </form>
+            </div>
+          </div>
+        )}
       </div>
     </>
   );
