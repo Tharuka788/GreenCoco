@@ -432,10 +432,12 @@ const InventoryForm = () => {
               required
             >
               <option value="">Select Waste Type</option>
-              <option value="Organic">Organic</option>
-              <option value="Plastic">Plastic</option>
-              <option value="Paper">Paper</option>
-              <option value="Metal">Metal</option>
+              <option value="CoconutHusk">Coconut Husk</option>
+              <option value="CoconutShell">Coconut Shell</option>
+              <option value="CoconutFiber">Coconut Fiber</option>
+              <option value="CoconutPith">Coconut Pith</option>
+              <option value="CoconutLeaves">Coconut Leaves</option>
+              <option value="CoconutTrunk">Coconut Trunk</option>
             </select>
             {errors.wasteType && <span className="form-error">{errors.wasteType}</span>}
           </div>
