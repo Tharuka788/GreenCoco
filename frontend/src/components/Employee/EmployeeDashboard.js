@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import AddEmployeeForm from './AddEmployeeForm';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faUsers, faPlus, faEdit, faTrash, faFileExport, faUserClock } from '@fortawesome/free-solid-svg-icons';
+import { faUsers, faPlus, faEdit, faTrash, faFileExport, faUserClock, faMoneyBillTransfer } from '@fortawesome/free-solid-svg-icons';
 import { toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import { Link } from 'react-router-dom';
@@ -142,6 +142,41 @@ const EmployeeDashboard = () => {
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
+  };
+
+  const sendToFinancialDashboard = async () => {
+    const toastId = toast.loading('Sending data to financial dashboard...');
+    
+    try {
+      const salaryData = employees.map(emp => ({
+        employeeId: emp.EmployeeId,
+        employeeName: emp.EmployeeName,
+        department: emp.DepartmentName,
+        salary: emp.NetSalary,
+        date: new Date().toISOString()
+      }));
+
+      await axios.post('/api/finance/salary-data', salaryData);
+      
+      toast.update(toastId, {
+        render: 'Data sent to financial dashboard successfully',
+        type: 'success',
+        isLoading: false,
+        autoClose: 3000,
+        closeButton: true,
+        closeOnClick: true,
+      });
+    } catch (err) {
+      console.error('Error sending data to financial dashboard:', err);
+      toast.update(toastId, {
+        render: err.response?.data?.message || 'Failed to send data to financial dashboard',
+        type: 'error',
+        isLoading: false,
+        autoClose: 3000,
+        closeButton: true,
+        closeOnClick: true,
+      });
+    }
   };
 
   const filteredEmployees = employees
@@ -366,6 +401,9 @@ const EmployeeDashboard = () => {
             </Link>
             <button className="export-button" onClick={exportToCSV} style={{ marginRight: '10px' }}>
               <FontAwesomeIcon icon={faFileExport} /> Export to CSV
+            </button>
+            <button className="export-button" onClick={sendToFinancialDashboard} style={{ marginRight: '10px', background: '#2ecc71' }}>
+              <FontAwesomeIcon icon={faMoneyBillTransfer} /> Send to Finance
             </button>
             <button className="add-button" onClick={toggleAddForm}>
               <FontAwesomeIcon icon={faPlus} /> {showAddForm ? 'Close Form' : 'Add Employee'}

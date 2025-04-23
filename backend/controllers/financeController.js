@@ -486,3 +486,136 @@ exports.deleteScheduledPayment = async (req, res, next) => {
     next(error);
   }
 };
+
+// Process Salary Data from Employee Dashboard
+exports.processSalaryData = async (req, res, next) => {
+  try {
+    const salaryData = req.body;
+    
+    if (!Array.isArray(salaryData) || salaryData.length === 0) {
+      return res.status(400).json({ message: 'Invalid salary data format' });
+    }
+
+    const finance = await Finance.findOne() || new Finance();
+    
+    // Process each salary entry
+    for (const entry of salaryData) {
+      const { employeeId, employeeName, department, salary, date } = entry;
+      
+      if (!employeeId || !salary) {
+        continue; // Skip invalid entries
+      }
+
+      const salaryEntry = {
+        employeeId,
+        amount: parseFloat(salary),
+        date: new Date(date),
+        description: `Salary for ${employeeName} (${department})`
+      };
+
+      // Add to salaries array
+      finance.salaries.push(salaryEntry);
+
+      // Add to transactions
+      finance.transactions.push({
+        type: 'salary',
+        amount: salaryEntry.amount,
+        category: 'Employee Salary',
+        date: salaryEntry.date,
+        description: salaryEntry.description
+      });
+    }
+
+    await finance.save();
+    res.status(201).json({
+      message: 'Salary data processed successfully',
+      count: salaryData.length
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+// Update Transaction
+exports.updateTransaction = async (req, res, next) => {
+  try {
+    const { transactionId } = req.params;
+    const { type, amount, category, date, description } = req.body;
+    
+    const finance = await Finance.findOne();
+    if (!finance) return res.status(404).json({ message: 'No finance data found' });
+
+    const transaction = finance.transactions.id(transactionId);
+    if (!transaction) return res.status(404).json({ message: 'Transaction not found' });
+
+    // Update transaction fields
+    transaction.type = type || transaction.type;
+    transaction.amount = amount ? parseFloat(amount) : transaction.amount;
+    transaction.category = category || transaction.category;
+    transaction.date = date ? new Date(date) : transaction.date;
+    transaction.description = description || transaction.description;
+
+    // Update corresponding entry in income, expense, or salary arrays
+    const oldDate = transaction.date.toISOString();
+    if (transaction.type === 'income') {
+      const income = finance.income.find(i => i.date.toISOString() === oldDate);
+      if (income) {
+        income.amount = transaction.amount;
+        income.category = transaction.category;
+        income.date = transaction.date;
+        income.description = transaction.description;
+      }
+    } else if (transaction.type === 'expense') {
+      const expense = finance.expenses.find(e => e.date.toISOString() === oldDate);
+      if (expense) {
+        expense.amount = transaction.amount;
+        expense.category = transaction.category;
+        expense.date = transaction.date;
+        expense.description = transaction.description;
+      }
+    } else if (transaction.type === 'salary') {
+      const salary = finance.salaries.find(s => s.date.toISOString() === oldDate);
+      if (salary) {
+        salary.amount = transaction.amount;
+        salary.date = transaction.date;
+        salary.description = transaction.description;
+      }
+    }
+
+    await finance.save();
+    res.status(200).json(finance.transactions);
+  } catch (error) {
+    next(error);
+  }
+};
+
+// Delete Transaction
+exports.deleteTransaction = async (req, res, next) => {
+  try {
+    const { transactionId } = req.params;
+    
+    const finance = await Finance.findOne();
+    if (!finance) return res.status(404).json({ message: 'No finance data found' });
+
+    const transaction = finance.transactions.id(transactionId);
+    if (!transaction) return res.status(404).json({ message: 'Transaction not found' });
+
+    // Remove from transactions array
+    finance.transactions.pull(transactionId);
+
+    // Remove corresponding entry from income, expense, or salary arrays
+    const transactionDate = transaction.date.toISOString();
+    if (transaction.type === 'income') {
+      finance.income = finance.income.filter(i => i.date.toISOString() !== transactionDate);
+    } else if (transaction.type === 'expense') {
+      finance.expenses = finance.expenses.filter(e => e.date.toISOString() !== transactionDate);
+    } else if (transaction.type === 'salary') {
+      finance.salaries = finance.salaries.filter(s => s.date.toISOString() !== transactionDate);
+    }
+
+    await finance.save();
+    res.status(200).json(finance.transactions);
+  } catch (error) {
+    next(error);
+  }
+};
