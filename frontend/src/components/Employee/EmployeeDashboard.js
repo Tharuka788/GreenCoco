@@ -3,7 +3,7 @@ import axios from 'axios';
 import AddEmployeeForm from './AddEmployeeForm';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faUsers, faPlus, faEdit, faTrash, faFileExport, faUserClock } from '@fortawesome/free-solid-svg-icons';
-import { ToastContainer, toast } from 'react-toastify';
+import { toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import { Link } from 'react-router-dom';
 
@@ -318,6 +318,25 @@ const EmployeeDashboard = () => {
       background-color: #2980b9;
     }
 
+    .attendance-button {
+      background-color: #e67e22;
+      color: white;
+      border: none;
+      padding: 10px 20px;
+      font-size: 1rem;
+      border-radius: 4px;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      transition: background-color 0.3s;
+      text-decoration: none;
+    }
+
+    .attendance-button:hover {
+      background-color: #d35400;
+    }
+
     .sortable {
       cursor: pointer;
       user-select: none;
@@ -469,18 +488,6 @@ const EmployeeDashboard = () => {
             )}
           </tbody>
         </table>
-        <ToastContainer
-          position="top-right"
-          autoClose={3000}
-          hideProgressBar={false}
-          newestOnTop={false}
-          closeOnClick
-          rtl={false}
-          pauseOnFocusLoss
-          draggable
-          pauseOnHover
-          theme="light"
-        />
       </div>
     </>
   );
