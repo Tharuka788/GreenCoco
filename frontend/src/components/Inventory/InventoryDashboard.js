@@ -2,10 +2,12 @@ import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import MainNavbar from '../Home/MainNavbar';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faBox, faWeight, faExclamationTriangle, faRecycle, faHistory, faDownload, faPlus } from '@fortawesome/free-solid-svg-icons';
+import { faBox, faWeight, faExclamationTriangle, faRecycle, faHistory, faDownload, faPlus, faShoppingCart } from '@fortawesome/free-solid-svg-icons';
 import { Pie } from 'react-chartjs-2';
 import { Chart as ChartJS, ArcElement, Tooltip, Legend } from 'chart.js';
 import 'chart.js/auto';
+import { ORDER_PLACED_EVENT } from '../supplier/AddOrder';
+import axios from 'axios';
 
 ChartJS.register(ArcElement, Tooltip, Legend);
 
@@ -17,54 +19,80 @@ const InventoryDashboard = () => {
     wasteTypeBreakdown: {},
     recentActivities: []
   });
+  const [recentOrders, setRecentOrders] = useState([]);
   const [error, setError] = useState('');
   const LOW_STOCK_THRESHOLD = 10;
 
-  useEffect(() => {
-    const fetchInventoryStats = async () => {
-      try {
-        const response = await fetch('http://localhost:5000/inventory/', {
-          method: 'GET',
-        });
+  const fetchOrders = async () => {
+    try {
+      const response = await axios.get('http://localhost:5000/api/orders/');
+      const orders = response.data;
+      setRecentOrders(orders.slice(0, 5)); // Get last 5 orders
+    } catch (err) {
+      console.error('Error fetching orders:', err);
+    }
+  };
 
-        if (!response.ok) {
-          throw new Error('Failed to fetch inventory data');
-        }
+  const fetchInventoryStats = async () => {
+    try {
+      const response = await fetch('http://localhost:5000/inventory/', {
+        method: 'GET',
+      });
 
-        const data = await response.json();
-        
-        // Calculate statistics
-        const totalItems = data.length;
-        const totalWeight = data.reduce((sum, item) => sum + item.totalWeight, 0);
-        const lowStockItems = data.filter(item => item.totalWeight < LOW_STOCK_THRESHOLD).length;
-        
-        // Calculate waste type breakdown
-        const wasteTypeBreakdown = data.reduce((acc, item) => {
-          acc[item.wasteType] = (acc[item.wasteType] || 0) + item.totalWeight;
-          return acc;
-        }, {});
-
-        // Mock recent activities (replace with actual API data if available)
-        const recentActivities = data.slice(0, 5).map(item => ({
-          id: item._id,
-          action: Math.random() > 0.5 ? 'Added' : 'Updated',
-          batchId: item.batchId,
-          timestamp: new Date(item.collectionDate).toLocaleString()
-        }));
-
-        setInventoryStats({
-          totalItems,
-          totalWeight,
-          lowStockItems,
-          wasteTypeBreakdown,
-          recentActivities
-        });
-      } catch (err) {
-        setError(`Error: ${err.message}. Please try again later.`);
+      if (!response.ok) {
+        throw new Error('Failed to fetch inventory data');
       }
+
+      const data = await response.json();
+      
+      // Calculate statistics
+      const totalItems = data.length;
+      const totalWeight = data.reduce((sum, item) => sum + item.totalWeight, 0);
+      const lowStockItems = data.filter(item => item.totalWeight < LOW_STOCK_THRESHOLD).length;
+      
+      // Calculate waste type breakdown
+      const wasteTypeBreakdown = data.reduce((acc, item) => {
+        acc[item.wasteType] = (acc[item.wasteType] || 0) + item.totalWeight;
+        return acc;
+      }, {});
+
+      // Mock recent activities (replace with actual API data if available)
+      const recentActivities = data.slice(0, 5).map(item => ({
+        id: item._id,
+        action: Math.random() > 0.5 ? 'Added' : 'Updated',
+        batchId: item.batchId,
+        timestamp: new Date(item.collectionDate).toLocaleString()
+      }));
+
+      setInventoryStats({
+        totalItems,
+        totalWeight,
+        lowStockItems,
+        wasteTypeBreakdown,
+        recentActivities
+      });
+    } catch (err) {
+      setError(`Error: ${err.message}. Please try again later.`);
+    }
+  };
+
+  useEffect(() => {
+    fetchInventoryStats();
+    fetchOrders();
+
+    // Add event listener for order updates
+    const handleOrderPlaced = (event) => {
+      console.log('Order placed event received, refreshing data...', event.detail);
+      fetchInventoryStats();
+      fetchOrders();
     };
 
-    fetchInventoryStats();
+    window.addEventListener(ORDER_PLACED_EVENT, handleOrderPlaced);
+
+    // Cleanup event listener
+    return () => {
+      window.removeEventListener(ORDER_PLACED_EVENT, handleOrderPlaced);
+    };
   }, []);
 
   // Pie chart data
@@ -466,6 +494,42 @@ const InventoryDashboard = () => {
             </div>
           </div>
 
+          <div className="activity-section">
+            <h2 className="activity-title">
+              <FontAwesomeIcon icon={faShoppingCart} className="icon" /> Recent Orders
+            </h2>
+            <div className="activity-list">
+              {recentOrders.map(order => (
+                <div key={order._id} className="activity-item">
+                  <div className="order-details">
+                    <div className="order-header">
+                      <span className="waste-type">{order.wasteType}</span>
+                      <span className={`order-status ${order.status?.toLowerCase()}`}>
+                        {order.status}
+                      </span>
+                    </div>
+                    <span className="order-info">
+                      Quantity: {order.quantity} | Amount: Rs.{order.amount?.toLocaleString()}
+                    </span>
+                  </div>
+                  <div className="order-contact">
+                    <span className="order-email">{order.email}</span>
+                    <span className="order-phone">{order.phoneNumber}</span>
+                    <span className="order-date">
+                      {new Date(order.createdAt).toLocaleString('en-US', {
+                        year: 'numeric',
+                        month: 'short',
+                        day: 'numeric',
+                        hour: '2-digit',
+                        minute: '2-digit'
+                      })}
+                    </span>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+
           <div className="chart-section">
             <h2 className="chart-title">
               <FontAwesomeIcon icon={faRecycle} className="icon" /> Waste Type Breakdown
@@ -512,6 +576,116 @@ const InventoryDashboard = () => {
               ))}
             </div>
           </div>
+
+          <style>
+            {`
+              .order-details {
+                display: flex;
+                flex-direction: column;
+                gap: 8px;
+              }
+              
+              .order-header {
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+              }
+
+              .waste-type {
+                font-weight: 600;
+                color: #00796b;
+                font-size: 1.1rem;
+                padding: 4px 8px;
+                background-color: #e0f2f1;
+                border-radius: 4px;
+              }
+              
+              .order-status {
+                font-size: 0.8rem;
+                font-weight: 600;
+                padding: 4px 8px;
+                border-radius: 12px;
+                text-transform: uppercase;
+              }
+
+              .order-status.pending {
+                background-color: #fff3e0;
+                color: #ef6c00;
+              }
+
+              .order-status.delivered {
+                background-color: #e8f5e9;
+                color: #2e7d32;
+              }
+
+              .order-status.cancelled {
+                background-color: #ffebee;
+                color: #c62828;
+              }
+
+              .order-status.on.delivery {
+                background-color: #e3f2fd;
+                color: #1565c0;
+              }
+              
+              .order-info {
+                color: #37474f;
+                font-size: 0.9rem;
+              }
+              
+              .order-contact {
+                display: flex;
+                flex-direction: column;
+                align-items: flex-end;
+                gap: 4px;
+              }
+              
+              .order-email, .order-phone, .order-date {
+                color: #78909c;
+                font-size: 0.85rem;
+              }
+              
+              .activity-item {
+                padding: 15px;
+                border-radius: 8px;
+                margin-bottom: 10px;
+                background: #f5f5f5;
+                transition: transform 0.2s ease, box-shadow 0.2s ease;
+                display: flex;
+                justify-content: space-between;
+                align-items: flex-start;
+              }
+              
+              .activity-item:hover {
+                transform: translateY(-2px);
+                box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+              }
+
+              .activity-list {
+                max-height: 400px;
+                overflow-y: auto;
+                padding-right: 10px;
+              }
+
+              .activity-list::-webkit-scrollbar {
+                width: 6px;
+              }
+
+              .activity-list::-webkit-scrollbar-track {
+                background: #f1f1f1;
+                border-radius: 3px;
+              }
+
+              .activity-list::-webkit-scrollbar-thumb {
+                background: #00796b;
+                border-radius: 3px;
+              }
+
+              .activity-list::-webkit-scrollbar-thumb:hover {
+                background: #00695c;
+              }
+            `}
+          </style>
 
           <div className="quick-links">
             <Link to="/inventory" className="quick-link">

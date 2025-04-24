@@ -205,6 +205,7 @@ input[type="checkbox"] {
   .App-logo {
     animation: App-logo-spin infinite 20s linear;
   }
+
 }
 
 .App-header {
@@ -258,6 +259,7 @@ input[type="checkbox"] {
     padding: 0.5rem;
     font-size: 0.9rem;
   }
+
 }
 
 @media (max-width: 480px) {

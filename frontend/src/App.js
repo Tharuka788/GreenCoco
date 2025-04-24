@@ -206,6 +206,7 @@ function App() {
 
                 <Route path="/suppliers" element={<SupplierDashboard />} />
                 <Route path="/employee" element={<EmployeeDashboard />} />
+                <Route path="/attendance" element={<AttendanceManagement />} />
                 <Route path="/delivery" element={<DeliveryPage />} />
               </Route>
 
@@ -233,6 +234,8 @@ function App() {
             draggable
             pauseOnHover
             theme="light"
+            limit={3}
+            closeButton={true}
           />
         </FinanceProvider>
       </Router>

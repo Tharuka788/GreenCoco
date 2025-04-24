@@ -1,17 +1,36 @@
 const express = require('express');
 const router = express.Router();
-const supplierController = require('../controllers/supplierController');
+const {
+  registerSupplier,
+  getSuppliers,
+  getSupplierById,
+  updateSupplier,
+  deleteSupplier
+} = require('../controllers/supplierController');
 
-// Register a new supplier
-router.post('/register', supplierController.registerSupplier);
+// @route   POST /api/suppliers/register
+// @desc    Register a new supplier
+// @access  Public
+router.post('/', registerSupplier);
 
-// Get all suppliers
-router.get('/', supplierController.getAllSuppliers);
+// @route   GET /api/suppliers
+// @desc    Get all suppliers
+// @access  Public
+router.get('/', getSuppliers);
 
-// Update a supplier by ID
-router.put('/:id', supplierController.updateSupplier);
+// @route   GET /api/suppliers/:id
+// @desc    Get supplier by ID
+// @access  Public
+router.get('/:id', getSupplierById);
 
-// Delete a supplier by ID
-router.delete('/:id', supplierController.deleteSupplier);
+// @route   PUT /api/suppliers/:id
+// @desc    Update supplier
+// @access  Public
+router.put('/:id', updateSupplier);
+
+// @route   DELETE /api/suppliers/:id
+// @desc    Delete supplier
+// @access  Public
+router.delete('/:id', deleteSupplier);
 
 module.exports = router;

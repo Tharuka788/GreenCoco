@@ -1,87 +1,97 @@
-const Supplier = require('../models/supplier');
+const asyncHandler = require('express-async-handler');
+const Supplier = require('../models/Supplier');
 
-// Register a new supplier
-exports.registerSupplier = async (req, res, next) => {
-  try {
-    const { supplierName, supplierProduct, quantity, amount, email } = req.body;
+// @desc    Register a new supplier
+// @route   POST /api/suppliers
+// @access  Public
+const registerSupplier = asyncHandler(async (req, res) => {
+  const { supplierName, email, supplierProduct, quantity, amount } = req.body;
 
-    // Check if supplier already exists by email
-    const existingSupplier = await Supplier.findOne({ email });
-    if (existingSupplier) {
-      return res.status(400).json({ message: 'Supplier with this email already exists' });
-    }
-
-    // Create new supplier
-    const supplier = new Supplier({
-      supplierName,
-      supplierProduct,
-      quantity,
-      amount,
-      email,
-    });
-
-    await supplier.save();
-    res.status(201).json({ message: 'Supplier registered successfully', supplier });
-  } catch (error) {
-    next(error);
+  // Check if supplier exists
+  const supplierExists = await Supplier.findOne({ email });
+  if (supplierExists) {
+    res.status(400);
+    throw new Error('Supplier already exists');
   }
-};
 
-// Get all suppliers
-exports.getAllSuppliers = async (req, res, next) => {
-  try {
-    const suppliers = await Supplier.find();
-    res.status(200).json(suppliers);
-  } catch (error) {
-    next(error);
+  // Create supplier
+  const supplier = await Supplier.create({
+    supplierName,
+    email,
+    supplierProduct,
+    quantity,
+    amount
+  });
+
+  if (supplier) {
+    res.status(201).json(supplier);
+  } else {
+    res.status(400);
+    throw new Error('Invalid supplier data');
   }
-};
+});
 
-// Update a supplier by ID
-exports.updateSupplier = async (req, res, next) => {
-  try {
-    const { id } = req.params;
-    const { supplierName, supplierProduct, quantity, amount, email } = req.body;
+// @desc    Get all suppliers
+// @route   GET /api/suppliers
+// @access  Public
+const getSuppliers = asyncHandler(async (req, res) => {
+  const suppliers = await Supplier.find({});
+  res.json(suppliers);
+});
 
-    const supplier = await Supplier.findById(id);
-    if (!supplier) {
-      return res.status(404).json({ message: 'Supplier not found' });
-    }
-
-    // Check if the new email is already used by another supplier
-    if (email && email !== supplier.email) {
-      const existingSupplier = await Supplier.findOne({ email });
-      if (existingSupplier) {
-        return res.status(400).json({ message: 'Email already in use by another supplier' });
-      }
-    }
-
-    // Update supplier fields
-    supplier.supplierName = supplierName || supplier.supplierName;
-    supplier.supplierProduct = supplierProduct || supplier.supplierProduct;
-    supplier.quantity = quantity || supplier.quantity;
-    supplier.amount = amount || supplier.amount;
-    supplier.email = email || supplier.email;
-
-    await supplier.save();
-    res.status(200).json({ message: 'Supplier updated successfully', supplier });
-  } catch (error) {
-    next(error);
+// @desc    Get supplier by ID
+// @route   GET /api/suppliers/:id
+// @access  Public
+const getSupplierById = asyncHandler(async (req, res) => {
+  const supplier = await Supplier.findById(req.params.id);
+  
+  if (supplier) {
+    res.json(supplier);
+  } else {
+    res.status(404);
+    throw new Error('Supplier not found');
   }
-};
+});
 
-// Delete a supplier by ID
-exports.deleteSupplier = async (req, res, next) => {
-  try {
-    const { id } = req.params;
-    const supplier = await Supplier.findByIdAndDelete(id);
+// @desc    Update supplier
+// @route   PUT /api/suppliers/:id
+// @access  Public
+const updateSupplier = asyncHandler(async (req, res) => {
+  const supplier = await Supplier.findById(req.params.id);
 
-    if (!supplier) {
-      return res.status(404).json({ message: 'Supplier not found' });
-    }
-
-    res.status(200).json({ message: 'Supplier deleted successfully' });
-  } catch (error) {
-    next(error);
+  if (!supplier) {
+    res.status(404);
+    throw new Error('Supplier not found');
   }
+
+  const updatedSupplier = await Supplier.findByIdAndUpdate(
+    req.params.id,
+    req.body,
+    { new: true, runValidators: true }
+  );
+
+  res.json(updatedSupplier);
+});
+
+// @desc    Delete supplier
+// @route   DELETE /api/suppliers/:id
+// @access  Public
+const deleteSupplier = asyncHandler(async (req, res) => {
+  const supplier = await Supplier.findById(req.params.id);
+
+  if (!supplier) {
+    res.status(404);
+    throw new Error('Supplier not found');
+  }
+
+  await supplier.deleteOne();
+  res.json({ message: 'Supplier removed' });
+});
+
+module.exports = {
+  registerSupplier,
+  getSuppliers,
+  getSupplierById,
+  updateSupplier,
+  deleteSupplier
 };

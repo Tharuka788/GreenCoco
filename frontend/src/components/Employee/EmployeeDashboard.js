@@ -2,10 +2,11 @@ import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import AddEmployeeForm from './AddEmployeeForm';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faUsers, faPlus, faEdit, faTrash, faFileExport, faUserClock } from '@fortawesome/free-solid-svg-icons';
-import { ToastContainer, toast } from 'react-toastify';
+import { faUsers, faPlus, faEdit, faTrash, faFileExport, faUserClock, faMoneyBillTransfer, faFilePdf } from '@fortawesome/free-solid-svg-icons';
+import { toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import { Link } from 'react-router-dom';
+import jsPDF from 'jspdf';
 
 // Set axios base URL and default headers
 axios.defaults.baseURL = 'http://localhost:5000';
@@ -144,6 +145,95 @@ const EmployeeDashboard = () => {
     document.body.removeChild(link);
   };
 
+  const sendToFinancialDashboard = async () => {
+    const toastId = toast.loading('Sending data to financial dashboard...');
+    
+    try {
+      const salaryData = employees.map(emp => ({
+        employeeId: emp.EmployeeId,
+        employeeName: emp.EmployeeName,
+        department: emp.DepartmentName,
+        salary: emp.NetSalary,
+        date: new Date().toISOString()
+      }));
+
+      await axios.post('/api/finance/salary-data', salaryData);
+      
+      toast.update(toastId, {
+        render: 'Data sent to financial dashboard successfully',
+        type: 'success',
+        isLoading: false,
+        autoClose: 3000,
+        closeButton: true,
+        closeOnClick: true,
+      });
+    } catch (err) {
+      console.error('Error sending data to financial dashboard:', err);
+      toast.update(toastId, {
+        render: err.response?.data?.message || 'Failed to send data to financial dashboard',
+        type: 'error',
+        isLoading: false,
+        autoClose: 3000,
+        closeButton: true,
+        closeOnClick: true,
+      });
+    }
+  };
+
+  const downloadSalaryPDF = () => {
+    const doc = new jsPDF();
+    
+    // Add title
+    doc.setFontSize(18);
+    doc.text('Employee Salary Information', 20, 20);
+    
+    // Add current date
+    doc.setFontSize(12);
+    doc.text(`Generated on: ${new Date().toLocaleDateString()}`, 20, 30);
+    
+    // Add table headers
+    const headers = ['Name', 'ID', 'Department', 'Job Role', 'Basic Salary', 'Net Salary'];
+    let yPos = 40;
+    const xPos = [20, 70, 100, 130, 160, 190];
+    
+    doc.setFontSize(12);
+    doc.setFont('helvetica', 'bold');
+    headers.forEach((header, i) => {
+      doc.text(header, xPos[i], yPos);
+    });
+    
+    // Add table content
+    doc.setFont('helvetica', 'normal');
+    yPos += 10;
+    
+    filteredEmployees.forEach((emp) => {
+      // Check if we need a new page
+      if (yPos > 280) {
+        doc.addPage();
+        yPos = 20;
+      }
+      
+      const row = [
+        emp.EmployeeName.substring(0, 15),
+        emp.EmployeeId,
+        emp.DepartmentName.substring(0, 12),
+        emp.JobRole.substring(0, 12),
+        emp.BasicSalary.toFixed(2),
+        emp.NetSalary.toFixed(2)
+      ];
+      
+      row.forEach((text, i) => {
+        doc.text(String(text), xPos[i], yPos);
+      });
+      
+      yPos += 10;
+    });
+    
+    // Save the PDF
+    doc.save('employee_salary_information.pdf');
+    toast.success('PDF downloaded successfully!');
+  };
+
   const filteredEmployees = employees
     .filter(employee => {
       const matchesSearch = employee.EmployeeName.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -163,88 +253,194 @@ const EmployeeDashboard = () => {
     });
 
   const styles = `
-    @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap');
+    @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600&display=swap');
 
     .employee-dashboard {
       max-width: 1200px;
       margin: 100px auto 20px;
-      padding: 20px;
+      padding: 30px;
       font-family: 'Poppins', sans-serif;
-      background: #f8f9fa;
-      border-radius: 8px;
-      box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+      background: linear-gradient(145deg, #ffffff, #f0f0f0);
+      border-radius: 20px;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
     }
 
     .dashboard-header {
       display: flex;
       justify-content: space-between;
       align-items: center;
-      margin-bottom: 20px;
+      margin-bottom: 30px;
+      padding-bottom: 20px;
+      border-bottom: 2px solid rgba(42, 116, 88, 0.1);
     }
 
     .dashboard-header h1 {
       color: #2c3e50;
-      font-size: 2rem;
+      font-size: 2.2rem;
       font-weight: 600;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      position: relative;
     }
 
-    .add-button {
-      background-color: #2a7458;
-      color: white;
-      border: none;
-      padding: 10px 20px;
-      font-size: 1rem;
-      border-radius: 4px;
+    .dashboard-header h1 svg {
+      color: #2a7458;
+      font-size: 2rem;
+    }
+
+    .header-buttons {
+      display: flex;
+      gap: 12px;
+      align-items: center;
+    }
+
+    .add-button, .export-button, .pdf-button, .finance-button {
+      padding: 12px 24px;
+      font-size: 0.95rem;
+      font-weight: 500;
+      border-radius: 12px;
       cursor: pointer;
       display: flex;
       align-items: center;
       gap: 8px;
-      transition: background-color 0.3s;
+      transition: all 0.3s ease;
+      border: none;
+      color: white;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+    }
+
+    .add-button {
+      background: linear-gradient(145deg, #2a7458, #3b9c73);
     }
 
     .add-button:hover {
-      background-color: #3b9c73;
+      background: linear-gradient(145deg, #3b9c73, #2a7458);
+      transform: translateY(-2px);
+    }
+
+    .export-button {
+      background: linear-gradient(145deg, #3498db, #2980b9);
+    }
+
+    .export-button:hover {
+      background: linear-gradient(145deg, #2980b9, #3498db);
+      transform: translateY(-2px);
+    }
+
+    .pdf-button {
+      background: linear-gradient(145deg, #e74c3c, #c0392b);
+    }
+
+    .pdf-button:hover {
+      background: linear-gradient(145deg, #c0392b, #e74c3c);
+      transform: translateY(-2px);
+    }
+
+    .finance-button {
+      background: linear-gradient(145deg, #f39c12, #d35400);
+    }
+
+    .finance-button:hover {
+      background: linear-gradient(145deg, #d35400, #f39c12);
+      transform: translateY(-2px);
+    }
+
+    .search-filter-container {
+      display: flex;
+      gap: 20px;
+      margin-bottom: 30px;
+      flex-wrap: wrap;
+      padding: 20px;
+      background: rgba(255, 255, 255, 0.8);
+      border-radius: 15px;
+      box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
+    }
+
+    .search-input,
+    .filter-select {
+      padding: 12px 20px;
+      border: 2px solid #eef2f7;
+      border-radius: 12px;
+      font-size: 0.95rem;
+      min-width: 250px;
+      transition: all 0.3s ease;
+      background: white;
+    }
+
+    .search-input:focus,
+    .filter-select:focus {
+      outline: none;
+      border-color: #2a7458;
+      box-shadow: 0 0 0 3px rgba(42, 116, 88, 0.1);
     }
 
     .employee-table {
       width: 100%;
-      border-collapse: collapse;
+      border-collapse: separate;
+      border-spacing: 0;
       background: white;
-      border-radius: 8px;
+      border-radius: 15px;
       overflow: hidden;
+      box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
     }
 
     .employee-table th,
     .employee-table td {
-      padding: 15px;
+      padding: 18px;
       text-align: left;
-      border-bottom: 1px solid #ddd;
+      border-bottom: 1px solid rgba(0, 0, 0, 0.05);
     }
 
     .employee-table th {
-      background: #2a7458;
+      background: linear-gradient(145deg, #2a7458, #3b9c73);
       color: white;
-      font-weight: 600;
+      font-weight: 500;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      font-size: 0.9rem;
     }
 
-    .employee-table tr:hover {
-      background: #f1f1f1;
+    .employee-table tr:last-child td {
+      border-bottom: none;
+    }
+
+    .employee-table tbody tr {
+      transition: all 0.3s ease;
+    }
+
+    .employee-table tbody tr:hover {
+      background: rgba(42, 116, 88, 0.05);
+      transform: translateY(-1px);
     }
 
     .action-buttons button {
       background: none;
       border: none;
       cursor: pointer;
-      margin-right: 10px;
+      margin-right: 15px;
       font-size: 1.2rem;
+      transition: all 0.3s ease;
+      padding: 8px;
+      border-radius: 8px;
     }
 
     .action-buttons .edit {
       color: #3498db;
     }
 
+    .action-buttons .edit:hover {
+      background: rgba(52, 152, 219, 0.1);
+    }
+
     .action-buttons .delete {
       color: #e74c3c;
+    }
+
+    .action-buttons .delete:hover {
+      background: rgba(231, 76, 60, 0.1);
     }
 
     .loading,
@@ -252,84 +448,67 @@ const EmployeeDashboard = () => {
       text-align: center;
       color: #2c3e50;
       font-size: 1.2rem;
-      margin: 20px 0;
+      margin: 30px 0;
+      padding: 20px;
+      border-radius: 12px;
+      background: white;
+      box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
     }
 
-    @media (max-width: 768px) {
-      .employee-dashboard {
-        margin: 120px auto 20px;
-        padding: 10px;
-      }
-
-      .dashboard-header h1 {
-        font-size: 1.5rem;
-      }
-
-      .employee-table th,
-      .employee-table td {
-        padding: 10px;
-        font-size: 0.9rem;
-      }
-
-      .add-button {
-        padding: 8px 15px;
-        font-size: 0.9rem;
-      }
-    }
-
-    .search-filter-container {
-      display: flex;
-      gap: 16px;
-      margin-bottom: 20px;
-      flex-wrap: wrap;
-    }
-
-    .search-input,
-    .filter-select {
-      padding: 8px 12px;
-      border: 1px solid #ddd;
-      border-radius: 4px;
-      font-size: 1rem;
-      min-width: 200px;
-    }
-
-    .search-input:focus,
-    .filter-select:focus {
-      outline: none;
-      border-color: #2a7458;
-      box-shadow: 0 0 0 2px rgba(42, 116, 88, 0.2);
-    }
-
-    .export-button {
-      background-color: #3498db;
-      color: white;
-      border: none;
-      padding: 10px 20px;
-      font-size: 1rem;
-      border-radius: 4px;
-      cursor: pointer;
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      transition: background-color 0.3s;
-    }
-
-    .export-button:hover {
-      background-color: #2980b9;
+    .error {
+      color: #e74c3c;
+      background: rgba(231, 76, 60, 0.1);
     }
 
     .sortable {
       cursor: pointer;
       user-select: none;
+      transition: all 0.3s ease;
     }
 
     .sortable:hover {
-      background-color: rgba(42, 116, 88, 0.1);
+      background: rgba(255, 255, 255, 0.1);
     }
 
     .sort-indicator {
       display: inline-block;
-      margin-left: 4px;
+      margin-left: 8px;
+      font-size: 0.8rem;
+    }
+
+    @media (max-width: 768px) {
+      .employee-dashboard {
+        margin: 80px auto 20px;
+        padding: 20px;
+      }
+
+      .dashboard-header {
+        flex-direction: column;
+        gap: 20px;
+        align-items: flex-start;
+      }
+
+      .header-buttons {
+        flex-wrap: wrap;
+        width: 100%;
+      }
+
+      .add-button, .export-button, .pdf-button, .finance-button {
+        padding: 10px 16px;
+        font-size: 0.85rem;
+      }
+
+      .search-input,
+      .filter-select {
+        width: 100%;
+        min-width: unset;
+      }
+
+      .employee-table th,
+      .employee-table td {
+        padding: 12px;
+        font-size: 0.85rem;
+      }
     }
   `;
 
@@ -341,15 +520,34 @@ const EmployeeDashboard = () => {
           <h1>
             <FontAwesomeIcon icon={faUsers} /> Employee Dashboard
           </h1>
-          <div>
-            <Link to="/attendance" className="attendance-button" style={{ marginRight: '10px' }}>
-              <FontAwesomeIcon icon={faUserClock} /> Attendance
-            </Link>
-            <button className="export-button" onClick={exportToCSV} style={{ marginRight: '10px' }}>
-              <FontAwesomeIcon icon={faFileExport} /> Export to CSV
+          <div className="header-buttons">
+            <button
+              className="add-button"
+              onClick={() => setShowAddForm(true)}
+              title="Add New Employee"
+            >
+              <FontAwesomeIcon icon={faPlus} /> Add Employee
             </button>
-            <button className="add-button" onClick={toggleAddForm}>
-              <FontAwesomeIcon icon={faPlus} /> {showAddForm ? 'Close Form' : 'Add Employee'}
+            <button
+              className="export-button"
+              onClick={exportToCSV}
+              title="Export to CSV"
+            >
+              <FontAwesomeIcon icon={faFileExport} /> Export CSV
+            </button>
+            <button
+              className="pdf-button"
+              onClick={downloadSalaryPDF}
+              title="Download Salary PDF"
+            >
+              <FontAwesomeIcon icon={faFilePdf} /> Download PDF
+            </button>
+            <button
+              className="finance-button"
+              onClick={sendToFinancialDashboard}
+              title="Send to Financial Dashboard"
+            >
+              <FontAwesomeIcon icon={faMoneyBillTransfer} /> Send to Finance
             </button>
           </div>
         </div>
@@ -469,18 +667,6 @@ const EmployeeDashboard = () => {
             )}
           </tbody>
         </table>
-        <ToastContainer
-          position="top-right"
-          autoClose={3000}
-          hideProgressBar={false}
-          newestOnTop={false}
-          closeOnClick
-          rtl={false}
-          pauseOnFocusLoss
-          draggable
-          pauseOnHover
-          theme="light"
-        />
       </div>
     </>
   );
