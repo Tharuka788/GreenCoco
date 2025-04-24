@@ -5,9 +5,10 @@ const orderSchema = new mongoose.Schema({
     type: Number,
     unique: true,
   },
-  productName: {
+  wasteType: {
     type: String,
     required: true,
+    enum: ['CoconutHusk', 'CoconutShell', 'CoconutFiber', 'CoconutPith', 'CoconutLeaves', 'CoconutTrunk'],
   },
   quantity: {
     type: Number,

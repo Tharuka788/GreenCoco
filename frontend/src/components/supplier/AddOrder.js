@@ -2,18 +2,21 @@ import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faBox, faInfoCircle, faShoppingCart, faMapMarkerAlt, faPhone, faEnvelope, faMoneyBillWave } from '@fortawesome/free-solid-svg-icons';
-import MainNavbar from '../Home/MainNavbar'; // Assuming you have a similar navbar component
+import { faRecycle, faInfoCircle, faShoppingCart, faMapMarkerAlt, faPhone, faEnvelope, faMoneyBillWave } from '@fortawesome/free-solid-svg-icons';
+import MainNavbar from '../Home/MainNavbar';
+
+// Create a custom event for order updates
+export const ORDER_PLACED_EVENT = 'orderPlaced';
 
 const AddOrder = () => {
   const navigate = useNavigate();
   const [formData, setFormData] = useState({
-    productName: '',
+    wasteType: '',
     quantity: '',
     amount: '',
     address: '',
     phoneNumber: '',
-    email: '',
+    email: ''
   });
   const [errors, setErrors] = useState({});
   const [success, setSuccess] = useState('');
@@ -31,8 +34,8 @@ const AddOrder = () => {
   const validateForm = () => {
     const newErrors = {};
 
-    if (!formData.productName) {
-      newErrors.productName = 'Product Name is required';
+    if (!formData.wasteType) {
+      newErrors.wasteType = 'Waste Type is required';
     }
 
     if (!formData.quantity) {
@@ -89,13 +92,20 @@ const AddOrder = () => {
       const response = await axios.post('http://localhost:5000/api/orders/', formData);
       console.log('Server response:', response.data);
       setSuccess('Order placed successfully!');
+      
+      // Dispatch custom event when order is placed successfully
+      const orderPlacedEvent = new CustomEvent(ORDER_PLACED_EVENT, {
+        detail: response.data
+      });
+      window.dispatchEvent(orderPlacedEvent);
+
       setFormData({
-        productName: '',
+        wasteType: '',
         quantity: '',
         amount: '',
         address: '',
         phoneNumber: '',
-        email: '',
+        email: ''
       });
       setTimeout(() => navigate('/orders'), 2000);
     } catch (error) {
@@ -322,22 +332,29 @@ const AddOrder = () => {
           {success && <div className="success">{success}</div>}
 
           <div className="form-group">
-            <label htmlFor="productName">
-              <FontAwesomeIcon icon={faBox} /> Product Name
+            <label htmlFor="wasteType">
+              <FontAwesomeIcon icon={faRecycle} /> Waste Type
               <div className="tooltip">
                 <FontAwesomeIcon icon={faInfoCircle} />
-                <span className="tooltip-text">Enter the name of the product being ordered.</span>
+                <span className="tooltip-text">Select the type of coconut waste product to order.</span>
               </div>
             </label>
-            <input
-              type="text"
-              id="productName"
-              name="productName"
-              value={formData.productName}
+            <select
+              id="wasteType"
+              name="wasteType"
+              value={formData.wasteType}
               onChange={handleInputChange}
               required
-            />
-            {errors.productName && <span className="form-error">{errors.productName}</span>}
+            >
+              <option value="">Select Waste Type</option>
+              <option value="CoconutHusk">Coconut Husk</option>
+              <option value="CoconutShell">Coconut Shell</option>
+              <option value="CoconutFiber">Coconut Fiber</option>
+              <option value="CoconutPith">Coconut Pith</option>
+              <option value="CoconutLeaves">Coconut Leaves</option>
+              <option value="CoconutTrunk">Coconut Trunk</option>
+            </select>
+            {errors.wasteType && <span className="form-error">{errors.wasteType}</span>}
           </div>
 
           <div className="form-group">
