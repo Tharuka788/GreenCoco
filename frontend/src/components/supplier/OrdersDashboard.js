@@ -3,6 +3,9 @@ import axios from 'axios';
 import { Pie } from 'react-chartjs-2';
 import { Chart as ChartJS, ArcElement, Tooltip, Legend } from 'chart.js';
 import { useNavigate } from 'react-router-dom';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { faPlus, faEdit, faTrash, faChartPie } from '@fortawesome/free-solid-svg-icons';
+import MainNavbar from '../Home/MainNavbar';
 
 // Register Chart.js components
 ChartJS.register(ArcElement, Tooltip, Legend);
@@ -31,7 +34,7 @@ const OrdersDashboard = () => {
   }, []);
 
   const handleOrderUpdate = async (id) => {
-    const updatedStatus = prompt('Enter new status for the order (e.g., Delivered, Pending, Cancelled):');
+    const updatedStatus = prompt('Enter new status for the order (e.g., Delivered, Pending, Cancelled, On Delivery):');
     if (updatedStatus) {
       try {
         await axios.put(`http://localhost:5000/api/orders/${id}`, { status: updatedStatus });
@@ -67,19 +70,17 @@ const OrdersDashboard = () => {
       if (order.status === 'Pending') acc.new += 1;
       else if (order.status === 'Delivered') acc.delivered += 1;
       else if (order.status === 'Cancelled') acc.cancelled += 1;
+      else if (order.status === 'On Delivery') acc.onDelivery += 1;
       return acc;
     },
-    { new: 0, delivered: 0, cancelled: 0 }
+    { new: 0, delivered: 0, cancelled: 0, onDelivery: 0 }
   );
-
-  // Include "On Delivery" as a category
-  const onDeliveryCount = orders.filter((order) => order.status === 'On Delivery').length || 0;
 
   const pieChartData = {
     labels: ['New Orders', 'On Delivery', 'Delivered', 'Cancelled'],
     datasets: [
       {
-        data: [statusCounts.new, onDeliveryCount, statusCounts.delivered, statusCounts.cancelled],
+        data: [statusCounts.new, statusCounts.onDelivery, statusCounts.delivered, statusCounts.cancelled],
         backgroundColor: ['#34C759', '#FF9500', '#007AFF', '#FF3B30'],
         hoverBackgroundColor: ['#2DB44A', '#E68600', '#0066CC', '#E62E26'],
       },
@@ -96,12 +97,13 @@ const OrdersDashboard = () => {
     }
   };
 
-  const dashboardStyles = `
-    .orders-dashboard {
-      font-family: 'Poppins', sans-serif;
-      padding: 80px 20px 20px;
-      background: #F5F7FA;
+  const styles = `
+    .orders-dashboard-container {
+      margin-top: 80px;
+      padding: 20px;
       min-height: 100vh;
+      background: linear-gradient(135deg, #e0f7fa 0%, #b2ebf2 100%);
+      font-family: 'Segoe UI', Arial, sans-serif;
     }
 
     .dashboard-header {
@@ -109,40 +111,55 @@ const OrdersDashboard = () => {
       justify-content: space-between;
       align-items: center;
       margin-bottom: 20px;
+      max-width: 1200px;
+      margin: 0 auto 20px;
     }
 
     .dashboard-header h1 {
-      font-size: 2rem;
-      color: #1A2526;
+      color: #00695c;
+      font-size: 24px;
+      font-weight: 600;
     }
 
     .dashboard-section {
-      background: #ffffff;
+      max-width: 1200px;
+      margin: 0 auto 20px;
+      background: white;
+      padding: 30px;
       border-radius: 12px;
-      padding: 20px;
-      margin-bottom: 20px;
-      box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+      box-shadow: 0 4px 15px rgba(0,0,0,0.15);
     }
 
     .dashboard-section h2 {
-      font-size: 1.3rem;
-      color: #1A2526;
+      color: #004d40;
+      font-size: 20px;
+      font-weight: 500;
       margin-bottom: 15px;
+      display: flex;
+      align-items: center;
+    }
+
+    .dashboard-section h2 svg {
+      margin-right: 8px;
+      color: #26a69a;
     }
 
     .new-order-button {
+      background: #00796b;
+      color: white;
       padding: 10px 20px;
-      background: #007AFF;
-      color: #ffffff;
       border: none;
-      border-radius: 8px;
+      border-radius: 6px;
       cursor: pointer;
-      font-size: 1rem;
-      transition: background 0.3s ease;
+      font-size: 16px;
+      font-weight: 500;
+      transition: all 0.3s ease;
     }
 
     .new-order-button:hover {
-      background: #0066CC;
+      background: #009688;
+      transform: translateY(-2px);
+      box-shadow: 0 4px 10px rgba(0, 150, 136, 0.3);
     }
 
     .orders-table {
@@ -154,42 +171,43 @@ const OrdersDashboard = () => {
     .orders-table th, .orders-table td {
       padding: 12px;
       text-align: left;
-      border-bottom: 1px solid #E5E7EB;
+      border-bottom: 1px solid #b0bec5;
     }
 
     .orders-table th {
-      background: #F9FAFB;
-      color: #6B7280;
-      font-size: 0.9rem;
+      background: #f5f5f5;
+      color: #004d40;
+      font-size: 14px;
       text-transform: uppercase;
     }
 
     .orders-table td {
-      color: #1A2526;
+      color: #37474f;
     }
 
     .orders-table button {
-      padding: 5px 10px;
+      padding: 8px 12px;
       margin-right: 5px;
       border: none;
-      border-radius: 5px;
+      border-radius: 6px;
       cursor: pointer;
-      font-size: 0.9rem;
-      transition: background 0.3s ease;
+      font-size: 14px;
+      transition: all 0.3s ease;
     }
 
     .orders-table button.update {
-      background: #34C759;
-      color: #ffffff;
+      background: #00796b;
+      color: white;
     }
 
     .orders-table button.delete {
-      background: #FF3B30;
-      color: #ffffff;
+      background: #d32f2f;
+      color: white;
     }
 
     .orders-table button:hover {
-      opacity: 0.9;
+      transform: translateY(-2px);
+      box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
     }
 
     .orders-summary {
@@ -213,6 +231,7 @@ const OrdersDashboard = () => {
       display: flex;
       align-items: center;
       gap: 10px;
+      color: #37474f;
     }
 
     .status-color {
@@ -238,32 +257,46 @@ const OrdersDashboard = () => {
     }
 
     .error-message {
-      color: #FF3B30;
+      color: #d32f2f;
       text-align: center;
       margin: 20px 0;
-      font-size: 1rem;
+      background: #ffebee;
+      padding: 10px;
+      border-radius: 4px;
+    }
+
+    .loading-message {
+      text-align: center;
+      color: #004d40;
+      font-size: 16px;
+      margin: 20px 0;
     }
 
     @media (max-width: 768px) {
-      .dashboard-header h1 {
-        font-size: 1.5rem;
-      }
-
-      .dashboard-section {
+      .orders-dashboard-container {
+        margin-top: 120px;
         padding: 15px;
       }
 
+      .dashboard-header h1 {
+        font-size: 20px;
+      }
+
+      .dashboard-section {
+        padding: 20px;
+      }
+
       .dashboard-section h2 {
-        font-size: 1.2rem;
+        font-size: 18px;
       }
 
       .new-order-button {
-        font-size: 0.9rem;
+        font-size: 14px;
         padding: 8px 15px;
       }
 
       .orders-table {
-        font-size: 0.85rem;
+        font-size: 12px;
       }
 
       .orders-table th, .orders-table td {
@@ -271,8 +304,8 @@ const OrdersDashboard = () => {
       }
 
       .orders-table button {
-        padding: 4px 8px;
-        font-size: 0.8rem;
+        padding: 6px 10px;
+        font-size: 12px;
       }
 
       .orders-summary {
@@ -287,26 +320,27 @@ const OrdersDashboard = () => {
     }
   `;
 
-  if (loading) return <div>Loading...</div>;
+  if (loading) return <div className="loading-message">Loading...</div>;
   if (error) return <div className="error-message">{error}</div>;
 
   return (
     <>
-      <style dangerouslySetInnerHTML={{ __html: dashboardStyles }} />
-      <div className="orders-dashboard">
+      <style dangerouslySetInnerHTML={{ __html: styles }} />
+      <MainNavbar />
+      <div className="orders-dashboard-container">
         <div className="dashboard-header">
           <h1>Orders Dashboard</h1>
           <button
             className="new-order-button"
             onClick={handleNavigateToAddOrder}
           >
-            New Order
+            <FontAwesomeIcon icon={faPlus} /> New Order
           </button>
         </div>
 
         {/* Orders Summary with Pie Chart */}
         <div className="dashboard-section">
-          <h2>Orders Summary</h2>
+          <h2><FontAwesomeIcon icon={faChartPie} /> Orders Summary</h2>
           <div className="orders-summary">
             <div className="pie-chart-container">
               <Pie data={pieChartData} options={{ maintainAspectRatio: false }} />
@@ -318,7 +352,7 @@ const OrdersDashboard = () => {
               </div>
               <div className="status-item">
                 <span className="status-color on-delivery"></span>
-                On Delivery: {onDeliveryCount}
+                On Delivery: {statusCounts.onDelivery}
               </div>
               <div className="status-item">
                 <span className="status-color delivered"></span>
@@ -367,13 +401,13 @@ const OrdersDashboard = () => {
                       className="update"
                       onClick={() => handleOrderUpdate(order._id)}
                     >
-                      Update
+                      <FontAwesomeIcon icon={faEdit} /> Update
                     </button>
                     <button
                       className="delete"
                       onClick={() => handleOrderDelete(order._id)}
                     >
-                      Delete
+                      <FontAwesomeIcon icon={faTrash} /> Delete
                     </button>
                   </td>
                 </tr>
