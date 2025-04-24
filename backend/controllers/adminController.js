@@ -76,9 +76,37 @@ const loginAdmin = async (req, res) => {
 
 // Generate JWT
 const generateToken = (id) => {
-  return jwt.sign({ id }, process.env.JWT_SECRET, {
-    expiresIn: '30d',
-  });
+  return jwt.sign(
+    { 
+      id,
+      role: 'admin'  // Add the role to the token payload
+    }, 
+    process.env.JWT_SECRET, 
+    {
+      expiresIn: '30d',
+    }
+  );
 };
 
-module.exports = { registerAdmin, loginAdmin };
+// Get admin overview data
+const getAdminOverview = async (req, res) => {
+  try {
+    // In a real application, you would fetch this data from your database
+    // For now, we'll return mock data
+    const overviewData = {
+      totalRevenue: 100000,
+      lowStockItems: 5,
+      pendingOrders: 10,
+      activeSuppliers: 15,
+      employeeCount: 20,
+      pendingDeliveries: 3,
+    };
+
+    res.status(200).json(overviewData);
+  } catch (error) {
+    console.error('Error fetching admin overview:', error);
+    res.status(500).json({ message: 'Error fetching admin overview' });
+  }
+};
+
+module.exports = { registerAdmin, loginAdmin, getAdminOverview };
