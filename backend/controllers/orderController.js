@@ -5,6 +5,20 @@ exports.createOrder = async (req, res, next) => {
   try {
     const { productName, quantity, amount, address, phoneNumber, email } = req.body;
 
+    // Log the received data
+    console.log('Received order data:', req.body);
+
+    // Validate required fields
+    const requiredFields = ['productName', 'quantity', 'amount', 'address', 'phoneNumber', 'email'];
+    const missingFields = requiredFields.filter(field => !req.body[field]);
+    
+    if (missingFields.length > 0) {
+      return res.status(400).json({
+        message: 'Missing required fields',
+        missingFields
+      });
+    }
+
     const order = new Order({
       productName,
       quantity,
@@ -17,6 +31,13 @@ exports.createOrder = async (req, res, next) => {
     await order.save();
     res.status(201).json({ message: 'Order created successfully', order });
   } catch (error) {
+    console.error('Order creation error:', error);
+    if (error.name === 'ValidationError') {
+      return res.status(400).json({
+        message: 'Validation error',
+        details: Object.values(error.errors).map(err => err.message)
+      });
+    }
     next(error);
   }
 };
