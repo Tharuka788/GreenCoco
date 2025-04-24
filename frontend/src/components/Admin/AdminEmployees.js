@@ -4,68 +4,66 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import {
   faUsers,
   faUserCheck,
-  faUserClock,
-  faMoneyBillWave,
+  faWallet,
   faSearch,
   faEdit,
-  faTrash,
-  faUserPlus
+  faTrash
 } from '@fortawesome/free-solid-svg-icons';
 import { toast } from 'react-toastify';
-import AdminNavbar from './AdminNavbar';
 
 const AdminEmployees = () => {
-  const [employeeData, setEmployeeData] = useState({
-    totalEmployees: 0,
-    activeEmployees: 0,
-    onLeaveEmployees: 0,
-    totalSalaries: 0,
-    employees: []
-  });
-  const [isLoading, setIsLoading] = useState(true);
+  const [employeesData, setEmployeesData] = useState(null);
+  const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
 
-  useEffect(() => {
-    fetchEmployeeData();
-  }, []);
-
-  const fetchEmployeeData = async () => {
+  const fetchEmployeesData = async () => {
     try {
-      const token = localStorage.getItem('token');
       const config = {
         headers: {
-          Authorization: `Bearer ${token}`
+          Authorization: `Bearer ${localStorage.getItem('token')}`
         }
       };
-
-      const response = await axios.get('http://localhost:5000/api/admin/employees', config);
-      setEmployeeData(response.data);
-      setIsLoading(false);
+      const response = await axios.get('http://localhost:5000/api/admins/employees', config);
+      setEmployeesData(response.data);
+      setLoading(false);
     } catch (error) {
-      console.error('Error fetching employee data:', error);
-      toast.error('Failed to fetch employee data');
-      setIsLoading(false);
+      console.error('Error fetching employees data:', error);
+      toast.error('Failed to fetch employees data');
+      setLoading(false);
     }
   };
 
-  const handleEdit = (employeeId) => {
-    // Implement edit functionality
-    console.log('Edit employee:', employeeId);
+  const handleStatusChange = async (employeeId, newStatus) => {
+    try {
+      const config = {
+        headers: {
+          Authorization: `Bearer ${localStorage.getItem('token')}`
+        }
+      };
+      await axios.put(
+        `http://localhost:5000/api/admins/employees/${employeeId}`,
+        { status: newStatus },
+        config
+      );
+      toast.success('Employee status updated successfully');
+      fetchEmployeesData();
+    } catch (error) {
+      console.error('Error updating employee status:', error);
+      toast.error('Failed to update employee status');
+    }
   };
 
   const handleDelete = async (employeeId) => {
     if (window.confirm('Are you sure you want to delete this employee?')) {
       try {
-        const token = localStorage.getItem('token');
         const config = {
           headers: {
-            Authorization: `Bearer ${token}`
+            Authorization: `Bearer ${localStorage.getItem('token')}`
           }
         };
-
-        await axios.delete(`http://localhost:5000/api/admin/employees/${employeeId}`, config);
+        await axios.delete(`http://localhost:5000/api/admins/employees/${employeeId}`, config);
         toast.success('Employee deleted successfully');
-        fetchEmployeeData();
+        fetchEmployeesData();
       } catch (error) {
         console.error('Error deleting employee:', error);
         toast.error('Failed to delete employee');
@@ -73,310 +71,73 @@ const AdminEmployees = () => {
     }
   };
 
-  const filteredEmployees = employeeData.employees.filter(employee =>
+  useEffect(() => {
+    fetchEmployeesData();
+  }, []);
+
+  if (loading || !employeesData) {
+    return <div>Loading...</div>;
+  }
+
+  const { stats, employees } = employeesData;
+
+  const filteredEmployees = employees.filter(employee =>
     employee.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
     employee.department.toLowerCase().includes(searchTerm.toLowerCase()) ||
     employee.position.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
-  const styles = `
-    .admin-employees {
-      padding: 2rem;
-      margin-left: 280px;
-    }
-
-    .employees-header {
-      margin-bottom: 2rem;
-    }
-
-    .employees-title {
-      font-size: 2rem;
-      color: #2a7458;
-      margin-bottom: 1rem;
-    }
-
-    .stats-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-      gap: 1.5rem;
-      margin-bottom: 2rem;
-    }
-
-    .stat-card {
-      background: white;
-      padding: 1.5rem;
-      border-radius: 10px;
-      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-      transition: transform 0.3s ease;
-    }
-
-    .stat-card:hover {
-      transform: translateY(-5px);
-    }
-
-    .stat-header {
-      display: flex;
-      align-items: center;
-      gap: 1rem;
-      margin-bottom: 1rem;
-    }
-
-    .stat-icon {
-      font-size: 1.5rem;
-      color: #2a7458;
-    }
-
-    .stat-title {
-      font-size: 1.1rem;
-      color: #666;
-    }
-
-    .stat-value {
-      font-size: 1.8rem;
-      font-weight: 600;
-      color: #2a7458;
-    }
-
-    .employees-content {
-      background: white;
-      padding: 1.5rem;
-      border-radius: 10px;
-      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-    }
-
-    .search-bar {
-      margin-bottom: 1.5rem;
-      display: flex;
-      align-items: center;
-      gap: 1rem;
-      background: #f8f9fa;
-      padding: 0.5rem 1rem;
-      border-radius: 8px;
-    }
-
-    .search-bar input {
-      flex: 1;
-      border: none;
-      background: none;
-      padding: 0.5rem;
-      font-size: 1rem;
-      color: #333;
-      outline: none;
-    }
-
-    .search-icon {
-      color: #666;
-    }
-
-    .add-button {
-      background: #2a7458;
-      color: white;
-      border: none;
-      padding: 0.75rem 1.5rem;
-      border-radius: 8px;
-      cursor: pointer;
-      display: flex;
-      align-items: center;
-      gap: 0.5rem;
-      transition: background-color 0.3s ease;
-      font-size: 1rem;
-    }
-
-    .add-button:hover {
-      background: #1e5c41;
-    }
-
-    .employees-table {
-      width: 100%;
-      border-collapse: collapse;
-      margin-top: 1rem;
-    }
-
-    .employees-table th,
-    .employees-table td {
-      padding: 1rem;
-      text-align: left;
-      border-bottom: 1px solid #eee;
-    }
-
-    .employees-table th {
-      background: #f8f9fa;
-      color: #2a7458;
-      font-weight: 600;
-    }
-
-    .employees-table tr:hover {
-      background: #f8f9fa;
-    }
-
-    .status-badge {
-      padding: 0.25rem 0.5rem;
-      border-radius: 4px;
-      font-size: 0.9rem;
-      font-weight: 500;
-    }
-
-    .status-active {
-      background: #e3f2fd;
-      color: #1976d2;
-    }
-
-    .status-on-leave {
-      background: #fff3e0;
-      color: #f57c00;
-    }
-
-    .action-buttons {
-      display: flex;
-      gap: 0.5rem;
-    }
-
-    .action-button {
-      background: none;
-      border: none;
-      padding: 0.5rem;
-      cursor: pointer;
-      transition: color 0.3s ease;
-    }
-
-    .edit-button {
-      color: #2196f3;
-    }
-
-    .edit-button:hover {
-      color: #1976d2;
-    }
-
-    .delete-button {
-      color: #f44336;
-    }
-
-    .delete-button:hover {
-      color: #d32f2f;
-    }
-
-    .loading {
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      min-height: 400px;
-      font-size: 1.2rem;
-      color: #666;
-    }
-
-    @media (max-width: 768px) {
-      .admin-employees {
-        margin-left: 0;
-        padding: 1rem;
-      }
-
-      .employees-title {
-        font-size: 1.5rem;
-      }
-
-      .stat-card {
-        padding: 1rem;
-      }
-
-      .stat-value {
-        font-size: 1.5rem;
-      }
-
-      .employees-table {
-        font-size: 0.9rem;
-      }
-
-      .employees-table th,
-      .employees-table td {
-        padding: 0.75rem 0.5rem;
-      }
-
-      .add-button {
-        padding: 0.5rem 1rem;
-      }
-    }
-  `;
-
-  if (isLoading) {
-    return (
-      <>
-        <style>{styles}</style>
-        <AdminNavbar />
-        <div className="admin-employees">
-          <div className="loading">Loading employee data...</div>
-        </div>
-      </>
-    );
-  }
-
   return (
-    <>
-      <style>{styles}</style>
-      <AdminNavbar />
-      <div className="admin-employees">
-        <div className="employees-header">
-          <h1 className="employees-title">Employee Management</h1>
-        </div>
+    <div className="admin-employees">
+      <h1>Employees Management</h1>
 
-        <div className="stats-grid">
-          <div className="stat-card">
-            <div className="stat-header">
-              <FontAwesomeIcon icon={faUsers} className="stat-icon" />
-              <h3 className="stat-title">Total Employees</h3>
-            </div>
-            <p className="stat-value">{employeeData.totalEmployees}</p>
-          </div>
-
-          <div className="stat-card">
-            <div className="stat-header">
-              <FontAwesomeIcon icon={faUserCheck} className="stat-icon" />
-              <h3 className="stat-title">Active Employees</h3>
-            </div>
-            <p className="stat-value">{employeeData.activeEmployees}</p>
-          </div>
-
-          <div className="stat-card">
-            <div className="stat-header">
-              <FontAwesomeIcon icon={faUserClock} className="stat-icon" />
-              <h3 className="stat-title">On Leave</h3>
-            </div>
-            <p className="stat-value">{employeeData.onLeaveEmployees}</p>
-          </div>
-
-          <div className="stat-card">
-            <div className="stat-header">
-              <FontAwesomeIcon icon={faMoneyBillWave} className="stat-icon" />
-              <h3 className="stat-title">Total Salaries</h3>
-            </div>
-            <p className="stat-value">${employeeData.totalSalaries.toLocaleString()}</p>
+      <div className="employee-stats">
+        <div className="stat-card">
+          <FontAwesomeIcon icon={faUsers} className="icon" />
+          <div className="stat-content">
+            <h3>Total Employees</h3>
+            <p>{stats.totalEmployees.toLocaleString()}</p>
           </div>
         </div>
 
-        <div className="employees-content">
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
-            <div className="search-bar">
-              <FontAwesomeIcon icon={faSearch} className="search-icon" />
-              <input
-                type="text"
-                placeholder="Search by name, department, or position..."
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-              />
-            </div>
-            <button className="add-button">
-              <FontAwesomeIcon icon={faUserPlus} />
-              Add Employee
-            </button>
+        <div className="stat-card">
+          <FontAwesomeIcon icon={faUserCheck} className="icon success" />
+          <div className="stat-content">
+            <h3>Active Employees</h3>
+            <p>{stats.activeEmployees.toLocaleString()}</p>
           </div>
+        </div>
 
-          <table className="employees-table">
+        <div className="stat-card">
+          <FontAwesomeIcon icon={faWallet} className="icon warning" />
+          <div className="stat-content">
+            <h3>Total Salaries</h3>
+            <p>${stats.totalSalaries.toLocaleString()}</p>
+          </div>
+        </div>
+      </div>
+
+      <div className="employees-content">
+        <div className="search-bar">
+          <FontAwesomeIcon icon={faSearch} className="search-icon" />
+          <input
+            type="text"
+            placeholder="Search by name, department, or position..."
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+          />
+        </div>
+
+        <div className="table-container">
+          <table>
             <thead>
               <tr>
                 <th>Name</th>
                 <th>Department</th>
                 <th>Position</th>
-                <th>Status</th>
+                <th>Contact</th>
                 <th>Salary</th>
+                <th>Status</th>
                 <th>Actions</th>
               </tr>
             </thead>
@@ -387,30 +148,28 @@ const AdminEmployees = () => {
                   <td>{employee.department}</td>
                   <td>{employee.position}</td>
                   <td>
-                    <span
-                      className={`status-badge ${
-                        employee.status === 'active' ? 'status-active' : 'status-on-leave'
-                      }`}
-                    >
-                      {employee.status === 'active' ? 'Active' : 'On Leave'}
-                    </span>
+                    <div>{employee.email}</div>
+                    <div>{employee.phone}</div>
                   </td>
                   <td>${employee.salary.toLocaleString()}</td>
                   <td>
-                    <div className="action-buttons">
-                      <button
-                        className="action-button edit-button"
-                        onClick={() => handleEdit(employee._id)}
-                      >
-                        <FontAwesomeIcon icon={faEdit} />
-                      </button>
-                      <button
-                        className="action-button delete-button"
-                        onClick={() => handleDelete(employee._id)}
-                      >
-                        <FontAwesomeIcon icon={faTrash} />
-                      </button>
-                    </div>
+                    <select
+                      value={employee.status}
+                      onChange={(e) => handleStatusChange(employee._id, e.target.value)}
+                      className={`status-select ${employee.status}`}
+                    >
+                      <option value="active">Active</option>
+                      <option value="on_leave">On Leave</option>
+                      <option value="inactive">Inactive</option>
+                    </select>
+                  </td>
+                  <td>
+                    <button
+                      className="action-btn delete"
+                      onClick={() => handleDelete(employee._id)}
+                    >
+                      <FontAwesomeIcon icon={faTrash} />
+                    </button>
                   </td>
                 </tr>
               ))}
@@ -418,7 +177,168 @@ const AdminEmployees = () => {
           </table>
         </div>
       </div>
-    </>
+
+      <style jsx>{`
+        .admin-employees {
+          padding: 2rem;
+        }
+
+        h1 {
+          margin-bottom: 2rem;
+          color: #2c3e50;
+        }
+
+        .employee-stats {
+          display: grid;
+          grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+          gap: 1.5rem;
+          margin-bottom: 2rem;
+        }
+
+        .stat-card {
+          background: white;
+          padding: 1.5rem;
+          border-radius: 10px;
+          box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+          display: flex;
+          align-items: center;
+        }
+
+        .icon {
+          font-size: 2rem;
+          margin-right: 1rem;
+          color: #3498db;
+        }
+
+        .icon.success {
+          color: #2ecc71;
+        }
+
+        .icon.warning {
+          color: #f1c40f;
+        }
+
+        .stat-content h3 {
+          margin: 0;
+          font-size: 1rem;
+          color: #7f8c8d;
+        }
+
+        .stat-content p {
+          margin: 0.5rem 0 0;
+          font-size: 1.5rem;
+          font-weight: bold;
+          color: #2c3e50;
+        }
+
+        .employees-content {
+          background: white;
+          padding: 1.5rem;
+          border-radius: 10px;
+          box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        .search-bar {
+          position: relative;
+          margin-bottom: 1.5rem;
+        }
+
+        .search-icon {
+          position: absolute;
+          left: 1rem;
+          top: 50%;
+          transform: translateY(-50%);
+          color: #7f8c8d;
+        }
+
+        input {
+          width: 100%;
+          padding: 0.75rem 1rem 0.75rem 2.5rem;
+          border: 1px solid #e0e0e0;
+          border-radius: 5px;
+          font-size: 1rem;
+        }
+
+        .table-container {
+          overflow-x: auto;
+        }
+
+        table {
+          width: 100%;
+          border-collapse: collapse;
+        }
+
+        th, td {
+          padding: 1rem;
+          text-align: left;
+          border-bottom: 1px solid #eee;
+        }
+
+        th {
+          background-color: #f8f9fa;
+          color: #2c3e50;
+        }
+
+        .status-select {
+          padding: 0.5rem;
+          border: 1px solid #e0e0e0;
+          border-radius: 4px;
+          font-size: 0.875rem;
+          cursor: pointer;
+        }
+
+        .status-select.active {
+          background-color: #e8f5e9;
+          color: #2e7d32;
+        }
+
+        .status-select.on_leave {
+          background-color: #fff3e0;
+          color: #ef6c00;
+        }
+
+        .status-select.inactive {
+          background-color: #ffebee;
+          color: #c62828;
+        }
+
+        .action-btn {
+          padding: 0.5rem;
+          margin: 0 0.25rem;
+          border: none;
+          border-radius: 4px;
+          cursor: pointer;
+          transition: background-color 0.2s;
+        }
+
+        .action-btn.delete {
+          background-color: #ffebee;
+          color: #c62828;
+        }
+
+        .action-btn:hover {
+          opacity: 0.8;
+        }
+
+        @media (max-width: 768px) {
+          .admin-employees {
+            padding: 1rem;
+          }
+
+          .employee-stats {
+            grid-template-columns: 1fr;
+          }
+
+          .stat-card {
+            padding: 1rem;
+          }
+
+          th, td {
+            padding: 0.75rem;
+          }
+        }
+      `}</style>
+    </div>
   );
 };
 

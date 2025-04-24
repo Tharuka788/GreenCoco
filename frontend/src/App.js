@@ -3,6 +3,7 @@ import { BrowserRouter as Router, Route, Routes, Navigate, Outlet, useNavigate, 
 import { FinanceProvider } from './FinanceContext';
 import { ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
+import axios from 'axios';
 
 // Lazy-loaded components
 const InventoryDashboard = lazy(() => import('./components/Inventory/InventoryDashboard'));
@@ -196,6 +197,12 @@ function App() {
       }
     }
   `;
+
+  const config = {
+    headers: {
+      Authorization: `Bearer ${localStorage.getItem('token')}`
+    }
+  };
 
   return (
     <>
