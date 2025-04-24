@@ -85,7 +85,9 @@ const AddOrder = () => {
 
     setIsSubmitting(true);
     try {
-      await axios.post('http://localhost:5000/api/orders/', formData);
+      console.log('Sending order data:', formData);
+      const response = await axios.post('http://localhost:5000/api/orders/', formData);
+      console.log('Server response:', response.data);
       setSuccess('Order placed successfully!');
       setFormData({
         productName: '',
@@ -98,7 +100,8 @@ const AddOrder = () => {
       setTimeout(() => navigate('/orders'), 2000);
     } catch (error) {
       console.error('Error placing order:', error);
-      setErrors({ submit: 'Failed to place order. Please try again.' });
+      const errorMessage = error.response?.data?.message || error.message || 'Failed to place order. Please try again.';
+      setErrors({ submit: errorMessage });
     } finally {
       setIsSubmitting(false);
     }
