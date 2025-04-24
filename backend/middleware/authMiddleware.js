@@ -1,5 +1,6 @@
 const jwt = require('jsonwebtoken');
 const User = require('../models/userModel');
+const Admin = require('../models/adminModel');
 
 const protect = async (req, res, next) => {
   let token;
@@ -12,8 +13,12 @@ const protect = async (req, res, next) => {
       // Verify token
       const decoded = jwt.verify(token, process.env.JWT_SECRET);
 
-      // Get user from the token
-      req.user = await User.findById(decoded.id).select('-password');
+      // Check if this is an admin route
+      if (req.baseUrl.includes('/api/admins')) {
+        req.user = await Admin.findById(decoded.id).select('-password');
+      } else {
+        req.user = await User.findById(decoded.id).select('-password');
+      }
 
       if (!req.user) {
         return res.status(401).json({ message: 'Not authorized, user not found' });
@@ -21,6 +26,7 @@ const protect = async (req, res, next) => {
 
       next();
     } catch (error) {
+      console.error('Auth error:', error);
       res.status(401).json({ message: 'Not authorized, token failed' });
     }
   } else {
@@ -28,4 +34,12 @@ const protect = async (req, res, next) => {
   }
 };
 
-module.exports = { protect };
+const admin = (req, res, next) => {
+  if (req.user && req.user.role === 'admin') {
+    next();
+  } else {
+    res.status(403).json({ message: 'Not authorized as admin' });
+  }
+};
+
+module.exports = { protect, admin };

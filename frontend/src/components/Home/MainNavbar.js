@@ -20,7 +20,8 @@ import {
   faExchangeAlt,
   faPeopleCarry,
   faSignInAlt,
-  faUserClock, // Add this import
+  faUserClock,
+  faUserShield,
 } from '@fortawesome/free-solid-svg-icons';
 
 const MainNavbar = () => {
@@ -31,6 +32,7 @@ const MainNavbar = () => {
   const [isSupplierDropdownOpen, setIsSupplierDropdownOpen] = useState(false);
   const [isOrdersDropdownOpen, setIsOrdersDropdownOpen] = useState(false);
   const [isEmployeeDropdownOpen, setIsEmployeeDropdownOpen] = useState(false);
+  const [isAdminDropdownOpen, setIsAdminDropdownOpen] = useState(false);
 
   const toggleMenu = () => {
     setIsOpen(!isOpen);
@@ -39,6 +41,7 @@ const MainNavbar = () => {
     if (isSupplierDropdownOpen) setIsSupplierDropdownOpen(false);
     if (isOrdersDropdownOpen) setIsOrdersDropdownOpen(false);
     if (isEmployeeDropdownOpen) setIsEmployeeDropdownOpen(false);
+    if (isAdminDropdownOpen) setIsAdminDropdownOpen(false);
   };
 
   const closeMenu = () => {
@@ -48,6 +51,7 @@ const MainNavbar = () => {
     setIsSupplierDropdownOpen(false);
     setIsOrdersDropdownOpen(false);
     setIsEmployeeDropdownOpen(false);
+    setIsAdminDropdownOpen(false);
   };
 
   const toggleFinanceDropdown = () => {
@@ -90,6 +94,15 @@ const MainNavbar = () => {
     setIsOrdersDropdownOpen(false);
   };
 
+  const toggleAdminDropdown = () => {
+    setIsAdminDropdownOpen(!isAdminDropdownOpen);
+    setIsFinanceDropdownOpen(false);
+    setIsInventoryDropdownOpen(false);
+    setIsSupplierDropdownOpen(false);
+    setIsOrdersDropdownOpen(false);
+    setIsEmployeeDropdownOpen(false);
+  };
+
   const isFinanceActive = [
     '/finance',
     '/finance/income',
@@ -114,6 +127,8 @@ const MainNavbar = () => {
   const isEmployeeActive = ['/employee', '/attendance'].includes(location.pathname);
 
   const isAdminLoginActive = ['/admin/login'].includes(location.pathname);
+
+  const isAdminActive = ['/admin', '/admin/login', '/admin/register'].includes(location.pathname);
 
   const navbarStyles = `
     @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600&display=swap');
@@ -678,14 +693,44 @@ const MainNavbar = () => {
               </Link>
             </li>
             <li role="none">
-              <Link
-                to="/admin/login"
-                className={isAdminLoginActive ? 'active' : ''}
+              <div
+                className={`dropdown-toggle ${isAdminActive ? 'active' : ''}`}
+                onClick={toggleAdminDropdown}
                 role="menuitem"
-                onClick={closeMenu}
+                aria-haspopup="true"
+                aria-expanded={isAdminDropdownOpen}
               >
-                <FontAwesomeIcon icon={faSignInAlt} /> Admin Login
-              </Link>
+                <FontAwesomeIcon icon={faUserShield} /> Admin
+                <FontAwesomeIcon 
+                  icon={faChevronDown} 
+                  className={`dropdown-arrow ${isAdminDropdownOpen ? 'open' : ''}`}
+                />
+              </div>
+              <ul
+                className={`dropdown-menu ${isAdminDropdownOpen ? 'show' : ''}`}
+                role="menu"
+              >
+                <li role="none">
+                  <Link
+                    to="/admin"
+                    className={location.pathname === '/admin' ? 'active' : ''}
+                    role="menuitem"
+                    onClick={closeMenu}
+                  >
+                    <FontAwesomeIcon icon={faChartBar} /> Dashboard
+                  </Link>
+                </li>
+                <li role="none">
+                  <Link
+                    to="/admin/login"
+                    className={location.pathname === '/admin/login' ? 'active' : ''}
+                    role="menuitem"
+                    onClick={closeMenu}
+                  >
+                    <FontAwesomeIcon icon={faSignInAlt} /> Login
+                  </Link>
+                </li>
+              </ul>
             </li>
           </ul>
         </div>
