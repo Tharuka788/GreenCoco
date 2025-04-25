@@ -198,12 +198,6 @@ function App() {
     }
   `;
 
-  const config = {
-    headers: {
-      Authorization: `Bearer ${localStorage.getItem('token')}`
-    }
-  };
-
   return (
     <>
       <style dangerouslySetInnerHTML={{ __html: appStyles }} />
