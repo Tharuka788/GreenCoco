@@ -8,10 +8,15 @@ import {
   faWarehouse,
   faSearch,
   faEdit,
-  faTrash
+  faTrash,
+  faTachometerAlt,
+  faPlus,
+  faChartLine,
+  faDownload
 } from '@fortawesome/free-solid-svg-icons';
 import { toast } from 'react-toastify';
 import AdminNavbar from './AdminNavbar';
+import { Link, useNavigate } from 'react-router-dom';
 
 const AdminInventory = () => {
   const [inventoryData, setInventoryData] = useState({
@@ -19,10 +24,12 @@ const AdminInventory = () => {
     lowStockItems: 0,
     outOfStockItems: 0,
     totalValue: 0,
-    items: []
+    items: [],
+    dashboardStats: {}
   });
   const [isLoading, setIsLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
+  const navigate = useNavigate();
 
   useEffect(() => {
     fetchInventoryData();
@@ -37,8 +44,16 @@ const AdminInventory = () => {
         }
       };
 
-      const response = await axios.get('http://localhost:5000/api/admin/inventory', config);
-      setInventoryData(response.data);
+      // Fetch both inventory items and dashboard data
+      const [inventoryResponse, dashboardResponse] = await Promise.all([
+        axios.get('http://localhost:5000/api/admin/inventory', config),
+        axios.get('http://localhost:5000/api/admin/inventory/dashboard', config)
+      ]);
+
+      setInventoryData({
+        ...inventoryResponse.data,
+        dashboardStats: dashboardResponse.data
+      });
       setIsLoading(false);
     } catch (error) {
       console.error('Error fetching inventory data:', error);
@@ -248,6 +263,49 @@ const AdminInventory = () => {
       color: #666;
     }
 
+    .view-dashboard-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 10px 20px;
+      background: #2a7458;
+      color: white;
+      border-radius: 8px;
+      text-decoration: none;
+      font-weight: 600;
+      transition: all 0.3s ease;
+    }
+
+    .view-dashboard-btn:hover {
+      background: #1e5c42;
+      transform: translateY(-2px);
+    }
+
+    .admin-actions {
+      display: flex;
+      gap: 15px;
+      margin-bottom: 25px;
+    }
+
+    .action-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 12px 24px;
+      background: #ffffff;
+      color: #2a7458;
+      border: 2px solid #2a7458;
+      border-radius: 8px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.3s ease;
+    }
+
+    .action-btn:hover {
+      background: #2a7458;
+      color: white;
+    }
+
     @media (max-width: 768px) {
       .admin-inventory {
         margin-left: 0;
@@ -295,7 +353,10 @@ const AdminInventory = () => {
       <AdminNavbar />
       <div className="admin-inventory">
         <div className="inventory-header">
-          <h1 className="inventory-title">Inventory Management</h1>
+          <h1 className="inventory-title">Admin Inventory Management</h1>
+          <Link to="/admin/inventory/dashboard" className="view-dashboard-btn">
+            <FontAwesomeIcon icon={faTachometerAlt} /> View Dashboard
+          </Link>
         </div>
 
         <div className="stats-grid">
@@ -330,6 +391,18 @@ const AdminInventory = () => {
             </div>
             <p className="stat-value">${inventoryData.totalValue.toLocaleString()}</p>
           </div>
+        </div>
+
+        <div className="admin-actions">
+          <button className="action-btn" onClick={() => navigate('/admin/inventory/add')}>
+            <FontAwesomeIcon icon={faPlus} /> Add New Item
+          </button>
+          <button className="action-btn" onClick={() => navigate('/admin/inventory/reports')}>
+            <FontAwesomeIcon icon={faChartLine} /> View Reports
+          </button>
+          <button className="action-btn" onClick={exportToCSV}>
+            <FontAwesomeIcon icon={faDownload} /> Export Data
+          </button>
         </div>
 
         <div className="inventory-content">

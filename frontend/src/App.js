@@ -247,8 +247,11 @@ function App() {
                   <Outlet />
                 </AdminProtectedRoute>}>
                   <Route index element={<AdminDashboard />} />
+                  <Route path="inventory">
+                    <Route index element={<AdminInventory />} />
+                    <Route path="dashboard" element={<InventoryDashboard isAdmin={true} />} />
+                  </Route>
                   <Route path="finance" element={<AdminFinance />} />
-                  <Route path="inventory" element={<AdminInventory />} />
                   <Route path="orders" element={<AdminOrders />} />
                   <Route path="suppliers" element={<AdminSuppliers />} />
                   <Route path="employees" element={<AdminEmployees />} />

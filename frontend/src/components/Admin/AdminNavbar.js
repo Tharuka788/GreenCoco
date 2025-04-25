@@ -19,7 +19,11 @@ const AdminNavbar = ({ onLogout }) => {
     { path: '/', icon: faHome, label: 'Home' },
     { path: '/admin', icon: faTachometerAlt, label: 'Dashboard' },
     { path: '/admin/finance', icon: faChartLine, label: 'Finance Management' },
-    { path: '/admin/inventory', icon: faBoxes, label: 'Inventory Management' },
+    { path: '/admin/inventory', icon: faBoxes, label: 'Inventory Management', subItems: [
+      { path: '/admin/inventory', label: 'Manage Inventory' },
+      { path: '/admin/inventory/dashboard', label: 'Inventory Dashboard' },
+      { path: '/admin/inventory/reports', label: 'Reports' }
+    ]},
     { path: '/admin/orders', icon: faShoppingCart, label: 'Order Management' },
     { path: '/admin/suppliers', icon: faTruck, label: 'Supplier Management' },
     { path: '/admin/employees', icon: faUsers, label: 'Employee Management' },

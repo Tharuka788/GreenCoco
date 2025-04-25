@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import MainNavbar from '../Home/MainNavbar';
+import AdminNavbar from '../Home/AdminNavbar';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faBox, faWeight, faExclamationTriangle, faRecycle, faHistory, faDownload, faPlus, faShoppingCart } from '@fortawesome/free-solid-svg-icons';
 import { Pie } from 'react-chartjs-2';
@@ -11,7 +12,7 @@ import axios from 'axios';
 
 ChartJS.register(ArcElement, Tooltip, Legend);
 
-const InventoryDashboard = () => {
+const InventoryDashboard = ({ isAdmin }) => {
   const [inventoryStats, setInventoryStats] = useState({
     totalItems: 0,
     totalWeight: 0,
@@ -460,11 +461,12 @@ const InventoryDashboard = () => {
   return (
     <>
       <style dangerouslySetInnerHTML={{ __html: styles }} />
-      <MainNavbar />
+      {isAdmin ? <AdminNavbar /> : <MainNavbar />}
       <div className="inventory-dashboard-container">
         <div className="inventory-dashboard">
           <h1 className="dashboard-title">
-            <FontAwesomeIcon icon={faBox} className="icon" /> Inventory Dashboard
+            <FontAwesomeIcon icon={faBox} className="icon" /> 
+            {isAdmin ? 'Admin Inventory Dashboard' : 'Inventory Dashboard'}
           </h1>
 
           {error && <div className="error">{error}</div>}
@@ -688,15 +690,31 @@ const InventoryDashboard = () => {
           </style>
 
           <div className="quick-links">
-            <Link to="/inventory" className="quick-link">
-              <FontAwesomeIcon icon={faBox} className="icon" /> Manage Inventory
-            </Link>
-            <Link to="/inventory/add" className="quick-link">
-              <FontAwesomeIcon icon={faPlus} className="icon" /> Add New Inventory
-            </Link>
-            <Link to="/inventory/low-stock" className="quick-link">
-              <FontAwesomeIcon icon={faExclamationTriangle} className="icon" /> View Low Stock Report
-            </Link>
+            {isAdmin ? (
+              <>
+                <Link to="/admin/inventory" className="quick-link">
+                  <FontAwesomeIcon icon={faBox} className="icon" /> Manage Inventory
+                </Link>
+                <Link to="/admin/inventory/add" className="quick-link">
+                  <FontAwesomeIcon icon={faPlus} className="icon" /> Add New Inventory
+                </Link>
+                <Link to="/admin/inventory/reports" className="quick-link">
+                  <FontAwesomeIcon icon={faExclamationTriangle} className="icon" /> View Reports
+                </Link>
+              </>
+            ) : (
+              <>
+                <Link to="/inventory" className="quick-link">
+                  <FontAwesomeIcon icon={faBox} className="icon" /> Manage Inventory
+                </Link>
+                <Link to="/inventory/add" className="quick-link">
+                  <FontAwesomeIcon icon={faPlus} className="icon" /> Add New Inventory
+                </Link>
+                <Link to="/inventory/low-stock" className="quick-link">
+                  <FontAwesomeIcon icon={faExclamationTriangle} className="icon" /> View Low Stock Report
+                </Link>
+              </>
+            )}
           </div>
         </div>
       </div>
