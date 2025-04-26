@@ -31,6 +31,7 @@ const MainNavbar = () => {
   const [isInventoryDropdownOpen, setIsInventoryDropdownOpen] = useState(false);
   const [isSupplierDropdownOpen, setIsSupplierDropdownOpen] = useState(false);
   const [isOrdersDropdownOpen, setIsOrdersDropdownOpen] = useState(false);
+  const [isTransportDropdownOpen, setIsTransportDropdownOpen] = useState(false);
   const [isEmployeeDropdownOpen, setIsEmployeeDropdownOpen] = useState(false);
   const [isAdminDropdownOpen, setIsAdminDropdownOpen] = useState(false);
 
@@ -40,6 +41,7 @@ const MainNavbar = () => {
     if (isInventoryDropdownOpen) setIsInventoryDropdownOpen(false);
     if (isSupplierDropdownOpen) setIsSupplierDropdownOpen(false);
     if (isOrdersDropdownOpen) setIsOrdersDropdownOpen(false);
+    if (isTransportDropdownOpen) setIsTransportDropdownOpen(false);
     if (isEmployeeDropdownOpen) setIsEmployeeDropdownOpen(false);
     if (isAdminDropdownOpen) setIsAdminDropdownOpen(false);
   };
@@ -50,6 +52,7 @@ const MainNavbar = () => {
     setIsInventoryDropdownOpen(false);
     setIsSupplierDropdownOpen(false);
     setIsOrdersDropdownOpen(false);
+    setIsTransportDropdownOpen(false);
     setIsEmployeeDropdownOpen(false);
     setIsAdminDropdownOpen(false);
   };
@@ -59,6 +62,7 @@ const MainNavbar = () => {
     setIsInventoryDropdownOpen(false);
     setIsSupplierDropdownOpen(false);
     setIsOrdersDropdownOpen(false);
+    setIsTransportDropdownOpen(false);
     setIsEmployeeDropdownOpen(false);
   };
 
@@ -67,6 +71,7 @@ const MainNavbar = () => {
     setIsFinanceDropdownOpen(false);
     setIsSupplierDropdownOpen(false);
     setIsOrdersDropdownOpen(false);
+    setIsTransportDropdownOpen(false);
     setIsEmployeeDropdownOpen(false);
   };
 
@@ -75,6 +80,7 @@ const MainNavbar = () => {
     setIsFinanceDropdownOpen(false);
     setIsInventoryDropdownOpen(false);
     setIsOrdersDropdownOpen(false);
+    setIsTransportDropdownOpen(false);
     setIsEmployeeDropdownOpen(false);
   };
 
@@ -83,7 +89,17 @@ const MainNavbar = () => {
     setIsFinanceDropdownOpen(false);
     setIsInventoryDropdownOpen(false);
     setIsSupplierDropdownOpen(false);
+    setIsTransportDropdownOpen(false);
     setIsEmployeeDropdownOpen(false);
+  };
+
+  const toggleTransportDropdown = () => {
+    setIsTransportDropdownOpen(!isTransportDropdownOpen);
+    setIsFinanceDropdownOpen(false);
+    setIsInventoryDropdownOpen(false);
+    setIsSupplierDropdownOpen(false);
+    setIsEmployeeDropdownOpen(false);
+    setIsOrdersDropdownOpen(false);
   };
 
   const toggleEmployeeDropdown = () => {
@@ -92,6 +108,7 @@ const MainNavbar = () => {
     setIsInventoryDropdownOpen(false);
     setIsSupplierDropdownOpen(false);
     setIsOrdersDropdownOpen(false);
+    setIsTransportDropdownOpen(false);
   };
 
   const toggleAdminDropdown = () => {
@@ -100,6 +117,7 @@ const MainNavbar = () => {
     setIsInventoryDropdownOpen(false);
     setIsSupplierDropdownOpen(false);
     setIsOrdersDropdownOpen(false);
+    setIsTransportDropdownOpen(false);
     setIsEmployeeDropdownOpen(false);
   };
 
@@ -123,6 +141,8 @@ const MainNavbar = () => {
   const isSupplierActive = ['/suppliers'].includes(location.pathname);
 
   const isOrdersActive = ['/orders', '/orders/add'].includes(location.pathname);
+
+  const isTransportActive = ['/transport', '/transpory'].includes(location.pathname);
 
   const isEmployeeActive = ['/employee', '/attendance'].includes(location.pathname);
 
@@ -650,6 +670,49 @@ const MainNavbar = () => {
                 </li>
               </ul>
             </li>
+             
+            <li role="none">
+              <div
+                className={`dropdown-toggle ${isTransportActive ? 'active' : ''}`}
+                onClick={toggleTransportDropdown}
+                role="menuitem"
+                aria-haspopup="true"
+                aria-expanded={isTransportDropdownOpen}
+              >
+                <FontAwesomeIcon icon={faTruck} /> Transport
+                <FontAwesomeIcon 
+                  icon={faChevronDown} 
+                  className={`dropdown-arrow ${isTransportDropdownOpen ? 'open' : ''}`}
+                />
+              </div>
+              <ul
+                className={`dropdown-menu ${isTransportDropdownOpen ? 'show' : ''}`}
+                role="menu"
+              >
+                <li role="none">
+                  <Link
+                    to="/tr"
+                    className={location.pathname === '/tr' ? 'active' : ''}
+                    role="menuitem"
+                    onClick={closeMenu}
+                  >
+                    <FontAwesomeIcon icon={faTruck} /> Transport Dashboard
+                  </Link>
+                </li>
+                <li role="none">
+                  <Link
+                    to="/transport/add"
+                    className={location.pathname === '/transport/add' ? 'active' : ''}
+                    role="menuitem"
+                    onClick={closeMenu}
+                  >
+                    
+                  </Link>
+                </li>
+              </ul>
+            </li>
+
+
             <li role="none">
               <div
                 className={`dropdown-toggle ${isEmployeeActive ? 'active' : ''}`}
