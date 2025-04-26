@@ -3,6 +3,7 @@ import { BrowserRouter as Router, Route, Routes, Navigate, Outlet, useNavigate, 
 import { FinanceProvider } from './FinanceContext';
 import { ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
+import './App.css';
 import axios from 'axios';
 
 // Lazy-loaded components
@@ -33,6 +34,7 @@ const AdminInventory = lazy(() => import('./components/Admin/AdminInventory'));
 const AdminEmployees = lazy(() => import('./components/Admin/AdminEmployees'));
 const AdminSuppliers = lazy(() => import('./components/Admin/AdminSuppliers'));
 const AdminOrders = lazy(() => import('./components/Admin/AdminOrders'));
+const Footer = lazy(() => import('./components/Home/Footer'));
 
 // Placeholder components for admin subpages
 const PlaceholderPage = ({ title, description }) => {
@@ -175,12 +177,15 @@ const MainNavbarWrapper = () => {
 function App() {
   const appStyles = `
     @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap');
+    @import url('https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css');
 
     .app {
       min-height: 100vh;
       padding-top: 80px;
       font-family: 'Poppins', sans-serif;
       background: #f5f7fa;
+      display: flex;
+      flex-direction: column;
     }
 
     .app.admin {
@@ -244,9 +249,7 @@ function App() {
                 </Route>
 
                 {/* Admin Protected Routes */}
-                <Route path="/admin" element={<AdminProtectedRoute>
-                  <Outlet />
-                </AdminProtectedRoute>}>
+                <Route path="/admin" element={<AdminProtectedRoute><Outlet /></AdminProtectedRoute>}>
                   <Route index element={<AdminDashboard />} />
                   <Route path="finance" element={<AdminFinance />} />
                   <Route path="inventory" element={<AdminInventory />} />
@@ -258,6 +261,7 @@ function App() {
                 {/* Fallback Route */}
                 <Route path="*" element={<NotFound />} />
               </Routes>
+              <Footer />
             </div>
           </Suspense>
           <ToastContainer
