@@ -11,6 +11,10 @@ import {
   faArrowRight,
   faChevronLeft,
   faChevronRight,
+  faQuoteLeft,
+  faEnvelope,
+  faPhone,
+  faMapMarkerAlt
 } from '@fortawesome/free-solid-svg-icons';
 import MainNavbar from './MainNavbar';
 
@@ -38,6 +42,27 @@ const HomePage = () => {
       image: '/3.jpg',
       title: 'Eco-Friendly',
       subtitle: 'Making a Difference'
+    }
+  ];
+
+  const testimonials = [
+    {
+      name: "Sarah Johnson",
+      role: "Environmental Advocate",
+      text: "GreenCoco's commitment to sustainability is unmatched. Their products are not only eco-friendly but also of the highest quality.",
+      initials: "SJ"
+    },
+    {
+      name: "Michael Chen",
+      role: "Business Owner",
+      text: "Working with GreenCoco has transformed our supply chain. Their efficient system and reliable service make them an invaluable partner.",
+      initials: "MC"
+    },
+    {
+      name: "Emma Davis",
+      role: "Sustainability Director",
+      text: "The impact GreenCoco has had on our environmental initiatives is remarkable. They're leading the way in sustainable practices.",
+      initials: "ED"
     }
   ];
 
@@ -182,6 +207,7 @@ const HomePage = () => {
     .slide-subtitle {
       font-size: 1.5rem;
       font-weight: 400;
+      margin-bottom: 2rem;
       opacity: 0;
       transform: translateY(20px);
       animation: fadeInUp 0.5s 0.2s forwards;
@@ -248,21 +274,13 @@ const HomePage = () => {
 
     /* Features Section */
     .features-section {
-      padding: 80px 20px;
+      padding: 100px 0;
       background: white;
-    }
-
-    .section-title {
-      text-align: center;
-      font-size: 2.5rem;
-      font-weight: 600;
-      color: #2a7458;
-      margin-bottom: 50px;
     }
 
     .features-grid {
       display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
       gap: 30px;
       max-width: 1200px;
       margin: 0 auto;
@@ -271,21 +289,20 @@ const HomePage = () => {
 
     .feature-card {
       background: white;
-      padding: 30px;
-      border-radius: 15px;
+      padding: 40px;
+      border-radius: 20px;
       box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
-      text-align: center;
       transition: all 0.3s ease;
+      text-align: center;
     }
 
     .feature-card:hover {
       transform: translateY(-10px);
-      box-shadow: 0 15px 40px rgba(42, 116, 88, 0.2);
     }
 
     .feature-icon {
       font-size: 2.5rem;
-      color: #2a7458;
+      color: #2ecc71;
       margin-bottom: 20px;
     }
 
@@ -332,97 +349,153 @@ const HomePage = () => {
       opacity: 0.9;
     }
 
-    /* Why Choose Us Section */
-    .why-choose-section {
-      padding: 80px 20px;
-      background: #f8f9fa;
+    /* Testimonials Section */
+    .testimonials-section {
+      padding: 100px 0;
+      background: linear-gradient(135deg, #f5f7fa 0%, #e6f0ea 100%);
+      position: relative;
+      overflow: hidden;
     }
 
-    .reasons-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-      gap: 30px;
-      max-width: 1200px;
-      margin: 0 auto;
+    .testimonials-section::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 100%;
+      background: linear-gradient(45deg, rgba(46, 204, 113, 0.05) 0%, rgba(39, 174, 96, 0.05) 100%);
+      transform: skewY(-6deg);
+      transform-origin: top left;
     }
 
-    .reason-card {
+    .testimonial-card {
       background: white;
       padding: 30px;
-      border-radius: 15px;
-      box-shadow: 0 5px 20px rgba(0, 0, 0, 0.05);
-      display: flex;
-      align-items: flex-start;
-      gap: 20px;
+      border-radius: 20px;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
       transition: all 0.3s ease;
+      position: relative;
+      z-index: 1;
     }
 
-    .reason-card:hover {
+    .testimonial-card:hover {
       transform: translateY(-5px);
-      box-shadow: 0 10px 30px rgba(42, 116, 88, 0.15);
+      box-shadow: 0 15px 40px rgba(46, 204, 113, 0.15);
     }
 
-    .reason-icon {
+    .quote-icon {
       font-size: 2rem;
-      color: #2a7458;
-      flex-shrink: 0;
+      color: #2ecc71;
+      opacity: 0.2;
+      margin-bottom: 15px;
     }
 
-    .reason-content h3 {
-      font-size: 1.3rem;
-      font-weight: 600;
-      color: #2a7458;
-      margin-bottom: 10px;
-    }
-
-    .reason-content p {
-      color: #666;
-      line-height: 1.6;
-      margin: 0;
-    }
-
-    /* CTA Section */
-    .cta-section {
-      padding: 100px 20px;
-      background: linear-gradient(135deg, #2a7458 0%, #3b9c73 100%);
-      text-align: center;
-      color: white;
-    }
-
-    .cta-content {
-      max-width: 800px;
-      margin: 0 auto;
-    }
-
-    .cta-title {
-      font-size: 2.5rem;
-      font-weight: 700;
-      margin-bottom: 20px;
-    }
-
-    .cta-description {
-      font-size: 1.2rem;
-      margin-bottom: 40px;
-      opacity: 0.9;
-    }
-
-    .cta-button {
-      display: inline-flex;
-      align-items: center;
-      gap: 10px;
-      background: white;
-      color: #2a7458;
-      padding: 15px 40px;
-      border-radius: 30px;
+    .testimonial-quote {
       font-size: 1.1rem;
+      color: #555;
+      margin-bottom: 20px;
+      line-height: 1.6;
+    }
+
+    .testimonial-author {
+      display: flex;
+      align-items: center;
+      gap: 15px;
+    }
+
+    .testimonial-avatar {
+      width: 60px;
+      height: 60px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, #2ecc71 0%, #27ae60 100%);
+      color: white;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.2rem;
       font-weight: 600;
-      text-decoration: none;
+    }
+
+    .author-info h4 {
+      margin: 0;
+      color: #333;
+      font-size: 1.1rem;
+    }
+
+    .author-info p {
+      margin: 5px 0 0;
+      color: #666;
+      font-size: 0.9rem;
+    }
+
+    /* Contact Section */
+    .contact-section {
+      padding: 100px 0;
+      background: white;
+      position: relative;
+    }
+
+    .contact-section::after {
+      content: '';
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      height: 30%;
+      background: linear-gradient(135deg, rgba(46, 204, 113, 0.05) 0%, rgba(39, 174, 96, 0.05) 100%);
+    }
+
+    .contact-info {
+      background: white;
+      padding: 30px;
+      border-radius: 20px;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+      transition: all 0.3s ease;
+      position: relative;
+      z-index: 1;
+    }
+
+    .contact-info:hover {
+      transform: translateY(-5px);
+      box-shadow: 0 15px 40px rgba(46, 204, 113, 0.15);
+    }
+
+    .contact-icon {
+      width: 50px;
+      height: 50px;
+      background: linear-gradient(135deg, #2ecc71 0%, #27ae60 100%);
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: white;
+      font-size: 1.2rem;
+      margin-right: 20px;
       transition: all 0.3s ease;
     }
 
-    .cta-button:hover {
-      transform: translateY(-3px);
-      box-shadow: 0 10px 20px rgba(0, 0, 0, 0.2);
+    .contact-info:hover .contact-icon {
+      transform: scale(1.1);
+    }
+
+    .contact-info h4 {
+      color: #333;
+      font-size: 1.2rem;
+      margin: 0 0 5px 0;
+    }
+
+    .contact-info p {
+      color: #666;
+      margin: 0;
+      font-size: 1rem;
+    }
+
+    .section-title {
+      text-align: center;
+      font-size: 2.5rem;
+      color: #333;
+      margin-bottom: 50px;
     }
 
     @keyframes fadeInUp {
@@ -444,57 +517,28 @@ const HomePage = () => {
       .section-title {
         font-size: 2rem;
       }
-
-      .feature-card {
-        padding: 20px;
-      }
-
-      .stat-number {
-        font-size: 2.5rem;
-      }
-
-      .cta-title {
-        font-size: 2rem;
-      }
-
-      .cta-description {
-        font-size: 1.1rem;
-      }
     }
 
-    @media (max-width: 480px) {
-      .slide-title {
-        font-size: 2rem;
-      }
+    .testimonials-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+      gap: 30px;
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 0 20px;
+      position: relative;
+      z-index: 1;
+    }
 
-      .slide-subtitle {
-        font-size: 1rem;
-      }
-
-      .section-title {
-        font-size: 1.8rem;
-      }
-
-      .feature-card {
-        padding: 15px;
-      }
-
-      .stat-number {
-        font-size: 2rem;
-      }
-
-      .cta-title {
-        font-size: 1.8rem;
-      }
-
-      .cta-description {
-        font-size: 1rem;
-      }
-
-      .cta-button {
-        padding: 12px 30px;
-        font-size: 1rem;
-      }
+    .contact-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+      gap: 30px;
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 0 20px;
+      position: relative;
+      z-index: 1;
     }
   `;
 
@@ -508,10 +552,13 @@ const HomePage = () => {
           <div className="slider-container">
             {slides.map((slide, index) => (
               <div key={index} className={`slide ${index === currentSlide ? 'active' : ''}`}>
-                <img src={slide.image} alt={`Slide ${index + 1}`} />
+                <img src={slide.image} alt={slide.title} />
                 <div className="slide-content">
                   <h1 className="slide-title">{slide.title}</h1>
                   <p className="slide-subtitle">{slide.subtitle}</p>
+                  <Link to="/register" className="cta-button">
+                    Get Started <FontAwesomeIcon icon={faArrowRight} />
+                  </Link>
                 </div>
               </div>
             ))}
@@ -526,7 +573,7 @@ const HomePage = () => {
             {slides.map((_, index) => (
               <div
                 key={index}
-                className={`dot ${currentSlide === index ? 'active' : ''}`}
+                className={`dot ${index === currentSlide ? 'active' : ''}`}
                 onClick={() => goToSlide(index)}
               />
             ))}
@@ -535,28 +582,22 @@ const HomePage = () => {
 
         {/* Features Section */}
         <section className="features-section">
-          <h2 className="section-title">Our Features</h2>
+          <h2 className="section-title">Why Choose GreenCoco</h2>
           <div className="features-grid">
             <div className="feature-card">
               <FontAwesomeIcon icon={faLeaf} className="feature-icon" />
-              <h3 className="feature-title">Eco-Friendly</h3>
-              <p className="feature-description">
-                Committed to sustainable practices and environmental conservation
-              </p>
+              <h3>Eco-Friendly</h3>
+              <p>Committed to sustainable practices and environmental conservation</p>
             </div>
             <div className="feature-card">
               <FontAwesomeIcon icon={faRecycle} className="feature-icon" />
-              <h3 className="feature-title">Sustainable</h3>
-              <p className="feature-description">
-                Promoting recycling and responsible resource management
-              </p>
+              <h3>Sustainable</h3>
+              <p>Using renewable resources and minimizing environmental impact</p>
             </div>
             <div className="feature-card">
               <FontAwesomeIcon icon={faHandHoldingHeart} className="feature-icon" />
-              <h3 className="feature-title">Quality Care</h3>
-              <p className="feature-description">
-                Dedicated to providing the highest quality products and service
-              </p>
+              <h3>Quality</h3>
+              <p>Premium products that meet the highest standards</p>
             </div>
           </div>
         </section>
@@ -565,62 +606,77 @@ const HomePage = () => {
         <section className="stats-section">
           <div className="stats-grid">
             <div className="stat-card">
-              <div className="stat-number">{animatedStats.products}+</div>
-              <div className="stat-label">Products</div>
+              <h3>{animatedStats.products}+</h3>
+              <p>Products</p>
             </div>
             <div className="stat-card">
-              <div className="stat-number">{animatedStats.customers}+</div>
-              <div className="stat-label">Happy Customers</div>
+              <h3>{animatedStats.customers}+</h3>
+              <p>Happy Customers</p>
             </div>
             <div className="stat-card">
-              <div className="stat-number">{animatedStats.satisfaction}%</div>
-              <div className="stat-label">Satisfaction Rate</div>
+              <h3>{animatedStats.satisfaction}%</h3>
+              <p>Satisfaction Rate</p>
             </div>
             <div className="stat-card">
-              <div className="stat-number">{animatedStats.sustainability}%</div>
-              <div className="stat-label">Sustainability Score</div>
+              <h3>{animatedStats.sustainability}%</h3>
+              <p>Sustainability Score</p>
             </div>
           </div>
         </section>
 
-        {/* Why Choose Us Section */}
-        <section className="why-choose-section">
-          <h2 className="section-title">Why Choose Us</h2>
-          <div className="reasons-grid">
-            <div className="reason-card">
-              <FontAwesomeIcon icon={faChartLine} className="reason-icon" />
-              <div className="reason-content">
-                <h3>Growth Focus</h3>
-                <p>Committed to continuous improvement and innovation</p>
+        {/* Testimonials Section */}
+        <section className="testimonials-section">
+          <h2 className="section-title">What Our Clients Say</h2>
+          <div className="testimonials-grid">
+            {testimonials.map((testimonial, index) => (
+              <div key={index} className="testimonial-card">
+                <FontAwesomeIcon icon={faQuoteLeft} className="quote-icon" />
+                <p className="testimonial-quote">{testimonial.text}</p>
+                <div className="testimonial-author">
+                  <div className="testimonial-avatar">
+                    {testimonial.initials}
+                  </div>
+                  <div className="author-info">
+                    <h4>{testimonial.name}</h4>
+                    <p>{testimonial.role}</p>
+                  </div>
+                </div>
               </div>
-            </div>
-            <div className="reason-card">
-              <FontAwesomeIcon icon={faUsers} className="reason-icon" />
-              <div className="reason-content">
-                <h3>Customer First</h3>
-                <p>Dedicated to exceeding customer expectations</p>
-              </div>
-            </div>
-            <div className="reason-card">
-              <FontAwesomeIcon icon={faShieldAlt} className="reason-icon" />
-              <div className="reason-content">
-                <h3>Quality Assured</h3>
-                <p>Rigorous quality control and testing processes</p>
-              </div>
-            </div>
+            ))}
           </div>
         </section>
 
-        {/* CTA Section */}
-        <section className="cta-section">
-          <div className="cta-content">
-            <h2 className="cta-title">Ready to Get Started?</h2>
-            <p className="cta-description">
-              Join us in our mission to create a more sustainable future
-            </p>
-            <Link to="/register" className="cta-button">
-              Get Started <FontAwesomeIcon icon={faArrowRight} />
-            </Link>
+        {/* Contact Section */}
+        <section className="contact-section">
+          <h2 className="section-title">Get in Touch</h2>
+          <div className="contact-grid">
+            <div className="contact-info">
+              <div className="contact-icon">
+                <FontAwesomeIcon icon={faEnvelope} />
+              </div>
+              <div>
+                <h4>Email</h4>
+                <p>info@greencoco.com</p>
+              </div>
+            </div>
+            <div className="contact-info">
+              <div className="contact-icon">
+                <FontAwesomeIcon icon={faPhone} />
+              </div>
+              <div>
+                <h4>Phone</h4>
+                <p>+1 (555) 123-4567</p>
+              </div>
+            </div>
+            <div className="contact-info">
+              <div className="contact-icon">
+                <FontAwesomeIcon icon={faMapMarkerAlt} />
+              </div>
+              <div>
+                <h4>Location</h4>
+                <p>123 Green Street, Eco City</p>
+              </div>
+            </div>
           </div>
         </section>
       </div>
