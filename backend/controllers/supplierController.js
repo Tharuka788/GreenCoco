@@ -1,5 +1,6 @@
 const asyncHandler = require('express-async-handler');
 const Supplier = require('../models/Supplier');
+const Order = require('../models/order');
 
 // @desc    Register a new supplier
 // @route   POST /api/suppliers
@@ -88,10 +89,47 @@ const deleteSupplier = asyncHandler(async (req, res) => {
   res.json({ message: 'Supplier removed' });
 });
 
+// @desc    Supplier Performance Overview
+// @route   GET /api/suppliers/performance
+// @access  Public
+const getSupplierPerformanceOverview = asyncHandler(async (req, res) => {
+  const suppliers = await Supplier.find({});
+  const orders = await Order.find({});
+
+  const performance = suppliers.map(supplier => {
+    const supplierOrders = orders.filter(order => order.email === supplier.email);
+    const totalOrders = supplierOrders.length;
+    const deliveredOrders = supplierOrders.filter(order => order.status === 'Delivered');
+    const cancelledOrders = supplierOrders.filter(order => order.status === 'Cancelled');
+    // If you have deliveryDate and expectedDeliveryDate, calculate on-time delivery
+    let onTimeDeliveries = 0;
+    deliveredOrders.forEach(order => {
+      if (order.deliveryDate && order.expectedDeliveryDate && order.deliveryDate <= order.expectedDeliveryDate) {
+        onTimeDeliveries++;
+      }
+    });
+    return {
+      _id: supplier._id,
+      supplierName: supplier.supplierName,
+      supplierProduct: supplier.supplierProduct,
+      email: supplier.email,
+      status: supplier.status,
+      totalDelivered: deliveredOrders.length,
+      deliverySuccessRate: totalOrders ? ((deliveredOrders.length / totalOrders) * 100).toFixed(2) : '0.00',
+      onTimeDeliveryPercent: deliveredOrders.length ? ((onTimeDeliveries / deliveredOrders.length) * 100).toFixed(2) : 'N/A',
+      canceledOrders: cancelledOrders.length,
+      totalOrders: totalOrders
+    };
+  });
+
+  res.json(performance);
+});
+
 module.exports = {
   registerSupplier,
   getSuppliers,
   getSupplierById,
   updateSupplier,
-  deleteSupplier
+  deleteSupplier,
+  getSupplierPerformanceOverview
 };

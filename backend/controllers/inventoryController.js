@@ -114,10 +114,20 @@ const getPicture = asyncHandler(async (req, res) => {
   readStream.pipe(res);
 });
 
+// @desc    Get low stock inventory items
+// @route   GET /api/inventory/low-stock
+// @access  Public
+const getLowStockInventory = asyncHandler(async (req, res) => {
+  const threshold = 10; // You can adjust this threshold as needed
+  const lowStockItems = await Inventory.find({ totalWeight: { $lt: threshold } });
+  res.status(200).json(lowStockItems);
+});
+
 module.exports = {
   getInventory,
   createInventory,
   updateInventory,
   deleteInventory,
-  getPicture
+  getPicture,
+  getLowStockInventory
 };

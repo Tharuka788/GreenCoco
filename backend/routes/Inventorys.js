@@ -163,4 +163,14 @@ router.route("/get/:id").get(async (req, res) => {
     });
 });
 
+// Route to get low stock inventory items
+router.get('/low-stock', async (req, res) => {
+  try {
+    const lowStockItems = await Inventory.find({ totalWeight: { $lt: LOW_STOCK_THRESHOLD } });
+    res.status(200).json(lowStockItems);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
 module.exports = router;
