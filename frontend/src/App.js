@@ -3,7 +3,9 @@ import { BrowserRouter as Router, Route, Routes, Navigate, Outlet, useNavigate, 
 import { FinanceProvider } from './FinanceContext';
 import { ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
+import './App.css';
 import axios from 'axios';
+import Footer from './components/Footer';
 
 // Lazy-loaded components
 const InventoryDashboard = lazy(() => import('./components/Inventory/InventoryDashboard'));
@@ -172,15 +174,30 @@ const MainNavbarWrapper = () => {
   return <MainNavbar />;
 };
 
+// Footer wrapper component
+const FooterWrapper = () => {
+  const location = useLocation();
+  const isAdminRoute = location.pathname.startsWith('/admin');
+  
+  if (isAdminRoute) {
+    return null;
+  }
+
+  return <Footer />;
+};
+
 function App() {
   const appStyles = `
     @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap');
+    @import url('https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css');
 
     .app {
       min-height: 100vh;
       padding-top: 80px;
       font-family: 'Poppins', sans-serif;
       background: #f5f7fa;
+      display: flex;
+      flex-direction: column;
     }
 
     .app.admin {
@@ -199,84 +216,68 @@ function App() {
   `;
 
   return (
-    <>
+    <Router>
       <style dangerouslySetInnerHTML={{ __html: appStyles }} />
-      <Router>
-        <FinanceProvider>
-          <Suspense fallback={<div>Loading...</div>}>
-            <MainNavbarWrapper />
-            <div className="app">
-              <Routes>
-                {/* Public Routes */}
-                <Route path="/" element={<HomePage />} />
-                <Route path="/register" element={<Register />} />
-                <Route path="/login" element={<Login />} />
-                <Route path="/admin/login" element={<AdminLogin />} />
-                <Route path="/admin/register" element={<AdminRegister />} />
+      <div className="app">
+        <MainNavbarWrapper />
+        <Suspense fallback={<div>Loading...</div>}>
+          <FinanceProvider>
+            <Routes>
+              {/* Public Routes */}
+              <Route path="/" element={<HomePage />} />
+              <Route path="/register" element={<Register />} />
+              <Route path="/login" element={<Login />} />
+              <Route path="/admin/login" element={<AdminLogin />} />
+              <Route path="/admin/register" element={<AdminRegister />} />
 
-                {/* User Protected Routes */}
-                <Route element={<ProtectedRoute />}>
-                  <Route path="/finance">
-                    <Route index element={<Dashboard />} />
-                    <Route path="income" element={<IncomePage />} />
-                    <Route path="expense" element={<ExpensePage />} />
-                    <Route path="salary" element={<SalaryPage />} />
-                    <Route path="transactions" element={<TransactionsPage />} />
-                  </Route>
-
-                  <Route path="/inventory">
-                    <Route index element={<InventoryManagement />} />
-                    <Route path="dashboard" element={<InventoryDashboard />} />
-                    <Route path="add" element={<InventoryForm />} />
-                    <Route path="details/:id" element={<InventoryDetails />} />
-                    <Route path="edit/:id" element={<InventoryDetails />} />
-                    <Route path="low-stock" element={<LowStockReport />} />
-                  </Route>
-
-                  <Route path="/orders">
-                    <Route index element={<OrdersDashboard />} />
-                    <Route path="add" element={<AddOrder />} />
-                  </Route>
-
-                  <Route path="/suppliers" element={<SupplierDashboard />} />
-                  <Route path="/employee" element={<EmployeeDashboard />} />
-                  <Route path="/attendance" element={<AttendanceManagement />} />
+              {/* User Protected Routes */}
+              <Route element={<ProtectedRoute />}>
+                <Route path="/finance">
+                  <Route index element={<Dashboard />} />
+                  <Route path="income" element={<IncomePage />} />
+                  <Route path="expense" element={<ExpensePage />} />
+                  <Route path="salary" element={<SalaryPage />} />
+                  <Route path="transactions" element={<TransactionsPage />} />
                 </Route>
 
-                {/* Admin Protected Routes */}
-                <Route path="/admin" element={<AdminProtectedRoute>
-                  <Outlet />
-                </AdminProtectedRoute>}>
-                  <Route index element={<AdminDashboard />} />
-                  <Route path="finance" element={<AdminFinance />} />
-                  <Route path="inventory" element={<AdminInventory />} />
-                  <Route path="orders" element={<AdminOrders />} />
-                  <Route path="suppliers" element={<AdminSuppliers />} />
-                  <Route path="employees" element={<AdminEmployees />} />
+                <Route path="/inventory">
+                  <Route index element={<InventoryManagement />} />
+                  <Route path="dashboard" element={<InventoryDashboard />} />
+                  <Route path="add" element={<InventoryForm />} />
+                  <Route path="details/:id" element={<InventoryDetails />} />
+                  <Route path="edit/:id" element={<InventoryDetails />} />
+                  <Route path="low-stock" element={<LowStockReport />} />
                 </Route>
 
-                {/* Fallback Route */}
-                <Route path="*" element={<NotFound />} />
-              </Routes>
-            </div>
-          </Suspense>
-          <ToastContainer
-            position="top-right"
-            autoClose={3000}
-            hideProgressBar={false}
-            newestOnTop={false}
-            closeOnClick
-            rtl={false}
-            pauseOnFocusLoss
-            draggable
-            pauseOnHover
-            theme="light"
-            limit={3}
-            closeButton={true}
-          />
-        </FinanceProvider>
-      </Router>
-    </>
+                <Route path="/orders">
+                  <Route index element={<OrdersDashboard />} />
+                  <Route path="add" element={<AddOrder />} />
+                </Route>
+
+                <Route path="/suppliers" element={<SupplierDashboard />} />
+                <Route path="/employee" element={<EmployeeDashboard />} />
+                <Route path="/attendance" element={<AttendanceManagement />} />
+              </Route>
+
+              {/* Admin Protected Routes */}
+              <Route path="/admin" element={<AdminProtectedRoute><Outlet /></AdminProtectedRoute>}>
+                <Route index element={<AdminDashboard />} />
+                <Route path="finance" element={<AdminFinance />} />
+                <Route path="inventory" element={<AdminInventory />} />
+                <Route path="orders" element={<AdminOrders />} />
+                <Route path="suppliers" element={<AdminSuppliers />} />
+                <Route path="employees" element={<AdminEmployees />} />
+              </Route>
+
+              {/* Fallback Route */}
+              <Route path="*" element={<NotFound />} />
+            </Routes>
+          </FinanceProvider>
+        </Suspense>
+        <FooterWrapper />
+        <ToastContainer />
+      </div>
+    </Router>
   );
 }
 
