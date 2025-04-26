@@ -130,6 +130,8 @@ const Dashboard = () => {
 
   useEffect(() => {
     fetchData();
+    const interval = setInterval(fetchData, 30000); // Refresh every 30 seconds
+    return () => clearInterval(interval);
   }, [refreshTrigger]);
 
   // Handle form input changes
@@ -196,50 +198,47 @@ const Dashboard = () => {
     }
   };
 
-  // Function to get the last 6 months' labels (e.g., "Jan 2025", "Feb 2025", etc.)
-  const getLastSixMonths = () => {
-    const months = [];
-    const today = new Date();
-    for (let i = 5; i >= 0; i--) {
-      const date = new Date(today.getFullYear(), today.getMonth() - i, 1);
-      months.push(date.toLocaleString('default', { month: 'short', year: 'numeric' }));
-    }
-    return months;
+  // Helper to get all unique months from both income and expenses
+  const getAllMonths = () => {
+    const allDates = [...financeData.income, ...financeData.expenses]
+      .map(item => new Date(item.date))
+      .filter(date => !isNaN(date));
+    const uniqueMonths = Array.from(new Set(
+      allDates.map(date => `${date.getFullYear()}-${date.getMonth()}`)
+    ));
+    // Sort months chronologically
+    uniqueMonths.sort((a, b) => {
+      const [aYear, aMonth] = a.split('-').map(Number);
+      const [bYear, bMonth] = b.split('-').map(Number);
+      return aYear !== bYear ? aYear - bYear : aMonth - bMonth;
+    });
+    return uniqueMonths.map(m => {
+      const [year, month] = m.split('-').map(Number);
+      return new Date(year, month, 1).toLocaleString('default', { month: 'short', year: 'numeric' });
+    });
   };
 
-  // Aggregate income and expenses by month for current and past entries only
-  const aggregateByMonth = (data) => {
-    const monthlyData = Array(6).fill(0);
-    const today = new Date();
-    const sixMonthsAgo = new Date(today.getFullYear(), today.getMonth() - 5, 1);
-
-    data.forEach((item) => {
-      const itemDate = new Date(item.date);
-      if (itemDate >= sixMonthsAgo && itemDate <= today) {
-        const monthDiff = (today.getFullYear() - itemDate.getFullYear()) * 12 + (today.getMonth() - itemDate.getMonth());
-        if (monthDiff >= 0 && monthDiff < 6) {
-          const index = 5 - monthDiff;
-          monthlyData[index] += item.amount;
-        }
+  // Aggregate by all months present in the data
+  const getMonthlyTotals = (data, allMonths) => {
+    const totals = Array(allMonths.length).fill(0);
+    data.forEach(item => {
+      const date = new Date(item.date);
+      if (!isNaN(date)) {
+        const label = date.toLocaleString('default', { month: 'short', year: 'numeric' });
+        const idx = allMonths.indexOf(label);
+        if (idx !== -1) totals[idx] += item.amount;
       }
     });
-
-    return monthlyData;
+    return totals;
   };
 
-  // Filter income and expenses up to today for the chart
-  const today = new Date();
-  today.setHours(0, 0, 0, 0);
-  const currentIncome = financeData.income.filter((item) => new Date(item.date) <= today);
-  const currentExpenses = financeData.expenses.filter((item) => new Date(item.date) <= today);
-
-  const monthlyIncome = aggregateByMonth(currentIncome);
-  const monthlyExpenses = aggregateByMonth(currentExpenses);
-  const monthLabels = getLastSixMonths();
+  const allMonths = getAllMonths();
+  const monthlyIncome = getMonthlyTotals(financeData.income, allMonths);
+  const monthlyExpenses = getMonthlyTotals(financeData.expenses, allMonths);
 
   // Create datasets for the line chart
   const chartData = {
-    labels: monthLabels,
+    labels: allMonths,
     datasets: [
       {
         label: 'Income',
@@ -247,19 +246,24 @@ const Dashboard = () => {
         fill: true,
         backgroundColor: (context) => {
           const ctx = context.chart.ctx;
-          const gradient = ctx.createLinearGradient(0, 0, 0, 200);
-          gradient.addColorStop(0, 'rgba(70, 179, 138, 0.3)');
-          gradient.addColorStop(1, 'rgba(70, 179, 138, 0)');
+          const gradient = ctx.createLinearGradient(0, 0, 0, 300);
+          gradient.addColorStop(0, 'rgba(52, 199, 89, 0.25)'); // Modern green
+          gradient.addColorStop(1, 'rgba(52, 199, 89, 0)');
           return gradient;
         },
-        borderColor: '#328e6e',
-        borderWidth: 2,
-        tension: 0.4,
-        pointBackgroundColor: '#328e6e',
+        borderColor: 'rgba(52, 199, 89, 1)',
+        borderWidth: 3,
+        tension: 0.5, // smoother curve
+        pointBackgroundColor: 'rgba(52, 199, 89, 1)',
         pointBorderColor: '#fff',
-        pointBorderWidth: 2,
-        pointRadius: 5,
-        pointHoverRadius: 7,
+        pointBorderWidth: 3,
+        pointRadius: 7,
+        pointHoverRadius: 10,
+        pointStyle: 'circle',
+        shadowOffsetX: 0,
+        shadowOffsetY: 4,
+        shadowBlur: 10,
+        shadowColor: 'rgba(52, 199, 89, 0.15)',
       },
       {
         label: 'Expenses',
@@ -267,71 +271,81 @@ const Dashboard = () => {
         fill: true,
         backgroundColor: (context) => {
           const ctx = context.chart.ctx;
-          const gradient = ctx.createLinearGradient(0, 0, 0, 200);
-          gradient.addColorStop(0, 'rgba(231, 76, 60, 0.3)');
-          gradient.addColorStop(1, 'rgba(231, 76, 60, 0)');
+          const gradient = ctx.createLinearGradient(0, 0, 0, 300);
+          gradient.addColorStop(0, 'rgba(255, 99, 132, 0.22)'); // Modern red
+          gradient.addColorStop(1, 'rgba(255, 99, 132, 0)');
           return gradient;
         },
-        borderColor: '#e74c3c',
-        borderWidth: 2,
-        tension: 0.4,
-        pointBackgroundColor: '#e74c3c',
+        borderColor: 'rgba(255, 99, 132, 1)',
+        borderWidth: 3,
+        tension: 0.5, // smoother curve
+        pointBackgroundColor: 'rgba(255, 99, 132, 1)',
         pointBorderColor: '#fff',
-        pointBorderWidth: 2,
-        pointRadius: 5,
-        pointHoverRadius: 7,
+        pointBorderWidth: 3,
+        pointRadius: 7,
+        pointHoverRadius: 10,
+        pointStyle: 'circle',
+        shadowOffsetX: 0,
+        shadowOffsetY: 4,
+        shadowBlur: 10,
+        shadowColor: 'rgba(255, 99, 132, 0.15)',
       },
     ],
   };
 
+  // Modern chart options
   const chartOptions = {
     responsive: true,
     maintainAspectRatio: true,
-    aspectRatio: 2,
+    aspectRatio: 2.2,
     plugins: {
       legend: {
         position: 'top',
         labels: {
           font: {
-            family: "'Poppins', sans-serif",
-            size: 14,
+            family: "'Poppins', 'Segoe UI', Arial, sans-serif",
+            size: 16,
+            weight: 'bold',
           },
-          color: '#2a7458',
-          padding: 15,
-          boxWidth: 20,
-          boxHeight: 20,
+          color: '#222',
+          padding: 20,
+          boxWidth: 24,
+          boxHeight: 24,
           usePointStyle: true,
           pointStyle: 'circle',
         },
       },
       title: {
         display: true,
-        text: 'Income vs Expenses Over Time',
+        text: 'Income vs Expenses (All Time)',
         font: {
-          family: "'Poppins', sans-serif",
-          size: 20,
-          weight: '600',
+          family: "'Poppins', 'Segoe UI', Arial, sans-serif",
+          size: 24,
+          weight: '700',
         },
-        color: '#2a7458',
+        color: '#222',
         padding: {
-          top: 10,
-          bottom: 20,
+          top: 16,
+          bottom: 28,
         },
       },
       tooltip: {
-        backgroundColor: 'rgba(0, 0, 0, 0.8)',
+        backgroundColor: 'rgba(30, 30, 30, 0.95)',
         titleFont: {
-          family: "'Poppins', sans-serif",
-          size: 14,
+          family: "'Poppins', 'Segoe UI', Arial, sans-serif",
+          size: 16,
+          weight: 'bold',
         },
         bodyFont: {
-          family: "'Poppins', sans-serif",
-          size: 12,
+          family: "'Poppins', 'Segoe UI', Arial, sans-serif",
+          size: 15,
         },
-        padding: 10,
-        cornerRadius: 8,
+        padding: 14,
+        cornerRadius: 10,
+        borderColor: '#eee',
+        borderWidth: 1,
         callbacks: {
-          label: (context) => `LKR ${context.parsed.y.toFixed(2)}`,
+          label: (context) => `LKR ${context.parsed.y.toLocaleString(undefined, {minimumFractionDigits: 2})}`,
         },
       },
     },
@@ -339,10 +353,10 @@ const Dashboard = () => {
       x: {
         ticks: {
           font: {
-            family: "'Poppins', sans-serif",
-            size: 12,
+            family: "'Poppins', 'Segoe UI', Arial, sans-serif",
+            size: 14,
           },
-          color: '#2a7458',
+          color: '#444',
         },
         grid: {
           display: false,
@@ -352,20 +366,20 @@ const Dashboard = () => {
         beginAtZero: true,
         ticks: {
           font: {
-            family: "'Poppins', sans-serif",
-            size: 12,
+            family: "'Poppins', 'Segoe UI', Arial, sans-serif",
+            size: 14,
           },
-          color: '#2a7458',
+          color: '#444',
           callback: (value) => `LKR ${value}`,
         },
         grid: {
-          color: 'rgba(0, 0, 0, 0.05)',
+          color: 'rgba(0, 0, 0, 0.04)',
         },
       },
     },
     animation: {
-      duration: 1500,
-      easing: 'easeOutQuart',
+      duration: 1800,
+      easing: 'easeInOutQuart',
     },
   };
 
@@ -963,7 +977,13 @@ const Dashboard = () => {
               </div>
             )}
             <div className="chart-container">
-              <Line data={chartData} options={chartOptions} />
+              {(monthlyIncome.every(val => val === 0) && monthlyExpenses.every(val => val === 0)) ? (
+                <div style={{ textAlign: 'center', color: '#888', padding: '40px 0', fontSize: '1.2rem' }}>
+                  No financial data available for the last 6 months. Please add income or expense records to see the chart.
+                </div>
+              ) : (
+                <Line data={chartData} options={chartOptions} />
+              )}
             </div>
             <div className="dashboard-grid">
               <div className="card income">

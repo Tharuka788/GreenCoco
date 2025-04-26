@@ -8,10 +8,16 @@ import {
   faSearch,
   faEdit,
   faTrash,
-  faSpinner
+  faSpinner,
+  faPlus,
+  faCheck,
+  faTimes,
+  faTrophy
 } from '@fortawesome/free-solid-svg-icons';
 import { toast } from 'react-toastify';
 import AdminNavbar from './AdminNavbar';
+
+const STATUS_OPTIONS = ['all', 'approved', 'pending', 'rejected'];
 
 const AdminSuppliers = () => {
   const [suppliersData, setSuppliersData] = useState({
@@ -25,6 +31,18 @@ const AdminSuppliers = () => {
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
   const [error, setError] = useState(null);
+  const [statusFilter, setStatusFilter] = useState('all');
+  const [showAddModal, setShowAddModal] = useState(false);
+  const [addForm, setAddForm] = useState({
+    supplierName: '',
+    supplierProduct: '',
+    quantity: '',
+    amount: '',
+    email: '',
+  });
+  const [performanceData, setPerformanceData] = useState([]);
+  const [loadingPerformance, setLoadingPerformance] = useState(true);
+  const [lowStockItems, setLowStockItems] = useState([]);
 
   const fetchSuppliersData = async () => {
     try {
@@ -161,6 +179,88 @@ const AdminSuppliers = () => {
     }
   };
 
+  // Approve supplier
+  const handleApprove = async (supplierId, email) => {
+    try {
+      await axios.put(`http://localhost:5000/api/suppliers/${supplierId}`, { status: 'approved' });
+      toast.success('Supplier approved!');
+      fetchSuppliersData();
+    } catch (error) {
+      toast.error(error.response?.data?.message || 'Failed to approve supplier.');
+    }
+  };
+
+  // Reject supplier
+  const handleReject = async (supplierId, email) => {
+    try {
+      await axios.put(`http://localhost:5000/api/suppliers/${supplierId}`, { status: 'rejected' });
+      toast.success('Supplier rejected!');
+      fetchSuppliersData();
+    } catch (error) {
+      toast.error(error.response?.data?.message || 'Failed to reject supplier.');
+    }
+  };
+
+  // Add supplier (manual)
+  const handleAddSupplier = async (e) => {
+    e.preventDefault();
+    try {
+      await axios.post('http://localhost:5000/api/suppliers', {
+        ...addForm,
+        quantity: addForm.quantity === '' ? 0 : Number(addForm.quantity),
+        amount: addForm.amount === '' ? 0 : Number(addForm.amount),
+      });
+      setShowAddModal(false);
+      setAddForm({ supplierName: '', supplierProduct: '', quantity: '', amount: '', email: '' });
+      toast.success('Supplier added!');
+      fetchSuppliersData();
+    } catch (error) {
+      toast.error('Failed to add supplier.');
+    }
+  };
+
+  // Fetch supplier performance data
+  useEffect(() => {
+    const fetchPerformance = async () => {
+      setLoadingPerformance(true);
+      try {
+        const res = await axios.get('http://localhost:5000/api/suppliers/performance');
+        setPerformanceData(res.data);
+      } catch (err) {
+        toast.error('Failed to load supplier performance');
+      }
+      setLoadingPerformance(false);
+    };
+    fetchPerformance();
+  }, []);
+
+  // Fetch low stock inventory items
+  useEffect(() => {
+    const fetchLowStock = async () => {
+      try {
+        const res = await axios.get('http://localhost:5000/api/inventory/low-stock');
+        setLowStockItems(res.data);
+      } catch (err) {
+        // Optionally show a toast or ignore
+      }
+    };
+    fetchLowStock();
+  }, []);
+
+  // Summary cards
+  const activeSuppliers = performanceData.filter(s => s.status === 'approved').length;
+  const pendingSuppliers = performanceData.filter(s => s.status === 'pending').length;
+  const topSupplier = performanceData.reduce((top, s) => (s.totalDelivered > (top?.totalDelivered || 0) ? s : top), null);
+
+  // Table data (filtered)
+  const filteredPerformance = performanceData.filter(supplier => {
+    if (statusFilter === 'all') return true;
+    return (supplier.status || 'pending').toLowerCase() === statusFilter;
+  }).filter(supplier =>
+    (supplier.supplierName?.toLowerCase() || '').includes(searchTerm.toLowerCase()) ||
+    (supplier.email?.toLowerCase() || '').includes(searchTerm.toLowerCase())
+  );
+
   useEffect(() => {
     fetchSuppliersData();
   }, []);
@@ -197,7 +297,11 @@ const AdminSuppliers = () => {
 
   const { stats, suppliers } = suppliersData;
 
-  const filteredSuppliers = suppliers.filter(supplier =>
+  // Filter by status
+  const filteredSuppliers = suppliers.filter(supplier => {
+    if (statusFilter === 'all') return true;
+    return (supplier.status || 'pending').toLowerCase() === statusFilter;
+  }).filter(supplier =>
     (supplier.name?.toLowerCase() || '').includes(searchTerm.toLowerCase()) ||
     (supplier.category?.toLowerCase() || '').includes(searchTerm.toLowerCase())
   );
@@ -206,6 +310,14 @@ const AdminSuppliers = () => {
     <>
       <AdminNavbar />
       <div className="admin-suppliers">
+        {/* Low Stock Notification */}
+        {lowStockItems.length > 0 && (
+          <div style={{ background: '#fff3cd', color: '#856404', border: '1px solid #ffeeba', borderRadius: 8, padding: 18, marginBottom: 24, fontWeight: 600, fontSize: 16 }}>
+            <FontAwesomeIcon icon={faTruck} style={{ marginRight: 8 }} />
+            Warning: The following items are low in stock:&nbsp;
+            {lowStockItems.map(item => `${item.batchId} (${item.totalWeight}kg)`).join(', ')}
+          </div>
+        )}
         <h1>Suppliers Management</h1>
 
         <div className="supplier-stats">
@@ -235,63 +347,162 @@ const AdminSuppliers = () => {
         </div>
 
         <div className="suppliers-content">
-          <div className="search-bar">
-            <FontAwesomeIcon icon={faSearch} className="search-icon" />
-            <input
-              type="text"
-              placeholder="Search by name or category..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-            />
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
+            <div className="search-bar">
+              <FontAwesomeIcon icon={faSearch} className="search-icon" />
+              <input
+                type="text"
+                placeholder="Search by name or category..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+              />
+            </div>
+            <button
+              className="add-supplier-btn"
+              style={{
+                background: '#00796b',
+                color: 'white',
+                border: 'none',
+                borderRadius: '8px',
+                padding: '10px 22px',
+                fontSize: '1rem',
+                fontWeight: 600,
+                cursor: 'pointer',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '8px',
+                boxShadow: '0 2px 8px rgba(0,0,0,0.08)'
+              }}
+              onClick={() => setShowAddModal(true)}
+            >
+              <FontAwesomeIcon icon={faPlus} /> Add New Supplier
+            </button>
+          </div>
+
+          {/* Status Filter Tabs */}
+          <div style={{ marginBottom: '1rem', display: 'flex', gap: '1rem' }}>
+            {STATUS_OPTIONS.map(opt => (
+              <button
+                key={opt}
+                style={{
+                  background: statusFilter === opt ? '#00796b' : '#f0f0f0',
+                  color: statusFilter === opt ? 'white' : '#333',
+                  border: 'none',
+                  borderRadius: '6px',
+                  padding: '8px 18px',
+                  fontWeight: 600,
+                  cursor: 'pointer',
+                  transition: 'all 0.2s',
+                }}
+                onClick={() => setStatusFilter(opt)}
+              >
+                {opt.charAt(0).toUpperCase() + opt.slice(1)}
+              </button>
+            ))}
           </div>
 
           <div className="table-container">
-            <table>
-              <thead>
-                <tr>
-                  <th>Name</th>
-                  <th>Category</th>
-                  <th>Contact</th>
-                  <th>Total Orders</th>
-                  <th>Status</th>
-                  <th>Actions</th>
-                </tr>
-              </thead>
-              <tbody>
-                {filteredSuppliers.map((supplier) => (
-                  <tr key={supplier._id}>
-                    <td>{supplier.name}</td>
-                    <td>{supplier.category}</td>
-                    <td>
-                      <div>{supplier.email}</div>
-                      <div>{supplier.phone}</div>
-                    </td>
-                    <td>{supplier.totalOrders}</td>
-                    <td>
-                      <select
-                        value={supplier.status}
-                        onChange={(e) => handleStatusChange(supplier._id, e.target.value)}
-                        className={`status-select ${supplier.status}`}
-                      >
-                        <option value="active">Active</option>
-                        <option value="inactive">Inactive</option>
-                        <option value="pending">Pending</option>
-                      </select>
-                    </td>
-                    <td>
-                      <button
-                        className="action-btn delete"
-                        onClick={() => handleDelete(supplier._id)}
-                      >
-                        <FontAwesomeIcon icon={faTrash} />
-                      </button>
-                    </td>
+            {loadingPerformance ? (
+              <div style={{ textAlign: 'center', padding: 40 }}>Loading performance data...</div>
+            ) : (
+              <table>
+                <thead>
+                  <tr>
+                    <th>Supplier Name</th>
+                    <th>Email</th>
+                    <th>Status</th>
+                    <th>Total Delivered</th>
+                    <th>Actions</th>
                   </tr>
-                ))}
-              </tbody>
-            </table>
+                </thead>
+                <tbody>
+                  {filteredPerformance.map((supplier) => (
+                    <tr key={supplier.email}>
+                      <td>{supplier.supplierName}</td>
+                      <td>{supplier.email}</td>
+                      <td style={{ textTransform: 'capitalize' }}>{supplier.status || 'pending'}</td>
+                      <td>{supplier.totalDelivered}</td>
+                      <td>
+                        {/* Approve/Reject for pending */}
+                        {(supplier.status === 'pending' || !supplier.status) ? (
+                          <>
+                            <button
+                              style={{ background: '#2ecc71', color: 'white', border: 'none', borderRadius: '5px', padding: '6px 12px', marginRight: '6px', cursor: 'pointer' }}
+                              onClick={() => handleApprove(supplier._id, supplier.email)}
+                            >
+                              <FontAwesomeIcon icon={faCheck} /> Approve
+                            </button>
+                            <button
+                              style={{ background: '#e74c3c', color: 'white', border: 'none', borderRadius: '5px', padding: '6px 12px', cursor: 'pointer' }}
+                              onClick={() => handleReject(supplier._id, supplier.email)}
+                            >
+                              <FontAwesomeIcon icon={faTimes} /> Reject
+                            </button>
+                          </>
+                        ) : (
+                          <span style={{ color: supplier.status === 'approved' ? '#2ecc71' : '#e74c3c', fontWeight: 600 }}>{supplier.status}</span>
+                        )}
+                        <button
+                          className="action-btn delete"
+                          onClick={() => handleDelete(supplier._id)}
+                          style={{ marginLeft: 8 }}
+                        >
+                          <FontAwesomeIcon icon={faTrash} />
+                        </button>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            )}
           </div>
         </div>
+
+        {/* Add Supplier Modal */}
+        {showAddModal && (
+          <div style={{ position: 'fixed', top: 0, left: 0, width: '100vw', height: '100vh', background: 'rgba(0,0,0,0.3)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000 }}>
+            <form onSubmit={handleAddSupplier} style={{ background: 'white', padding: 32, borderRadius: 12, minWidth: 350, boxShadow: '0 4px 24px rgba(0,0,0,0.15)' }}>
+              <h2 style={{ marginBottom: 20 }}>Add New Supplier</h2>
+              <div style={{ marginBottom: 12 }}>
+                <label>Supplier Name</label>
+                <input type="text" value={addForm.supplierName} onChange={e => setAddForm(f => ({ ...f, supplierName: e.target.value }))} required style={{ width: '100%', padding: 8, borderRadius: 6, border: '1px solid #ddd' }} />
+              </div>
+              <div style={{ marginBottom: 12 }}>
+                <label>Product</label>
+                <select
+                  value={addForm.supplierProduct}
+                  onChange={e => setAddForm(f => ({ ...f, supplierProduct: e.target.value }))}
+                  required
+                  style={{ width: '100%', padding: 8, borderRadius: 6, border: '1px solid #ddd' }}
+                >
+                  <option value="">Select a product</option>
+                  <option value="coconut husk">Coconut Husk</option>
+                  <option value="coconut shell">Coconut Shell</option>
+                  <option value="coconut fiber">Coconut Fiber</option>
+                  <option value="coconut pith">Coconut Pith</option>
+                  <option value="coconut leaves">Coconut Leaves</option>
+                  <option value="coconut trunk">Coconut Trunk</option>
+                </select>
+              </div>
+              <div style={{ marginBottom: 12 }}>
+                <label>Quantity</label>
+                <input type="number" value={addForm.quantity} min="0" onChange={e => setAddForm(f => ({ ...f, quantity: e.target.value }))} required style={{ width: '100%', padding: 8, borderRadius: 6, border: '1px solid #ddd' }} />
+              </div>
+              <div style={{ marginBottom: 12 }}>
+                <label>Amount</label>
+                <input type="number" value={addForm.amount} min="0" onChange={e => setAddForm(f => ({ ...f, amount: e.target.value }))} required style={{ width: '100%', padding: 8, borderRadius: 6, border: '1px solid #ddd' }} />
+              </div>
+              <div style={{ marginBottom: 12 }}>
+                <label>Email</label>
+                <input type="email" value={addForm.email} onChange={e => setAddForm(f => ({ ...f, email: e.target.value }))} required style={{ width: '100%', padding: 8, borderRadius: 6, border: '1px solid #ddd' }} />
+              </div>
+              <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 10, marginTop: 18 }}>
+                <button type="button" onClick={() => setShowAddModal(false)} style={{ background: '#eee', color: '#333', border: 'none', borderRadius: 6, padding: '8px 18px', fontWeight: 600, cursor: 'pointer' }}>Cancel</button>
+                <button type="submit" style={{ background: '#00796b', color: 'white', border: 'none', borderRadius: 6, padding: '8px 18px', fontWeight: 600, cursor: 'pointer' }}>Add Supplier</button>
+              </div>
+            </form>
+          </div>
+        )}
       </div>
 
       <style jsx>{`

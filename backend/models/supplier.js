@@ -30,6 +30,11 @@ const supplierSchema = mongoose.Schema({
     required: [true, 'Please add an amount'],
     min: [0, 'Amount cannot be negative']
   },
+  status: {
+    type: String,
+    enum: ['pending', 'approved', 'rejected'],
+    default: 'pending'
+  },
   isActive: {
     type: Boolean,
     default: true

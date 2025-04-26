@@ -366,78 +366,9 @@ const SupplierManagement = ({ onUpdate }) => {
               onChange={(e) => setSearchTerm(e.target.value)}
             />
           </div>
-          <button className="add-button" onClick={() => setShowAddForm(true)}>
-            <FontAwesomeIcon icon={faPlus} /> Add Supplier
-          </button>
         </div>
 
         {error && <div className="error-message">{error}</div>}
-
-        {(showAddForm || editingSupplier) && (
-          <form className="supplier-form" onSubmit={editingSupplier ? handleUpdateSupplier : handleAddSupplier}>
-            <div className="form-group">
-              <label>Supplier Name</label>
-              <input
-                type="text"
-                name="supplierName"
-                value={formData.supplierName}
-                onChange={handleInputChange}
-                required
-              />
-            </div>
-            <div className="form-group">
-              <label>Product</label>
-              <input
-                type="text"
-                name="supplierProduct"
-                value={formData.supplierProduct}
-                onChange={handleInputChange}
-                required
-              />
-            </div>
-            <div className="form-group">
-              <label>Quantity</label>
-              <input
-                type="number"
-                name="quantity"
-                value={formData.quantity}
-                onChange={handleInputChange}
-                required
-              />
-            </div>
-            <div className="form-group">
-              <label>Amount</label>
-              <input
-                type="number"
-                name="amount"
-                value={formData.amount}
-                onChange={handleInputChange}
-                required
-              />
-            </div>
-            <div className="form-group">
-              <label>Email</label>
-              <input
-                type="email"
-                name="email"
-                value={formData.email}
-                onChange={handleInputChange}
-                required
-              />
-            </div>
-            <div className="form-buttons">
-              <button type="button" className="cancel-button" onClick={() => {
-                setShowAddForm(false);
-                cancelEditing();
-              }}>
-                <FontAwesomeIcon icon={faTimes} /> Cancel
-              </button>
-              <button type="submit" className="save-button">
-                <FontAwesomeIcon icon={faSave} /> {editingSupplier ? 'Update' : 'Save'}
-              </button>
-            </div>
-          </form>
-        )}
 
         {loading ? (
           <div className="loading">Loading suppliers...</div>
