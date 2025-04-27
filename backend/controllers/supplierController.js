@@ -125,28 +125,6 @@ const getSupplierPerformanceOverview = asyncHandler(async (req, res) => {
   res.json(performance);
 });
 
-// @desc    Get supplier statistics
-// @route   GET /api/supplier/stats
-// @access  Public
-const getSupplierStats = asyncHandler(async (req, res) => {
-  try {
-    const orders = await Order.find({});
-    const totalOrders = orders.length;
-    const pendingOrders = orders.filter(o => o.status === 'Pending').length;
-    const completedOrders = orders.filter(o => o.status === 'Delivered').length;
-    const totalRevenue = orders.reduce((sum, o) => sum + (o.amount || 0), 0);
-
-    res.json({
-      totalOrders,
-      pendingOrders,
-      completedOrders,
-      totalRevenue
-    });
-  } catch (err) {
-    console.error('Supplier stats error:', err);
-    res.status(400).json({ message: 'Supplier stats error', error: err.message });
-  }
-});
 
 module.exports = {
   registerSupplier,
@@ -154,6 +132,3 @@ module.exports = {
   getSupplierById,
   updateSupplier,
   deleteSupplier,
-  getSupplierPerformanceOverview,
-  getSupplierStats
-};
