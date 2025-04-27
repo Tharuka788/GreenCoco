@@ -49,8 +49,11 @@ const AddEmployeeForm = ({ onSuccess, editingEmployee, onUpdate }) => {
   const validateForm = () => {
     const newErrors = {};
     
+    // Employee Name: only letters (no numbers or symbols)
     if (!employee.EmployeeName.trim()) {
       newErrors.EmployeeName = 'Employee name is required';
+    } else if (!/^[A-Za-z ]+$/.test(employee.EmployeeName.trim())) {
+      newErrors.EmployeeName = 'Employee name can only contain letters and spaces';
     }
 
     if (!employee.EmployeeId.trim()) {
@@ -61,18 +64,24 @@ const AddEmployeeForm = ({ onSuccess, editingEmployee, onUpdate }) => {
       newErrors.DepartmentName = 'Department is required';
     }
 
+    // Job Role: only letters (no numbers or symbols)
     if (!employee.JobRole.trim()) {
       newErrors.JobRole = 'Job role is required';
+    } else if (!/^[A-Za-z ]+$/.test(employee.JobRole.trim())) {
+      newErrors.JobRole = 'Job role can only contain letters and spaces';
     }
 
+    // Phone Number: only numbers, exactly 10 digits
     if (!employee.PhoneNumber) {
       newErrors.PhoneNumber = 'Phone number is required';
-    } else if (!/^\d{10}$/.test(employee.PhoneNumber)) {
-      newErrors.PhoneNumber = 'Phone number must be 10 digits';
+    } else if (!/^[0-9]{10}$/.test(employee.PhoneNumber)) {
+      newErrors.PhoneNumber = 'Phone number must be exactly 10 digits';
     }
 
     if (!employee.Email.trim()) {
       newErrors.Email = 'Email is required';
+    } else if (!employee.Email.includes('@')) {
+      newErrors.Email = 'Email must contain @ symbol';
     } else if (!/\S+@\S+\.\S+/.test(employee.Email)) {
       newErrors.Email = 'Invalid email format';
     }
@@ -86,16 +95,29 @@ const AddEmployeeForm = ({ onSuccess, editingEmployee, onUpdate }) => {
 
   const handleChange = (e) => {
     const { name, value } = e.target;
+    let newValue = value;
+    // Employee Name: only letters and spaces
+    if (name === 'EmployeeName') {
+      newValue = newValue.replace(/[^A-Za-z ]/g, '');
+    }
+    // Job Role: only letters and spaces
+    if (name === 'JobRole') {
+      newValue = newValue.replace(/[^A-Za-z ]/g, '');
+    }
+    // Phone Number: only numbers, max 10 digits
+    if (name === 'PhoneNumber') {
+      newValue = newValue.replace(/[^0-9]/g, '').slice(0, 10);
+    }
     setEmployee((prev) => ({
       ...prev,
-      [name]: value,
+      [name]: newValue,
     }));
 
     // Recalculate salary components if relevant fields change
     if (['BasicSalary', 'Bonus', 'OverTimeHours'].includes(name)) {
       calculateSalary({
         ...employee,
-        [name]: value,
+        [name]: newValue,
       });
     }
   };

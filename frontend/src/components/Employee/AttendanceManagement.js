@@ -255,6 +255,7 @@ const AttendanceManagement = () => {
               onChange={(update) => setDateRange(update)}
               className="date-picker"
               placeholderText="Select date range"
+              minDate={new Date()}
             />
             <button
               className="action-button check-in-button"
