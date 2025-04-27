@@ -6,7 +6,8 @@ const {
   getSupplierById,
   updateSupplier,
   deleteSupplier,
-  getSupplierPerformanceOverview
+  getSupplierPerformanceOverview,
+  getSupplierStats
 } = require('../controllers/supplierController');
 
 // @route   POST /api/suppliers/register
@@ -23,6 +24,11 @@ router.get('/', getSuppliers);
 // @desc    Get supplier performance overview
 // @access  Public
 router.get('/performance', getSupplierPerformanceOverview);
+
+// @route   GET /api/suppliers/stats
+// @desc    Get supplier statistics
+// @access  Public
+router.get('/stats', getSupplierStats);
 
 // @route   GET /api/suppliers/:id
 // @desc    Get supplier by ID

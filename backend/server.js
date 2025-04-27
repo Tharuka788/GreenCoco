@@ -11,6 +11,7 @@ const attendanceRoutes = require('./routes/AttendanceRoutes');
 const adminRoutes = require('./routes/adminRoutes'); // Add admin routes
 const errorHandler = require('./middleware/errorHandler');
 const cors = require('cors');
+const invoiceRoutes = require('./routes/invoiceRoutes');
 
 // Load environment variables
 dotenv.config();
@@ -40,7 +41,7 @@ app.use('/api/orders', orderRoutes);
 app.use('/employees', employeeRoutes);
 app.use('/attendance', attendanceRoutes);
 app.use('/api/admins', adminRoutes); // Add admin routes
-
+app.use('/api/invoices', invoiceRoutes);
 
 // Error Handler
 app.use(errorHandler);
