@@ -125,11 +125,10 @@ const getSupplierPerformanceOverview = asyncHandler(async (req, res) => {
   res.json(performance);
 });
 
+
 module.exports = {
   registerSupplier,
   getSuppliers,
   getSupplierById,
   updateSupplier,
   deleteSupplier,
-  getSupplierPerformanceOverview
-};
