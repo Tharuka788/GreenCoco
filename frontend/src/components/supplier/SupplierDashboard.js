@@ -12,6 +12,8 @@ import {
 import InvoicePaymentTracking from './InvoicePaymentTracking';
 import SupplierManagement from './SupplierManagement';
 import MainNavbar from '../Home/MainNavbar';
+import jsPDF from 'jspdf';
+import 'jspdf-autotable';
 
 const SupplierDashboard = () => {
   const [stats, setStats] = useState({

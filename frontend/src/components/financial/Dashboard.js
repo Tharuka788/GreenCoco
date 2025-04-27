@@ -39,6 +39,9 @@ const Dashboard = () => {
     status: 'pending',
   });
 
+  // Get today's date in YYYY-MM-DD format
+  const todayStr = new Date().toISOString().split('T')[0];
+
   const fetchData = async () => {
     try {
       setError(null);
@@ -235,6 +238,7 @@ const Dashboard = () => {
   const allMonths = getAllMonths();
   const monthlyIncome = getMonthlyTotals(financeData.income, allMonths);
   const monthlyExpenses = getMonthlyTotals(financeData.expenses, allMonths);
+  const monthlyProfit = monthlyIncome.map((inc, idx) => inc - monthlyExpenses[idx]);
 
   // Create datasets for the line chart
   const chartData = {
@@ -290,6 +294,31 @@ const Dashboard = () => {
         shadowBlur: 10,
         shadowColor: 'rgba(255, 99, 132, 0.15)',
       },
+      {
+        label: 'Profit',
+        data: monthlyProfit,
+        fill: true,
+        backgroundColor: (context) => {
+          const ctx = context.chart.ctx;
+          const gradient = ctx.createLinearGradient(0, 0, 0, 300);
+          gradient.addColorStop(0, 'rgba(54, 162, 235, 0.22)'); // Modern blue
+          gradient.addColorStop(1, 'rgba(54, 162, 235, 0)');
+          return gradient;
+        },
+        borderColor: 'rgba(54, 162, 235, 1)',
+        borderWidth: 3,
+        tension: 0.5,
+        pointBackgroundColor: 'rgba(54, 162, 235, 1)',
+        pointBorderColor: '#fff',
+        pointBorderWidth: 3,
+        pointRadius: 7,
+        pointHoverRadius: 10,
+        pointStyle: 'circle',
+        shadowOffsetX: 0,
+        shadowOffsetY: 4,
+        shadowBlur: 10,
+        shadowColor: 'rgba(54, 162, 235, 0.15)',
+      },
     ],
   };
 
@@ -317,7 +346,7 @@ const Dashboard = () => {
       },
       title: {
         display: true,
-        text: 'Income vs Expenses (All Time)',
+        text: 'Income vs Expenses vs Profit (All Time)',
         font: {
           family: "'Poppins', 'Segoe UI', Arial, sans-serif",
           size: 24,

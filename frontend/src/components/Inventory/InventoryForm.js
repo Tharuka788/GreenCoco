@@ -25,6 +25,9 @@ const InventoryForm = () => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [formProgress, setFormProgress] = useState(0);
 
+  // Get today's date in YYYY-MM-DD format
+  const todayStr = new Date().toISOString().split('T')[0];
+
   // Calculate form completion progress
   useEffect(() => {
     const fields = Object.values(formData);
@@ -83,9 +86,31 @@ const InventoryForm = () => {
   };
 
   const handleChange = (e) => {
-    setFormData({ ...formData, [e.target.name]: e.target.value });
-    if (errors[e.target.name]) {
-      setErrors({ ...errors, [e.target.name]: '' });
+    const { name, value } = e.target;
+    let newValue = value;
+
+    if (name === 'batchId') {
+      // Only allow letters and numbers
+      newValue = value.replace(/[^a-zA-Z0-9]/g, '');
+    } else if (name === 'totalWeight') {
+      // Only allow numbers and a single decimal point
+      newValue = value.replace(/[^0-9.]/g, '');
+      // Remove multiple decimals
+      newValue = newValue.replace(/(\..*)\./g, '$1');
+    } else if (name === 'sourceLocation') {
+      // Only allow letters
+      newValue = value.replace(/[^a-zA-Z]/g, '');
+    } else if (name === 'notes') {
+      // Only allow up to 100 words
+      const words = value.split(/\s+/).filter(Boolean);
+      if (words.length > 100) {
+        newValue = words.slice(0, 100).join(' ');
+      }
+    }
+
+    setFormData({ ...formData, [name]: newValue });
+    if (errors[name]) {
+      setErrors({ ...errors, [name]: '' });
     }
   };
 
@@ -384,6 +409,7 @@ const InventoryForm = () => {
               value={formData.collectionDate}
               onChange={handleChange}
               required
+              min={todayStr}
             />
             {errors.collectionDate && <span className="form-error">{errors.collectionDate}</span>}
           </div>

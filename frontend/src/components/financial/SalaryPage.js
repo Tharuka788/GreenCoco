@@ -15,6 +15,9 @@ const SalaryPage = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
 
+  // Get today's date in YYYY-MM-DD format
+  const todayStr = new Date().toISOString().split('T')[0];
+
   useEffect(() => {
     fetchSalaries();
   }, []);
@@ -51,7 +54,7 @@ const SalaryPage = () => {
       } else if (value.trim().length > 50) {
         errors.title = 'Title cannot exceed 50 characters';
       } else if (!/^[a-zA-Z0-9\s]*$/.test(value)) {
-        errors.title = 'Title can only contain letters, numbers, and spaces (no symbols allowed)';
+        errors.title = 'Title cannot contain symbols';
       } else {
         delete errors.title;
       }
@@ -61,7 +64,9 @@ const SalaryPage = () => {
     if (name === 'amount') {
       if (value === '') {
         errors.amount = 'Amount is required';
-      } else if (isNaN(value) || parseFloat(value) <= 0) {
+      } else if (!/^\d*\.?\d*$/.test(value)) {
+        errors.amount = 'Amount must contain only numbers';
+      } else if (parseFloat(value) <= 0) {
         errors.amount = 'Amount must be a positive number';
       } else if (parseFloat(value) > 1000000000) {
         errors.amount = 'Amount cannot exceed LKR 1,000,000,000';
@@ -78,6 +83,7 @@ const SalaryPage = () => {
         const selectedDate = new Date(value);
         const today = new Date();
         today.setHours(0, 0, 0, 0); // Reset time to midnight for accurate comparison
+        selectedDate.setHours(0, 0, 0, 0); // Reset time for selected date
         if (selectedDate < today) {
           errors.date = 'Date cannot be earlier than today';
         } else {
@@ -112,8 +118,8 @@ const SalaryPage = () => {
       errors.title = 'Title must be at least 3 characters long';
     } else if (salaryData.title.trim().length > 50) {
       errors.title = 'Title cannot exceed 50 characters';
-    } else if (!/^[a-zA-Z0-9\s]*$/.test(salaryData.title)) {
-      errors.title = 'Title can only contain letters, numbers, and spaces (no symbols allowed)';
+    } else if (!/^[a-zA-Z0-9\s!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]*$/.test(salaryData.title)) {
+      errors.title = 'Title contains invalid characters';
     }
 
     // Amount Validation
@@ -129,9 +135,10 @@ const SalaryPage = () => {
     } else {
       const selectedDate = new Date(salaryData.date);
       const today = new Date();
-      today.setHours(0, 0, 0, 0); // Reset time to midnight for accurate comparison
-      if (selectedDate < today) {
-        errors.date = 'Date cannot be earlier than today';
+      today.setHours(0, 0, 0, 0);
+      selectedDate.setHours(0, 0, 0, 0);
+      if (selectedDate.getTime() !== today.getTime()) {
+        errors.date = 'Date must be today';
       }
     }
 
@@ -477,6 +484,7 @@ const SalaryPage = () => {
                 value={editSalary ? editSalary.date : newSalary.date}
                 onChange={handleInputChange}
                 required
+                min={todayStr}
               />
               {formErrors.date && <div className="error">{formErrors.date}</div>}
             </label>
