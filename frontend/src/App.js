@@ -7,6 +7,7 @@ import './App.css';
 import axios from 'axios';
 import Footer from './components/Footer';
 
+
 // Lazy-loaded components
 const InventoryDashboard = lazy(() => import('./components/Inventory/InventoryDashboard'));
 const HomePage = lazy(() => import('./components/Home/HomePage'));
@@ -26,6 +27,10 @@ const AdminLogin = lazy(() => import('./components/Admin/AdminLogin'));
 const AdminRegister = lazy(() => import('./components/Admin/AdminRegister'));
 const AdminDashboard = lazy(() => import('./components/Admin/AdminDashboard'));
 const OrdersDashboard = lazy(() => import('./components/supplier/OrdersDashboard'));
+const TransportManagement = lazy(() => import('./components/Transport/TransportManagement'));
+const VehicleManagement = lazy(() => import('./components/Transport/VehicleManagement'));
+const DriverManagement = lazy(() => import('./components/Transport/DriverManagement'));
+const LandingPage = lazy(() => import('./components/Transport/LandingPage'));
 const AddOrder = lazy(() => import('./components/supplier/AddOrder'));
 const SupplierDashboard = lazy(() => import('./components/supplier/SupplierDashboard'));
 const EmployeeDashboard = lazy(() => import('./components/Employee/EmployeeDashboard'));
@@ -253,6 +258,14 @@ function App() {
                   <Route index element={<OrdersDashboard />} />
                   <Route path="add" element={<AddOrder />} />
                 </Route>
+
+                
+                <Route path="/tr" element={<LandingPage />} />
+                <Route path="/transport" element={<TransportManagement />} />
+                <Route path="/drivers" element={<DriverManagement />} />
+                <Route path="/vehicles" element={<VehicleManagement />} />
+                  
+                
 
                 <Route path="/suppliers" element={<SupplierDashboard />} />
                 <Route path="/employee" element={<EmployeeDashboard />} />
