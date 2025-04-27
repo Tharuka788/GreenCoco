@@ -6,7 +6,7 @@ const {
   getSupplierById,
   updateSupplier,
   deleteSupplier,
-
+  getSupplierPerformanceOverview
 } = require('../controllers/supplierController');
 
 // @route   POST /api/suppliers/register
