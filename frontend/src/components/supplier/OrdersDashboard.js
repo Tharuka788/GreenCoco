@@ -7,7 +7,7 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faPlus, faEdit, faTrash, faChartPie, faSearch, faCalendar, faMoneyBill, faBoxes } from '@fortawesome/free-solid-svg-icons';
 import MainNavbar from '../Home/MainNavbar';
 import jsPDF from 'jspdf';
-import 'jspdf-autotable';
+import autoTable from 'jspdf-autotable';
 
 // Register Chart.js components
 ChartJS.register(ArcElement, Tooltip, Legend);
@@ -25,7 +25,7 @@ const OrdersDashboard = () => {
     totalOrders: 0,
     totalAmount: 0,
     averageOrderValue: 0,
-    totalQuantity: 0
+    totalQuantity: 0,
   });
   const ordersPerPage = 10;
 
@@ -36,18 +36,21 @@ const OrdersDashboard = () => {
         const response = await axios.get('http://localhost:5000/api/orders');
         const ordersData = response.data;
         setOrders(ordersData);
-        
+
         // Calculate order statistics
-        const stats = ordersData.reduce((acc, order) => {
-          acc.totalOrders++;
-          acc.totalAmount += order.amount;
-          acc.totalQuantity += order.quantity;
-          return acc;
-        }, { totalOrders: 0, totalAmount: 0, totalQuantity: 0 });
-        
-        stats.averageOrderValue = stats.totalAmount / stats.totalOrders;
+        const stats = ordersData.reduce(
+          (acc, order) => {
+            acc.totalOrders++;
+            acc.totalAmount += order.amount;
+            acc.totalQuantity += order.quantity;
+            return acc;
+          },
+          { totalOrders: 0, totalAmount: 0, totalQuantity: 0 }
+        );
+
+        stats.averageOrderValue = stats.totalOrders ? stats.totalAmount / stats.totalOrders : 0;
         setOrderStats(stats);
-        
+
         setLoading(false);
       } catch (error) {
         console.error('Error fetching orders:', error);
@@ -61,15 +64,15 @@ const OrdersDashboard = () => {
 
   // Filter orders based on search term and date range
   const filteredOrders = React.useMemo(() => {
-    return orders.filter(order => {
-      const matchesSearch = 
+    return orders.filter((order) => {
+      const matchesSearch =
         order.wasteType?.toLowerCase().includes(searchTerm.toLowerCase()) ||
         order.email?.toLowerCase().includes(searchTerm.toLowerCase()) ||
         order.phoneNumber?.includes(searchTerm) ||
         order.status?.toLowerCase().includes(searchTerm.toLowerCase());
 
       const orderDate = new Date(order.createdAt);
-      const matchesDateRange = 
+      const matchesDateRange =
         (!dateRange.start || orderDate >= new Date(dateRange.start)) &&
         (!dateRange.end || orderDate <= new Date(dateRange.end));
 
@@ -188,138 +191,412 @@ const OrdersDashboard = () => {
     }
   };
 
-  // Minimal working PDF generator for each order
-  const generateOrderPDF = () => {
-    const doc = new jsPDF();
-    doc.text('Test PDF', 10, 10);
-    doc.autoTable({
-      head: [['Col1', 'Col2']],
-      body: [['A', 'B']],
-    });
-    doc.save('test.pdf');
+  // Generate PDF for a specific order
+  const generateOrderPDF = (order) => {
+    try {
+      const doc = new jsPDF();
+      
+      // Add title
+      doc.setFontSize(16);
+      doc.text(`Order Details - ${order._id}`, 10, 10);
+
+      // Add order summary
+      doc.setFontSize(12);
+      doc.text(`Waste Type: ${order.wasteType}`, 10, 20);
+      doc.text(`Quantity: ${order.quantity}`, 10, 30);
+      doc.text(`Amount: Rs. ${order.amount.toLocaleString()}`, 10, 40);
+      doc.text(`Status: ${order.status}`, 10, 50);
+      doc.text(`Order Date: ${new Date(order.createdAt).toLocaleString('en-US', {
+        year: 'numeric',
+        month: 'short',
+        day: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit',
+      })}`, 10, 60);
+      doc.text(`Customer Email: ${order.email}`, 10, 70);
+      doc.text(`Phone Number: ${order.phoneNumber}`, 10, 80);
+      doc.text(`Address: ${order.address}`, 10, 90);
+
+      // Add a table for order details
+      autoTable(doc, {
+        startY: 100,
+        head: [['Field', 'Value']],
+        body: [
+          ['Waste Type', order.wasteType],
+          ['Quantity', order.quantity.toString()],
+          ['Amount', `Rs. ${order.amount.toLocaleString()}`],
+          ['Status', order.status],
+          ['Order Date', new Date(order.createdAt).toLocaleString('en-US')],
+          ['Email', order.email],
+          ['Phone Number', order.phoneNumber],
+          ['Address', order.address],
+        ],
+        theme: 'striped',
+        headStyles: { fillColor: [0, 121, 107] }, // Teal color for header
+        styles: { fontSize: 10 },
+      });
+
+      // Save the PDF
+      doc.save(`order_${order._id}.pdf`);
+    } catch (error) {
+      console.error('Error generating PDF:', error);
+      alert('Failed to generate PDF. Please try again.');
+    }
   };
 
+  // Updated CSS for a modern, responsive dashboard
   const styles = `
+    /* Root container for the dashboard */
     .orders-dashboard-container {
       margin-top: 80px;
       padding: 20px;
       min-height: 100vh;
       background: linear-gradient(135deg, #e0f7fa 0%, #b2ebf2 100%);
-      font-family: 'Segoe UI', Arial, sans-serif;
+      font-family: 'Inter', 'Segoe UI', Arial, sans-serif;
+      color: #1e3a8a;
     }
 
+    /* Dashboard header with title and new order button */
     .dashboard-header {
       display: flex;
       justify-content: space-between;
       align-items: center;
-      margin-bottom: 20px;
-      max-width: 1200px;
-      margin: 0 auto 20px;
+      max-width: 1280px;
+      margin: 0 auto 30px;
+      padding: 15px 0;
     }
 
     .dashboard-header h1 {
-      color: #00695c;
-      font-size: 24px;
-      font-weight: 600;
+      font-size: 2rem;
+      font-weight: 700;
+      color: #005b4f;
+      letter-spacing: -0.025em;
+      margin: 0;
     }
 
-    .dashboard-section {
-      max-width: 1200px;
-      margin: 0 auto 20px;
-      background: white;
-      padding: 30px;
-      border-radius: 12px;
-      box-shadow: 0 4px 15px rgba(0,0,0,0.15);
-    }
-
-    .dashboard-section h2 {
-      color: #004d40;
-      font-size: 20px;
-      font-weight: 500;
-      margin-bottom: 15px;
+    /* New order button with modern hover effect */
+    .new-order-button {
       display: flex;
       align-items: center;
-    }
-
-    .dashboard-section h2 svg {
-      margin-right: 8px;
-      color: #26a69a;
-    }
-
-    .new-order-button {
+      gap: 8px;
       background: #00796b;
       color: white;
-      padding: 10px 20px;
+      padding: 12px 24px;
       border: none;
-      border-radius: 6px;
+      border-radius: 8px;
+      font-size: 1rem;
+      font-weight: 600;
       cursor: pointer;
-      font-size: 16px;
-      font-weight: 500;
       transition: all 0.3s ease;
+      box-shadow: 0 2px 8px rgba(0, 121, 107, 0.2);
     }
 
     .new-order-button:hover {
-      background: #009688;
+      background: #00695c;
       transform: translateY(-2px);
-      box-shadow: 0 4px 10px rgba(0, 150, 136, 0.3);
+      box-shadow: 0 4px 12px rgba(0, 121, 107, 0.3);
     }
 
-    .orders-table {
-      width: 100%;
-      border-collapse: collapse;
-      margin-top: 20px;
+    .new-order-button:focus {
+      outline: none;
+      box-shadow: 0 0 0 3px rgba(0, 121, 107, 0.3);
     }
 
-    .orders-table th, .orders-table td {
-      padding: 12px;
-      text-align: left;
-      border-bottom: 1px solid #b0bec5;
+    /* Stats cards grid */
+    .stats-cards {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      gap: 20px;
+      max-width: 1280px;
+      margin: 0 auto 30px;
     }
 
-    .orders-table th {
-      background: #f5f5f5;
-      color: #004d40;
-      font-size: 14px;
+    .stat-card {
+      background: white;
+      padding: 20px;
+      border-radius: 12px;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+      text-align: center;
+      transition: transform 0.3s ease, box-shadow 0.3s ease;
+    }
+
+    .stat-card:hover {
+      transform: translateY(-5px);
+      box-shadow: 0 6px 16px rgba(0, 0, 0, 0.15);
+    }
+
+    .stat-icon {
+      font-size: 1.5rem;
+      color: #26a69a;
+      margin-bottom: 12px;
+    }
+
+    .stat-title {
+      font-size: 0.9rem;
+      font-weight: 500;
+      color: #64748b;
       text-transform: uppercase;
-      cursor: pointer;
-      user-select: none;
+      letter-spacing: 0.05em;
+      margin-bottom: 8px;
+    }
+
+    .stat-value {
+      font-size: 1.75rem;
+      font-weight: 700;
+      color: #005b4f;
+    }
+
+    /* Filters section */
+    .dashboard-filters {
+      display: flex;
+      gap: 20px;
+      max-width: 1280px;
+      margin: 0 auto 30px;
+      flex-wrap: wrap;
+    }
+
+    .search-box {
+      flex: 1;
+      min-width: 250px;
       position: relative;
     }
 
-    .orders-table th:hover {
-      background: #e0e0e0;
+    .search-box input {
+      width: 100%;
+      padding: 12px 16px 12px 40px;
+      border: 1px solid #d1d5db;
+      border-radius: 8px;
+      font-size: 1rem;
+      transition: all 0.3s ease;
+      background: white;
+      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
     }
 
-    .orders-table th::after {
-      content: '';
+    .search-box input:focus {
+      border-color: #00796b;
+      box-shadow: 0 0 0 3px rgba(0, 121, 107, 0.2);
+      outline: none;
+    }
+
+    .search-box .icon {
       position: absolute;
-      right: 8px;
+      left: 12px;
       top: 50%;
       transform: translateY(-50%);
+      color: #6b7280;
+      font-size: 1.1rem;
+    }
+
+    .date-filters {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+
+    .date-input {
+      padding: 12px;
+      border: 1px solid #d1d5db;
+      border-radius: 8px;
+      font-size: 1rem;
+      background: white;
+      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+      transition: all 0.3s ease;
+    }
+
+    .date-input:focus {
+      border-color: #00796b;
+      box-shadow: 0 0 0 3px rgba(0, 121, 107, 0.2);
+      outline: none;
+    }
+
+    /* Dashboard section for chart and table */
+    .dashboard-section {
+      max-width: 1280px;
+      margin: 0 auto 30px;
+      background: white;
+      padding: 24px;
+      border-radius: 12px;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    }
+
+    .dashboard-section h2 {
+      font-size: 1.5rem;
+      font-weight: 600;
+      color: #005b4f;
+      margin-bottom: 20px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .dashboard-section h2 svg {
+      color: #26a69a;
+      font-size: 1.25rem;
+    }
+
+    /* Orders summary with pie chart */
+    .orders-summary {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 24px;
+      padding: 20px 0;
+    }
+
+    .chart-container {
+      width: 100%;
+      max-width: 360px;
+      padding: 16px;
+      background: #f8fafc;
+      border-radius: 12px;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+    }
+
+    .status-legend {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+      gap: 12px;
+      padding: 16px;
+      background: #f8fafc;
+      border-radius: 12px;
+      width: 100%;
+      max-width: 400px;
+    }
+
+    .status-item {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 10px;
+      background: white;
+      border-radius: 8px;
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+      transition: transform 0.2s ease;
+      font-size: 0.9rem;
+      font-weight: 500;
+      color: #1e3a8a;
+    }
+
+    .status-item:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    }
+
+    .status-color {
+      width: 16px;
+      height: 16px;
+      border-radius: 4px;
+    }
+
+    .status-color.new {
+      background: #34c759;
+    }
+
+    .status-color.on-delivery {
+      background: #ff9500;
+    }
+
+    .status-color.delivered {
+      background: #007aff;
+    }
+
+    .status-color.cancelled {
+      background: #ff3b30;
+    }
+
+    /* Orders table */
+    .orders-table {
+      width: 100%;
+      border-collapse: separate;
+      border-spacing: 0;
+      margin-top: 16px;
+      background: white;
+      border-radius: 8px;
+      overflow: hidden;
+    }
+
+    .orders-table th,
+    .orders-table td {
+      padding: 14px 16px;
+      text-align: left;
+      font-size: 0.9rem;
+      border-bottom: 1px solid #e5e7eb;
+    }
+
+    .orders-table th {
+      background: #f1f5f9;
+      color: #005b4f;
+      font-weight: 600;
+      text-transform: uppercase;
+      font-size: 0.85rem;
+      cursor: pointer;
+      transition: background 0.2s ease;
+    }
+
+    .orders-table th:hover {
+      background: #e2e8f0;
     }
 
     .orders-table th[data-sort='asc']::after {
-      content: '▲';
-      font-size: 12px;
+      content: '↑';
+      margin-left: 8px;
+      font-size: 0.75rem;
     }
 
     .orders-table th[data-sort='desc']::after {
-      content: '▼';
-      font-size: 12px;
+      content: '↓';
+      margin-left: 8px;
+      font-size: 0.75rem;
     }
 
     .orders-table td {
-      color: #37474f;
+      color: #1e3a8a;
     }
 
+    /* Status badges */
+    .status-badge {
+      display: inline-block;
+      padding: 6px 12px;
+      border-radius: 16px;
+      font-size: 0.85rem;
+      font-weight: 600;
+      text-transform: capitalize;
+    }
+
+    .status-badge.delivered {
+      background: #e8f5e9;
+      color: #2e7d32;
+    }
+
+    .status-badge.pending {
+      background: #fff3e0;
+      color: #ef6c00;
+    }
+
+    .status-badge.cancelled {
+      background: #ffebee;
+      color: #c62828;
+    }
+
+    .status-badge.on-delivery {
+      background: #e3f2fd;
+      color: #1565c0;
+    }
+
+    /* Action buttons */
     .orders-table button {
       padding: 8px 12px;
-      margin-right: 5px;
+      margin-right: 8px;
       border: none;
       border-radius: 6px;
+      font-size: 0.85rem;
+      font-weight: 500;
       cursor: pointer;
-      font-size: 14px;
       transition: all 0.3s ease;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
     }
 
     .orders-table button.update {
@@ -328,300 +605,184 @@ const OrdersDashboard = () => {
     }
 
     .orders-table button.delete {
-      background: #d32f2f;
+      background: #dc2626;
       color: white;
     }
 
     .orders-table button:hover {
       transform: translateY(-2px);
-      box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
     }
 
-    .orders-summary {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      gap: 30px;
-      padding: 20px;
-      max-width: 800px;
-      margin: 0 auto;
+    .orders-table button:focus {
+      outline: none;
+      box-shadow: 0 0 0 3px rgba(0, 121, 107, 0.3);
     }
 
-    .chart-container {
-      width: 100%;
-      max-width: 400px;
-      margin: 0 auto;
-      position: relative;
-    }
-
-    .status-legend {
-      display: grid;
-      grid-template-columns: repeat(2, 1fr);
-      gap: 15px;
-      padding: 20px;
-      background: #f5f5f5;
-      border-radius: 10px;
-      width: 100%;
-      max-width: 400px;
-    }
-
-    .status-item {
-      display: flex;
-      align-items: center;
-      gap: 10px;
-      color: #37474f;
-      padding: 8px;
-      background: white;
-      border-radius: 6px;
-      box-shadow: 0 2px 4px rgba(0,0,0,0.05);
-      transition: transform 0.2s ease;
-    }
-
-    .status-item:hover {
-      transform: translateY(-2px);
-    }
-
-    .status-color {
-      width: 24px;
-      height: 12px;
-      border-radius: 3px;
-    }
-
-    .status-color.new {
-      background: #34C759;
-    }
-
-    .status-color.on-delivery {
-      background: #FF9500;
-    }
-
-    .status-color.delivered {
-      background: #007AFF;
-    }
-
-    .status-color.cancelled {
-      background: #FF3B30;
-    }
-
-    .error-message {
-      color: #d32f2f;
-      text-align: center;
-      margin: 20px 0;
-      background: #ffebee;
-      padding: 10px;
-      border-radius: 4px;
-    }
-
-    .loading-message {
-      text-align: center;
-      color: #004d40;
-      font-size: 16px;
-      margin: 20px 0;
-    }
-
-    .status-badge {
-      padding: 6px 12px;
-      border-radius: 12px;
-      font-size: 12px;
-      font-weight: 600;
-      text-transform: uppercase;
-    }
-
-    .status-badge.delivered {
-      background-color: #e8f5e9;
-      color: #2e7d32;
-    }
-
-    .status-badge.pending {
-      background-color: #fff3e0;
-      color: #ef6c00;
-    }
-
-    .status-badge.cancelled {
-      background-color: #ffebee;
-      color: #c62828;
-    }
-
-    .status-badge.on-delivery {
-      background-color: #e3f2fd;
-      color: #1565c0;
-    }
-
+    /* Pagination */
     .pagination {
       display: flex;
       justify-content: center;
       align-items: center;
-      margin-top: 20px;
-      gap: 10px;
+      gap: 8px;
+      margin-top: 24px;
     }
 
     .pagination button {
       padding: 8px 12px;
-      border: 1px solid #00796b;
+      border: 1px solid #d1d5db;
       background: white;
-      color: #00796b;
-      border-radius: 4px;
+      color: #005b4f;
+      border-radius: 6px;
+      font-size: 0.9rem;
       cursor: pointer;
       transition: all 0.3s ease;
-    }
-
-    .pagination button:disabled {
-      border-color: #ccc;
-      color: #ccc;
-      cursor: not-allowed;
-    }
-
-    .pagination button.active {
-      background: #00796b;
-      color: white;
     }
 
     .pagination button:hover:not(:disabled) {
       background: #00796b;
       color: white;
-    }
-
-    .dashboard-filters {
-      display: flex;
-      gap: 20px;
-      margin-bottom: 20px;
-      flex-wrap: wrap;
-    }
-
-    .search-box {
-      flex: 1;
-      min-width: 200px;
-      position: relative;
-    }
-
-    .search-box input {
-      width: 100%;
-      padding: 10px 15px 10px 35px;
-      border: 1px solid #b0bec5;
-      border-radius: 6px;
-      font-size: 14px;
-      transition: all 0.3s ease;
-    }
-
-    .search-box input:focus {
       border-color: #00796b;
-      box-shadow: 0 0 0 2px rgba(0, 121, 107, 0.2);
-      outline: none;
     }
 
-    .search-box .icon {
-      position: absolute;
-      left: 10px;
-      top: 50%;
-      transform: translateY(-50%);
-      color: #78909c;
-    }
-
-    .date-filters {
-      display: flex;
-      gap: 10px;
-      align-items: center;
-    }
-
-    .date-input {
-      padding: 8px 12px;
-      border: 1px solid #b0bec5;
-      border-radius: 6px;
-      font-size: 14px;
-    }
-
-    .stats-cards {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-      gap: 20px;
-      margin-bottom: 30px;
-    }
-
-    .stat-card {
-      background: white;
-      padding: 20px;
-      border-radius: 10px;
-      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-      text-align: center;
-      transition: transform 0.3s ease;
-    }
-
-    .stat-card:hover {
-      transform: translateY(-5px);
-    }
-
-    .stat-title {
-      color: #546e7a;
-      font-size: 0.9rem;
-      margin-bottom: 8px;
-      text-transform: uppercase;
-      letter-spacing: 0.5px;
-    }
-
-    .stat-value {
-      color: #00796b;
-      font-size: 1.5rem;
+    .pagination button.active {
+      background: #00796b;
+      color: white;
+      border-color: #00796b;
       font-weight: 600;
     }
 
-    .stat-icon {
-      font-size: 1.2rem;
-      color: #26a69a;
-      margin-bottom: 10px;
+    .pagination button:disabled {
+      color: #9ca3af;
+      border-color: #d1d5db;
+      cursor: not-allowed;
+    }
+
+    /* Loading and error messages */
+    .loading-message {
+      text-align: center;
+      font-size: 1.1rem;
+      color: #005b4f;
+      padding: 20px;
+      background: #f8fafc;
+      border-radius: 8px;
+      margin: 20px auto;
+      max-width: 400px;
+    }
+
+    .error-message {
+      text-align: center;
+      font-size: 1.1rem;
+      color: #dc2626;
+      padding: 20px;
+      background: #fef2f2;
+      border-radius: 8px;
+      margin: 20px auto;
+      max-width: 400px;
+    }
+
+    /* Responsive adjustments */
+    @media (max-width: 1024px) {
+      .dashboard-header {
+        flex-direction: column;
+        gap: 16px;
+        text-align: center;
+      }
+
+      .stats-cards {
+        grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+      }
+
+      .dashboard-filters {
+        flex-direction: column;
+        align-items: stretch;
+      }
+
+      .search-box {
+        min-width: auto;
+      }
     }
 
     @media (max-width: 768px) {
       .orders-dashboard-container {
-        margin-top: 120px;
-        padding: 15px;
+        margin-top: 100px;
+        padding: 16px;
       }
 
       .dashboard-header h1 {
-        font-size: 20px;
-      }
-
-      .dashboard-section {
-        padding: 20px;
-      }
-
-      .dashboard-section h2 {
-        font-size: 18px;
+        font-size: 1.75rem;
       }
 
       .new-order-button {
-        font-size: 14px;
-        padding: 8px 15px;
+        padding: 10px 20px;
+        font-size: 0.9rem;
+      }
+
+      .dashboard-section {
+        padding: 16px;
+      }
+
+      .dashboard-section h2 {
+        font-size: 1.25rem;
       }
 
       .orders-table {
-        font-size: 12px;
+        font-size: 0.85rem;
       }
 
-      .orders-table th, .orders-table td {
-        padding: 8px;
+      .orders-table th,
+      .orders-table td {
+        padding: 10px;
       }
 
       .orders-table button {
         padding: 6px 10px;
-        font-size: 12px;
+        font-size: 0.8rem;
       }
 
-      .orders-summary {
-        padding: 10px;
+      .chart-container {
+        max-width: 300px;
       }
 
       .status-legend {
         grid-template-columns: 1fr;
         max-width: 300px;
       }
+    }
 
-      .chart-container {
-        max-width: 300px;
+    @media (max-width: 480px) {
+      .orders-table {
+        display: block;
+        overflow-x: auto;
+        white-space: nowrap;
+      }
+
+      .orders-table th,
+      .orders-table td {
+        min-width: 120px;
+      }
+
+      .pagination {
+        flex-wrap: wrap;
+        gap: 6px;
+      }
+
+      .pagination button {
+        padding: 6px 10px;
+        font-size: 0.8rem;
       }
     }
   `;
 
-  if (loading) return <div className="loading-message">Loading...</div>;
+  if (loading) return (
+    <div className="loading-message">
+      <svg className="animate-spin h-5 w-5 mr-3 inline" viewBox="0 0 24 24">
+        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" />
+        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8h-8z" />
+      </svg>
+      Loading...
+    </div>
+  );
   if (error) return <div className="error-message">{error}</div>;
 
   return (
@@ -631,10 +792,7 @@ const OrdersDashboard = () => {
       <div className="orders-dashboard-container">
         <div className="dashboard-header">
           <h1>Orders Dashboard</h1>
-          <button
-            className="new-order-button"
-            onClick={handleNavigateToAddOrder}
-          >
+          <button className="new-order-button" onClick={handleNavigateToAddOrder}>
             <FontAwesomeIcon icon={faPlus} /> New Order
           </button>
         </div>
@@ -680,52 +838,54 @@ const OrdersDashboard = () => {
               type="date"
               className="date-input"
               value={dateRange.start}
-              onChange={(e) => setDateRange(prev => ({ ...prev, start: e.target.value }))}
+              onChange={(e) => setDateRange((prev) => ({ ...prev, start: e.target.value }))}
             />
             <span>to</span>
             <input
               type="date"
               className="date-input"
               value={dateRange.end}
-              onChange={(e) => setDateRange(prev => ({ ...prev, end: e.target.value }))}
+              onChange={(e) => setDateRange((prev) => ({ ...prev, end: e.target.value }))}
             />
           </div>
         </div>
 
         {/* Orders Summary with Pie Chart */}
         <div className="dashboard-section">
-          <h2><FontAwesomeIcon icon={faChartPie} /> Orders Summary</h2>
+          <h2>
+            <FontAwesomeIcon icon={faChartPie} /> Orders Summary
+          </h2>
           <div className="orders-summary">
             <div className="chart-container">
-              <Pie 
-                data={pieChartData} 
-                options={{ 
+              <Pie
+                data={pieChartData}
+                options={{
                   maintainAspectRatio: true,
                   aspectRatio: 1,
                   plugins: {
                     legend: {
-                      display: false
+                      display: false,
                     },
                     tooltip: {
                       backgroundColor: '#00796b',
                       titleFont: {
                         size: 14,
-                        family: "'Segoe UI', Arial, sans-serif",
-                        weight: 'bold'
+                        family: "'Inter', 'Segoe UI', Arial, sans-serif",
+                        weight: 'bold',
                       },
                       bodyFont: {
                         size: 13,
-                        family: "'Segoe UI', Arial, sans-serif"
+                        family: "'Inter', 'Segoe UI', Arial, sans-serif",
                       },
                       padding: 12,
                       cornerRadius: 8,
                       displayColors: true,
                       boxWidth: 10,
                       boxHeight: 10,
-                      usePointStyle: true
-                    }
-                  }
-                }} 
+                      usePointStyle: true,
+                    },
+                  },
+                }}
               />
             </div>
             <div className="status-legend">
@@ -792,34 +952,25 @@ const OrdersDashboard = () => {
                   <td>{order.phoneNumber}</td>
                   <td>{order.email}</td>
                   <td>
-                    <span className={getStatusBadgeClass(order.status)}>
-                      {order.status}
-                    </span>
+                    <span className={getStatusBadgeClass(order.status)}>{order.status}</span>
                   </td>
-                  <td>{new Date(order.createdAt).toLocaleString('en-US', {
-                    year: 'numeric',
-                    month: 'short',
-                    day: 'numeric',
-                    hour: '2-digit',
-                    minute: '2-digit'
-                  })}</td>
                   <td>
-                    <button
-                      className="update"
-                      onClick={() => handleOrderUpdate(order._id)}
-                    >
+                    {new Date(order.createdAt).toLocaleString('en-US', {
+                      year: 'numeric',
+                      month: 'short',
+                      day: 'numeric',
+                      hour: '2-digit',
+                      minute: '2-digit',
+                    })}
+                  </td>
+                  <td>
+                    <button className="update" onClick={() => handleOrderUpdate(order._id)}>
                       <FontAwesomeIcon icon={faEdit} /> Update
                     </button>
-                    <button
-                      className="delete"
-                      onClick={() => handleOrderDelete(order._id)}
-                    >
+                    <button className="delete" onClick={() => handleOrderDelete(order._id)}>
                       <FontAwesomeIcon icon={faTrash} /> Delete
                     </button>
-                    <button
-                      className="update"
-                      onClick={() => generateOrderPDF()}
-                    >
+                    <button className="update" onClick={() => generateOrderPDF(order)}>
                       PDF
                     </button>
                   </td>
@@ -828,16 +979,10 @@ const OrdersDashboard = () => {
             </tbody>
           </table>
           <div className="pagination">
-            <button
-              onClick={() => setCurrentPage(1)}
-              disabled={currentPage === 1}
-            >
+            <button onClick={() => setCurrentPage(1)} disabled={currentPage === 1}>
               First
             </button>
-            <button
-              onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
-              disabled={currentPage === 1}
-            >
+            <button onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))} disabled={currentPage === 1}>
               Previous
             </button>
             {[...Array(totalPages)].map((_, index) => (
@@ -850,15 +995,12 @@ const OrdersDashboard = () => {
               </button>
             ))}
             <button
-              onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
+              onClick={() => setCurrentPage((prev) => Math.min(prev + 1, totalPages))}
               disabled={currentPage === totalPages}
             >
               Next
             </button>
-            <button
-              onClick={() => setCurrentPage(totalPages)}
-              disabled={currentPage === totalPages}
-            >
+            <button onClick={() => setCurrentPage(totalPages)} disabled={currentPage === totalPages}>
               Last
             </button>
           </div>

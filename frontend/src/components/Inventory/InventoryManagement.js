@@ -2,7 +2,11 @@ import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import MainNavbar from '../Home/MainNavbar';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faBox, faCalendar, faMapMarkerAlt, faWeight, faRecycle, faExclamationTriangle, faSearch, faPlus, faArrowUp, faArrowDown } from '@fortawesome/free-solid-svg-icons';
+import { faBox, faCalendar, faMapMarkerAlt, faWeight, faRecycle, faExclamationTriangle, faSearch, faPlus, faArrowUp, faArrowDown, faFilePdf } from '@fortawesome/free-solid-svg-icons';
+import jsPDF from 'jspdf';
+
+// Import Poppins font (optional, for better styling - requires font file or manual addition to jsPDF)
+import 'jspdf-autotable'; // For table support in jsPDF
 
 const InventoryManagement = () => {
   const [inventoryItems, setInventoryItems] = useState([]);
@@ -39,7 +43,6 @@ const InventoryManagement = () => {
   // Calculate inventory turnover rate (mock data for demonstration)
   const calculateTurnoverRate = (items) => {
     const totalInventory = items.reduce((sum, item) => sum + item.totalWeight, 0);
-    // Mock annual sales data (replace with actual data in production)
     const annualSales = totalInventory * 1.5;
     return totalInventory > 0 ? (annualSales / totalInventory) : 0;
   };
@@ -201,6 +204,143 @@ const InventoryManagement = () => {
     }
   };
 
+  // Generate PDF report
+  const generateReport = () => {
+    const doc = new jsPDF();
+    const pageWidth = doc.internal.pageSize.getWidth();
+    const margin = 10;
+    let yOffset = 20;
+
+    // Set font to match component style (default Helvetica if Poppins not added)
+    doc.setFont('Helvetica', 'bold');
+    doc.setFontSize(20);
+    doc.setTextColor(0, 105, 92); // Teal color (#00695c)
+    doc.text('Inventory Management Report', pageWidth / 2, yOffset, { align: 'center' });
+    yOffset += 10;
+
+    // Add date
+    doc.setFontSize(12);
+    doc.setTextColor(55, 71, 79); // Gray color (#37474f)
+    doc.text(`Generated on: ${new Date().toLocaleDateString()}`, pageWidth / 2, yOffset, { align: 'center' });
+    yOffset += 15;
+
+    // Summary Metrics
+    doc.setFontSize(16);
+    doc.setTextColor(0, 77, 64); // Dark teal (#004d40)
+    doc.text('Summary Metrics', margin, yOffset);
+    yOffset += 10;
+
+    doc.setFontSize(12);
+    doc.setTextColor(0, 0, 0);
+    doc.text(`Total Inventory Weight: ${totalWeight.toFixed(2)} kg`, margin, yOffset);
+    yOffset += 7;
+    doc.text(`Inventory Value: $${inventoryValue.toFixed(2)}`, margin, yOffset);
+    yOffset += 7;
+    doc.text(`Turnover Rate: ${turnoverRate.toFixed(2)}x per year`, margin, yOffset);
+    yOffset += 15;
+
+    // Weight Breakdown
+    doc.setFontSize(16);
+    doc.setTextColor(0, 77, 64);
+    doc.text('Weight Breakdown by Waste Type', margin, yOffset);
+    yOffset += 10;
+
+    Object.entries(weightBreakdown).forEach(([type, weight]) => {
+      doc.setFontSize(12);
+      doc.setTextColor(0, 0, 0);
+      doc.text(`${type}: ${weight.toFixed(2)} kg`, margin, yOffset);
+      yOffset += 7;
+    });
+    yOffset += 10;
+
+    // Low Stock Alert
+    if (lowStockItems.length > 0) {
+      doc.setFontSize(16);
+      doc.setTextColor(211, 47, 47); // Red (#d32f2f)
+      doc.text('Low Stock Alert', margin, yOffset);
+      yOffset += 10;
+
+      doc.setFontSize(12);
+      doc.setTextColor(0, 0, 0);
+      doc.text(
+        `Warning: ${lowStockItems.length} item(s) are low on stock (below ${LOW_STOCK_THRESHOLD} kg)!`,
+        margin,
+        yOffset
+      );
+      yOffset += 7;
+      doc.text(`Total Low Stock Weight: ${lowStockTotalWeight.toFixed(2)} kg`, margin, yOffset);
+      yOffset += 15;
+    }
+
+    // Inventory Alerts
+    if (alerts.length > 0) {
+      doc.setFontSize(16);
+      doc.setTextColor(0, 77, 64);
+      doc.text('Inventory Alerts', margin, yOffset);
+      yOffset += 10;
+
+      alerts.forEach((alert) => {
+        doc.setFontSize(12);
+        doc.setTextColor(alert.severity === 'high' ? [211, 47, 47] : [239, 108, 0]); // Red or Orange
+        doc.text(`${alert.severity.charAt(0).toUpperCase() + alert.severity.slice(1)}: ${alert.message}`, margin, yOffset);
+        yOffset += 7;
+      });
+      yOffset += 15;
+    }
+
+    // Inventory Items Table
+    doc.setFontSize(16);
+    doc.setTextColor(0, 77, 64);
+    doc.text('Inventory Items', margin, yOffset);
+    yOffset += 10;
+
+    const tableColumns = ['Batch ID', 'Collection Date', 'Source Location', 'Weight (kg)', 'Waste Type', 'Status'];
+    const tableRows = filteredItems.map((item) => [
+      item.batchId,
+      new Date(item.collectionDate).toLocaleDateString(),
+      item.sourceLocation,
+      item.totalWeight.toString(),
+      item.wasteType,
+      item.totalWeight < LOW_STOCK_THRESHOLD ? 'Low Stock' : 'In Stock'
+    ]);
+
+    doc.autoTable({
+      startY: yOffset,
+      head: [tableColumns],
+      body: tableRows,
+      theme: 'striped',
+      headStyles: { fillColor: [0, 121, 107], textColor: [230, 240, 234] }, // Teal header
+      styles: { fontSize: 10, cellPadding: 3 },
+      columnStyles: { 3: { halign: 'right' } } // Align weight column to right
+    });
+    yOffset = doc.lastAutoTable.finalY + 15;
+
+    // Batch Tracking
+    doc.setFontSize(16);
+    doc.setTextColor(0, 77, 64);
+    doc.text('Batch Tracking', margin, yOffset);
+    yOffset += 10;
+
+    Object.entries(batchTracking).forEach(([batchId, data]) => {
+      doc.setFontSize(12);
+      doc.setTextColor(0, 0, 0);
+      doc.text(`Batch: ${batchId}`, margin, yOffset);
+      yOffset += 7;
+      doc.text(`Weight: ${data.totalWeight} kg`, margin + 5, yOffset);
+      yOffset += 7;
+      doc.text(`Location: ${data.location}`, margin + 5, yOffset);
+      yOffset += 7;
+      doc.text(`Last Updated: ${new Date(data.lastUpdated).toLocaleDateString()}`, margin + 5, yOffset);
+      yOffset += 7;
+      doc.setTextColor(data.status === 'Low Stock' ? [211, 47, 47] : [46, 125, 50]); // Red or Green
+      doc.text(`Status: ${data.status}`, margin + 5, yOffset);
+      yOffset += 10;
+    });
+
+    // Save the PDF
+    doc.save(`Inventory_Report_${new Date().toISOString().split('T')[0]}.pdf`);
+  };
+
   // Calculate total weights
   const totalWeight = inventoryItems.reduce((sum, item) => sum + item.totalWeight, 0);
   const lowStockTotalWeight = lowStockItems.reduce((sum, item) => sum + item.totalWeight, 0);
@@ -254,7 +394,7 @@ const InventoryManagement = () => {
       margin-right: 10px;
     }
 
-    .add-button {
+    .add-button, .report-button {
       display: inline-block;
       background: #00796b;
       color: white;
@@ -262,11 +402,12 @@ const InventoryManagement = () => {
       border-radius: 6px;
       text-decoration: none;
       margin-bottom: 20px;
+      margin-right: 10px;
       text-align: center;
       transition: all 0.3s ease;
     }
 
-    .add-button:hover {
+    .add-button:hover, .report-button:hover {
       background: #009688;
       transform: translateY(-2px);
       box-shadow: 0 4px 10px rgba(0, 150, 136, 0.3);
@@ -318,7 +459,7 @@ const InventoryManagement = () => {
       font-size: 18px;
     }
 
-    .weight-breakdown {
+   F    .weight-breakdown {
       display: grid;
       grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
       gap: 10px;
@@ -721,10 +862,16 @@ const InventoryManagement = () => {
             </div>
           </div>
 
-          <Link to="/inventory/add" className="add-button">
-            <FontAwesomeIcon icon={faPlus} style={{ marginRight: '8px' }} />
-            Add New Inventory
-          </Link>
+          <div>
+            <Link to="/inventory/add" className="add-button">
+              <FontAwesomeIcon icon={faPlus} style={{ marginRight: '8px' }} />
+              Add New Inventory
+            </Link>
+            <button onClick={generateReport} className="report-button">
+              <FontAwesomeIcon icon={faFilePdf} style={{ marginRight: '8px' }} />
+              Generate Report
+            </button>
+          </div>
 
           {filteredItems.length === 0 ? (
             <div className="empty-state">
