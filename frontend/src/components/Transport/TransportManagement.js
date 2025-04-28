@@ -317,7 +317,7 @@ const TransportManagement = () => {
       width: 150,
       renderCell: (params) => (
         <Box sx={{ display: 'flex', alignItems: 'center' }}>
-          <LocalShippingIcon sx={{ color: '#1976d2', mr: 1 }} />
+          <LocalShippingIcon sx={{ color: '#2e7d32', mr: 1 }} />
           <div>{params.value ? params.value.replace('-', ' ').toUpperCase() : 'N/A'}</div>
         </Box>
       ),
@@ -342,7 +342,7 @@ const TransportManagement = () => {
 
         return (
           <Box sx={{ display: 'flex', alignItems: 'center' }}>
-            <BadgeIcon sx={{ color: '#1976d2', mr: 1 }} />
+            <BadgeIcon sx={{ color: '#2e7d32', mr: 1 }} />
             <div>{params.row.assignedDriver.name}</div>
           </Box>
         );
@@ -359,7 +359,7 @@ const TransportManagement = () => {
 
         return (
           <Box sx={{ display: 'flex', alignItems: 'center' }}>
-            <DirectionsCarIcon sx={{ color: '#1976d2', mr: 1 }} />
+            <DirectionsCarIcon sx={{ color: '#2e7d32', mr: 1 }} />
             <div>{params.row.assignedVehicle.licensePlate}</div>
           </Box>
         );
@@ -443,7 +443,7 @@ const TransportManagement = () => {
     <Container maxWidth="lg" sx={{ py: 4 }}>
       <Paper elevation={3} sx={{ p: 3, borderRadius: 2 }}>
         <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
-          <Typography variant="h4" sx={{ fontWeight: '600', color: '#1976d2', display: 'flex', alignItems: 'center' }}>
+          <Typography variant="h4" sx={{ fontWeight: '600', color: '#2e7d32', display: 'flex', alignItems: 'center' }}>
             <LocalShippingIcon sx={{ mr: 1, fontSize: 32 }} />
             Transport Management
           </Typography>

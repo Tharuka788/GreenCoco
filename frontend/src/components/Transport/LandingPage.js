@@ -40,12 +40,12 @@ const LandingPage = () => {
         >
           <Box sx={{ textAlign: 'center', mb: 6 }}>
             <Box sx={{ display: 'inline-flex', alignItems: 'center', mb: 2 }}>
-              <LocalShippingIcon sx={{ fontSize: 40, color: '#1976d2', mr: 2 }} />
+              <LocalShippingIcon sx={{ fontSize: 40, color: '#2e7d32', mr: 2 }} />
               <Typography 
                 variant="h3" 
                 sx={{ 
                   fontWeight: '700', 
-                  background: 'linear-gradient(90deg, #1976d2, #64b5f6)',
+                  background: 'linear-gradient(90deg, #2e7d32, #4caf50)',
                   backgroundClip: 'text',
                   textFillColor: 'transparent',
                   WebkitBackgroundClip: 'text',
@@ -73,16 +73,16 @@ const LandingPage = () => {
                   boxShadow: '0 10px 30px rgba(0,0,0,0.05)',
                   transition: 'all 0.3s ease',
                   overflow: 'hidden',
-                  border: '1px solid rgba(25, 118, 210, 0.1)',
+                  border: '1px solid rgba(46, 125, 50, 0.1)',
                   '&:hover': { 
                     transform: 'translateY(-10px)',
-                    boxShadow: '0 15px 35px rgba(25, 118, 210, 0.1)'
+                    boxShadow: '0 15px 35px rgba(46, 125, 50, 0.1)'
                   }
                 }}
               >
                 <Box 
                   sx={{ 
-                    background: 'linear-gradient(135deg, #42a5f5 0%, #1976d2 100%)',
+                    background: 'linear-gradient(135deg, #4caf50 0%, #2e7d32 100%)',
                     py: 4,
                     position: 'relative',
                     overflow: 'hidden'
@@ -130,7 +130,7 @@ const LandingPage = () => {
                       py: 1,
                       textTransform: 'none',
                       fontWeight: '600',
-                      boxShadow: '0 4px 10px rgba(25, 118, 210, 0.3)'
+                      boxShadow: '0 4px 10px rgba(46, 125, 50, 0.3)'
                     }}
                   >
                     Manage Drivers
@@ -150,16 +150,16 @@ const LandingPage = () => {
                   boxShadow: '0 10px 30px rgba(0,0,0,0.05)',
                   transition: 'all 0.3s ease',
                   overflow: 'hidden',
-                  border: '1px solid rgba(25, 118, 210, 0.1)',
+                  border: '1px solid rgba(46, 125, 50, 0.1)',
                   '&:hover': { 
                     transform: 'translateY(-10px)',
-                    boxShadow: '0 15px 35px rgba(25, 118, 210, 0.1)'
+                    boxShadow: '0 15px 35px rgba(46, 125, 50, 0.1)'
                   }
                 }}
               >
                 <Box 
                   sx={{ 
-                    background: 'linear-gradient(135deg, #42a5f5 0%, #1976d2 100%)',
+                    background: 'linear-gradient(135deg, #4caf50 0%, #2e7d32 100%)',
                     py: 4,
                     position: 'relative',
                     overflow: 'hidden'
@@ -207,7 +207,7 @@ const LandingPage = () => {
                       py: 1,
                       textTransform: 'none',
                       fontWeight: '600',
-                      boxShadow: '0 4px 10px rgba(25, 118, 210, 0.3)'
+                      boxShadow: '0 4px 10px rgba(46, 125, 50, 0.3)'
                     }}
                   >
                     Manage Vehicles
@@ -227,16 +227,16 @@ const LandingPage = () => {
                   boxShadow: '0 10px 30px rgba(0,0,0,0.05)',
                   transition: 'all 0.3s ease',
                   overflow: 'hidden',
-                  border: '1px solid rgba(25, 118, 210, 0.1)',
+                  border: '1px solid rgba(46, 125, 50, 0.1)',
                   '&:hover': { 
                     transform: 'translateY(-10px)',
-                    boxShadow: '0 15px 35px rgba(25, 118, 210, 0.1)'
+                    boxShadow: '0 15px 35px rgba(46, 125, 50, 0.1)'
                   }
                 }}
               >
                 <Box 
                   sx={{ 
-                    background: 'linear-gradient(135deg, #42a5f5 0%, #1976d2 100%)',
+                    background: 'linear-gradient(135deg, #4caf50 0%, #2e7d32 100%)',
                     py: 4,
                     position: 'relative',
                     overflow: 'hidden'
@@ -284,7 +284,7 @@ const LandingPage = () => {
                       py: 1,
                       textTransform: 'none',
                       fontWeight: '600',
-                      boxShadow: '0 4px 10px rgba(25, 118, 210, 0.3)'
+                      boxShadow: '0 4px 10px rgba(46, 125, 50, 0.3)'
                     }}
                   >
                     Manage Transport
