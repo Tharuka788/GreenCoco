@@ -4,9 +4,9 @@ import MainNavbar from '../Home/MainNavbar';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faBox, faCalendar, faMapMarkerAlt, faWeight, faRecycle, faExclamationTriangle, faSearch, faPlus, faArrowUp, faArrowDown, faFilePdf } from '@fortawesome/free-solid-svg-icons';
 import jsPDF from 'jspdf';
+import autoTable from 'jspdf-autotable';
 
 // Import Poppins font (optional, for better styling - requires font file or manual addition to jsPDF)
-import 'jspdf-autotable'; // For table support in jsPDF
 
 const InventoryManagement = () => {
   const [inventoryItems, setInventoryItems] = useState([]);
@@ -206,95 +206,128 @@ const InventoryManagement = () => {
 
   // Generate PDF report
   const generateReport = () => {
-    const doc = new jsPDF();
-    const pageWidth = doc.internal.pageSize.getWidth();
-    const margin = 10;
-    let yOffset = 20;
+    const doc = new jsPDF({
+      orientation: 'portrait',
+      unit: 'mm',
+      format: 'a4'
+    });
 
-    // Set font to match component style (default Helvetica if Poppins not added)
-    doc.setFont('Helvetica', 'bold');
+    // Company Branding
+    doc.setFont('helvetica', 'bold');
     doc.setFontSize(20);
-    doc.setTextColor(0, 105, 92); // Teal color (#00695c)
-    doc.text('Inventory Management Report', pageWidth / 2, yOffset, { align: 'center' });
-    yOffset += 10;
+    doc.setTextColor(0, 105, 92);
+    doc.text('GreenCoco', 15, 18);
+    doc.setFontSize(10);
+    doc.setFont('helvetica', 'normal');
+    doc.setTextColor(80, 80, 80);
+    doc.text([
+      'No. 668, Kanubichchiya, Dummalasuriya, Sri Lanka 60260',
+      'Tel: +94 322241161 | Mobile: +94 716550681',
+      'Email: info@greencocoexpo.lk'
+    ], 15, 24);
 
-    // Add date
-    doc.setFontSize(12);
-    doc.setTextColor(55, 71, 79); // Gray color (#37474f)
-    doc.text(`Generated on: ${new Date().toLocaleDateString()}`, pageWidth / 2, yOffset, { align: 'center' });
-    yOffset += 15;
+    // Decorative header bar
+    doc.setFillColor(0, 105, 92);
+    doc.rect(0, 32, 210, 8, 'F');
 
-    // Summary Metrics
-    doc.setFontSize(16);
-    doc.setTextColor(0, 77, 64); // Dark teal (#004d40)
-    doc.text('Summary Metrics', margin, yOffset);
-    yOffset += 10;
+    // Report Title
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(18);
+    doc.setTextColor(0, 105, 92);
+    doc.text('Inventory Management Report', 105, 48, { align: 'center' });
 
-    doc.setFontSize(12);
-    doc.setTextColor(0, 0, 0);
-    doc.text(`Total Inventory Weight: ${totalWeight.toFixed(2)} kg`, margin, yOffset);
-    yOffset += 7;
-    doc.text(`Inventory Value: $${inventoryValue.toFixed(2)}`, margin, yOffset);
-    yOffset += 7;
-    doc.text(`Turnover Rate: ${turnoverRate.toFixed(2)}x per year`, margin, yOffset);
-    yOffset += 15;
+    // Date
+    doc.setFont('helvetica', 'italic');
+    doc.setFontSize(11);
+    doc.setTextColor(80, 80, 80);
+    doc.text(`Generated on: ${new Date().toLocaleDateString()}`, 105, 56, { align: 'center' });
+
+    // Summary Section
+    let y = 65;
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(13);
+    doc.setTextColor(0, 77, 64);
+    doc.text('Summary', 15, y);
+
+    doc.setFont('helvetica', 'normal');
+    doc.setFontSize(11);
+    doc.setTextColor(60, 60, 60);
+    y += 7;
+    doc.text(`Total Inventory Weight: ${totalWeight.toFixed(2)} kg`, 15, y);
+    y += 6;
+    doc.text(`Inventory Value: $${inventoryValue.toFixed(2)}`, 15, y);
+    y += 6;
+    doc.text(`Turnover Rate: ${turnoverRate.toFixed(2)}x per year`, 15, y);
 
     // Weight Breakdown
-    doc.setFontSize(16);
+    y += 10;
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(12);
     doc.setTextColor(0, 77, 64);
-    doc.text('Weight Breakdown by Waste Type', margin, yOffset);
-    yOffset += 10;
-
+    doc.text('Weight Breakdown by Waste Type:', 15, y);
+    y += 6;
+    doc.setFont('helvetica', 'normal');
+    doc.setFontSize(10);
+    doc.setTextColor(60, 60, 60);
     Object.entries(weightBreakdown).forEach(([type, weight]) => {
-      doc.setFontSize(12);
-      doc.setTextColor(0, 0, 0);
-      doc.text(`${type}: ${weight.toFixed(2)} kg`, margin, yOffset);
-      yOffset += 7;
+      doc.text(`${type}: ${weight.toFixed(2)} kg`, 18, y);
+      y += 5;
     });
-    yOffset += 10;
 
     // Low Stock Alert
     if (lowStockItems.length > 0) {
-      doc.setFontSize(16);
-      doc.setTextColor(211, 47, 47); // Red (#d32f2f)
-      doc.text('Low Stock Alert', margin, yOffset);
-      yOffset += 10;
-
+      y += 5;
+      doc.setFont('helvetica', 'bold');
       doc.setFontSize(12);
-      doc.setTextColor(0, 0, 0);
+      doc.setTextColor(211, 47, 47);
+      doc.text('Low Stock Alert:', 15, y);
+      y += 6;
+      doc.setFont('helvetica', 'normal');
+      doc.setFontSize(10);
+      doc.setTextColor(60, 60, 60);
       doc.text(
         `Warning: ${lowStockItems.length} item(s) are low on stock (below ${LOW_STOCK_THRESHOLD} kg)!`,
-        margin,
-        yOffset
+        18, y
       );
-      yOffset += 7;
-      doc.text(`Total Low Stock Weight: ${lowStockTotalWeight.toFixed(2)} kg`, margin, yOffset);
-      yOffset += 15;
+      y += 5;
+      doc.text(`Total Low Stock Weight: ${lowStockTotalWeight.toFixed(2)} kg`, 18, y);
+      y += 5;
     }
 
     // Inventory Alerts
     if (alerts.length > 0) {
-      doc.setFontSize(16);
+      y += 5;
+      doc.setFont('helvetica', 'bold');
+      doc.setFontSize(12);
       doc.setTextColor(0, 77, 64);
-      doc.text('Inventory Alerts', margin, yOffset);
-      yOffset += 10;
-
+      doc.text('Inventory Alerts:', 15, y);
+      y += 6;
+      doc.setFont('helvetica', 'normal');
+      doc.setFontSize(10);
       alerts.forEach((alert) => {
-        doc.setFontSize(12);
-        doc.setTextColor(alert.severity === 'high' ? [211, 47, 47] : [239, 108, 0]); // Red or Orange
-        doc.text(`${alert.severity.charAt(0).toUpperCase() + alert.severity.slice(1)}: ${alert.message}`, margin, yOffset);
-        yOffset += 7;
+        if (alert.severity === 'high') {
+          doc.setTextColor(211, 47, 47); // Red
+        } else {
+          doc.setTextColor(239, 108, 0); // Orange
+        }
+        doc.text(
+          `${alert.severity.charAt(0).toUpperCase() + alert.severity.slice(1)}: ${alert.message}`,
+          18, y
+        );
+        y += 5;
       });
-      yOffset += 15;
     }
 
-    // Inventory Items Table
-    doc.setFontSize(16);
+    // Inventory Table
+    y += 8;
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(13);
     doc.setTextColor(0, 77, 64);
-    doc.text('Inventory Items', margin, yOffset);
-    yOffset += 10;
+    doc.text('Inventory Items', 15, y);
 
-    const tableColumns = ['Batch ID', 'Collection Date', 'Source Location', 'Weight (kg)', 'Waste Type', 'Status'];
+    const tableColumns = [
+      'Batch ID', 'Collection Date', 'Source Location', 'Weight (kg)', 'Waste Type', 'Status'
+    ];
     const tableRows = filteredItems.map((item) => [
       item.batchId,
       new Date(item.collectionDate).toLocaleDateString(),
@@ -304,41 +337,35 @@ const InventoryManagement = () => {
       item.totalWeight < LOW_STOCK_THRESHOLD ? 'Low Stock' : 'In Stock'
     ]);
 
-    doc.autoTable({
-      startY: yOffset,
+    // Use the imported autoTable function
+    autoTable(doc, {
+      startY: y + 3,
       head: [tableColumns],
       body: tableRows,
       theme: 'striped',
-      headStyles: { fillColor: [0, 121, 107], textColor: [230, 240, 234] }, // Teal header
-      styles: { fontSize: 10, cellPadding: 3 },
-      columnStyles: { 3: { halign: 'right' } } // Align weight column to right
+      headStyles: { fillColor: [0, 121, 107], textColor: [230, 240, 234] },
+      styles: { fontSize: 9, cellPadding: 2 },
+      columnStyles: { 3: { halign: 'right' } }
     });
-    yOffset = doc.lastAutoTable.finalY + 15;
 
-    // Batch Tracking
-    doc.setFontSize(16);
-    doc.setTextColor(0, 77, 64);
-    doc.text('Batch Tracking', margin, yOffset);
-    yOffset += 10;
-
-    Object.entries(batchTracking).forEach(([batchId, data]) => {
-      doc.setFontSize(12);
-      doc.setTextColor(0, 0, 0);
-      doc.text(`Batch: ${batchId}`, margin, yOffset);
-      yOffset += 7;
-      doc.text(`Weight: ${data.totalWeight} kg`, margin + 5, yOffset);
-      yOffset += 7;
-      doc.text(`Location: ${data.location}`, margin + 5, yOffset);
-      yOffset += 7;
-      doc.text(`Last Updated: ${new Date(data.lastUpdated).toLocaleDateString()}`, margin + 5, yOffset);
-      yOffset += 7;
-      doc.setTextColor(data.status === 'Low Stock' ? [211, 47, 47] : [46, 125, 50]); // Red or Green
-      doc.text(`Status: ${data.status}`, margin + 5, yOffset);
-      yOffset += 10;
-    });
+    // Footer
+    const pageCount = doc.internal.getNumberOfPages();
+    doc.setFont('helvetica', 'italic');
+    doc.setFontSize(8);
+    doc.setTextColor(150, 150, 150);
+    for (let i = 1; i <= pageCount; i++) {
+      doc.setPage(i);
+      doc.text(
+        'GreenCoco - Committed to sustainable coconut waste management',
+        105,
+        290,
+        { align: 'center' }
+      );
+      doc.text(`Page ${i} of ${pageCount}`, 200, 290, { align: 'right' });
+    }
 
     // Save the PDF
-    doc.save(`Inventory_Report_${new Date().toISOString().split('T')[0]}.pdf`);
+    doc.save(`GreenCoco_Inventory_Report_${new Date().toISOString().split('T')[0]}.pdf`);
   };
 
   // Calculate total weights
