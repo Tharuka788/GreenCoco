@@ -43,6 +43,7 @@ const AdminSuppliers = () => {
   const [performanceData, setPerformanceData] = useState([]);
   const [loadingPerformance, setLoadingPerformance] = useState(true);
   const [lowStockItems, setLowStockItems] = useState([]);
+  const [addFormErrors, setAddFormErrors] = useState({});
 
   const fetchSuppliersData = async () => {
     try {
@@ -202,8 +203,39 @@ const AdminSuppliers = () => {
   };
 
   // Add supplier (manual)
+  const validateAddForm = () => {
+    const errors = {};
+    if (!addForm.supplierName.trim()) {
+      errors.supplierName = 'Supplier name is required';
+    } else if (!/^[A-Za-z ]+$/.test(addForm.supplierName.trim())) {
+      errors.supplierName = 'Supplier name can only contain letters and spaces';
+    }
+    if (!addForm.quantity) {
+      errors.quantity = 'Quantity is required';
+    } else if (!/^[0-9]+$/.test(addForm.quantity)) {
+      errors.quantity = 'Quantity can only contain numbers';
+    }
+    if (!addForm.amount) {
+      errors.amount = 'Amount is required';
+    } else if (!/^[0-9]+$/.test(addForm.amount)) {
+      errors.amount = 'Amount can only contain numbers';
+    }
+    if (!addForm.email) {
+      errors.email = 'Email is required';
+    } else if (!addForm.email.includes('@')) {
+      errors.email = 'Email must contain @ symbol';
+    }
+    return errors;
+  };
+
   const handleAddSupplier = async (e) => {
     e.preventDefault();
+    const errors = validateAddForm();
+    if (Object.keys(errors).length > 0) {
+      setAddFormErrors(errors);
+      return;
+    }
+    setAddFormErrors({});
     try {
       await axios.post('http://localhost:5000/api/suppliers', {
         ...addForm,
@@ -465,7 +497,11 @@ const AdminSuppliers = () => {
               <h2 style={{ marginBottom: 20 }}>Add New Supplier</h2>
               <div style={{ marginBottom: 12 }}>
                 <label>Supplier Name</label>
-                <input type="text" value={addForm.supplierName} onChange={e => setAddForm(f => ({ ...f, supplierName: e.target.value }))} required style={{ width: '100%', padding: 8, borderRadius: 6, border: '1px solid #ddd' }} />
+                <input type="text" value={addForm.supplierName} onChange={e => {
+                  const value = e.target.value.replace(/[^A-Za-z ]/g, '');
+                  setAddForm(f => ({ ...f, supplierName: value }));
+                }} required style={{ width: '100%', padding: 8, borderRadius: 6, border: '1px solid #ddd' }} />
+                {addFormErrors.supplierName && <div className="error-message">{addFormErrors.supplierName}</div>}
               </div>
               <div style={{ marginBottom: 12 }}>
                 <label>Product</label>
@@ -486,15 +522,24 @@ const AdminSuppliers = () => {
               </div>
               <div style={{ marginBottom: 12 }}>
                 <label>Quantity</label>
-                <input type="number" value={addForm.quantity} min="0" onChange={e => setAddForm(f => ({ ...f, quantity: e.target.value }))} required style={{ width: '100%', padding: 8, borderRadius: 6, border: '1px solid #ddd' }} />
+                <input type="number" value={addForm.quantity} min="0" onChange={e => {
+                  const value = e.target.value.replace(/[^0-9]/g, '');
+                  setAddForm(f => ({ ...f, quantity: value }));
+                }} required style={{ width: '100%', padding: 8, borderRadius: 6, border: '1px solid #ddd' }} />
+                {addFormErrors.quantity && <div className="error-message">{addFormErrors.quantity}</div>}
               </div>
               <div style={{ marginBottom: 12 }}>
                 <label>Amount</label>
-                <input type="number" value={addForm.amount} min="0" onChange={e => setAddForm(f => ({ ...f, amount: e.target.value }))} required style={{ width: '100%', padding: 8, borderRadius: 6, border: '1px solid #ddd' }} />
+                <input type="number" value={addForm.amount} min="0" onChange={e => {
+                  const value = e.target.value.replace(/[^0-9]/g, '');
+                  setAddForm(f => ({ ...f, amount: value }));
+                }} required style={{ width: '100%', padding: 8, borderRadius: 6, border: '1px solid #ddd' }} />
+                {addFormErrors.amount && <div className="error-message">{addFormErrors.amount}</div>}
               </div>
               <div style={{ marginBottom: 12 }}>
                 <label>Email</label>
                 <input type="email" value={addForm.email} onChange={e => setAddForm(f => ({ ...f, email: e.target.value }))} required style={{ width: '100%', padding: 8, borderRadius: 6, border: '1px solid #ddd' }} />
+                {addFormErrors.email && <div className="error-message">{addFormErrors.email}</div>}
               </div>
               <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 10, marginTop: 18 }}>
                 <button type="button" onClick={() => setShowAddModal(false)} style={{ background: '#eee', color: '#333', border: 'none', borderRadius: 6, padding: '8px 18px', fontWeight: 600, cursor: 'pointer' }}>Cancel</button>

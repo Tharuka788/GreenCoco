@@ -27,6 +27,7 @@ const SupplierManagement = ({ onUpdate }) => {
     amount: '',
     email: ''
   });
+  const [formErrors, setFormErrors] = useState({});
 
   // Fetch suppliers
   useEffect(() => {
@@ -48,15 +49,53 @@ const SupplierManagement = ({ onUpdate }) => {
   // Handle form input changes
   const handleInputChange = (e) => {
     const { name, value } = e.target;
+    let newValue = value;
+    if (name === 'supplierName') {
+      newValue = newValue.replace(/[^A-Za-z ]/g, '');
+    }
+    if (name === 'quantity' || name === 'amount') {
+      newValue = newValue.replace(/[^0-9]/g, '');
+    }
     setFormData(prev => ({
       ...prev,
-      [name]: value
+      [name]: newValue
     }));
+  };
+
+  const validateForm = () => {
+    const errors = {};
+    if (!formData.supplierName.trim()) {
+      errors.supplierName = 'Supplier name is required';
+    } else if (!/^[A-Za-z ]+$/.test(formData.supplierName.trim())) {
+      errors.supplierName = 'Supplier name can only contain letters and spaces';
+    }
+    if (!formData.quantity) {
+      errors.quantity = 'Quantity is required';
+    } else if (!/^[0-9]+$/.test(formData.quantity)) {
+      errors.quantity = 'Quantity can only contain numbers';
+    }
+    if (!formData.amount) {
+      errors.amount = 'Amount is required';
+    } else if (!/^[0-9]+$/.test(formData.amount)) {
+      errors.amount = 'Amount can only contain numbers';
+    }
+    if (!formData.email) {
+      errors.email = 'Email is required';
+    } else if (!formData.email.includes('@')) {
+      errors.email = 'Email must contain @ symbol';
+    }
+    return errors;
   };
 
   // Add new supplier
   const handleAddSupplier = async (e) => {
     e.preventDefault();
+    const errors = validateForm();
+    if (Object.keys(errors).length > 0) {
+      setFormErrors(errors);
+      return;
+    }
+    setFormErrors({});
     try {
       await axios.post('http://localhost:5000/api/suppliers', formData);
       setShowAddForm(false);
@@ -78,6 +117,12 @@ const SupplierManagement = ({ onUpdate }) => {
   // Update supplier
   const handleUpdateSupplier = async (e) => {
     e.preventDefault();
+    const errors = validateForm();
+    if (Object.keys(errors).length > 0) {
+      setFormErrors(errors);
+      return;
+    }
+    setFormErrors({});
     try {
       await axios.put(`http://localhost:5000/api/suppliers/${editingSupplier._id}`, formData);
       setEditingSupplier(null);
@@ -417,6 +462,73 @@ const SupplierManagement = ({ onUpdate }) => {
             </tbody>
           </table>
         )}
+
+        {showAddForm || editingSupplier ? (
+          <form className="supplier-form" onSubmit={editingSupplier ? handleUpdateSupplier : handleAddSupplier}>
+            <div className="form-group">
+              <label>Supplier Name</label>
+              <input
+                type="text"
+                name="supplierName"
+                value={formData.supplierName}
+                onChange={handleInputChange}
+                required
+              />
+              {formErrors.supplierName && <div className="error-message">{formErrors.supplierName}</div>}
+            </div>
+            <div className="form-group">
+              <label>Product</label>
+              <input
+                type="text"
+                name="supplierProduct"
+                value={formData.supplierProduct}
+                onChange={handleInputChange}
+                required
+              />
+            </div>
+            <div className="form-group">
+              <label>Quantity</label>
+              <input
+                type="text"
+                name="quantity"
+                value={formData.quantity}
+                onChange={handleInputChange}
+                required
+              />
+              {formErrors.quantity && <div className="error-message">{formErrors.quantity}</div>}
+            </div>
+            <div className="form-group">
+              <label>Amount</label>
+              <input
+                type="text"
+                name="amount"
+                value={formData.amount}
+                onChange={handleInputChange}
+                required
+              />
+              {formErrors.amount && <div className="error-message">{formErrors.amount}</div>}
+            </div>
+            <div className="form-group">
+              <label>Email</label>
+              <input
+                type="email"
+                name="email"
+                value={formData.email}
+                onChange={handleInputChange}
+                required
+              />
+              {formErrors.email && <div className="error-message">{formErrors.email}</div>}
+            </div>
+            <div className="form-buttons">
+              <button type="submit" className="save-button">
+                <FontAwesomeIcon icon={faSave} /> {editingSupplier ? 'Update' : 'Add'}
+              </button>
+              <button type="button" className="cancel-button" onClick={cancelEditing}>
+                <FontAwesomeIcon icon={faTimes} /> Cancel
+              </button>
+            </div>
+          </form>
+        ) : null}
       </div>
     </>
   );

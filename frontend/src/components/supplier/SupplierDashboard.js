@@ -2,21 +2,28 @@ import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import {
-  faUsers,
-  faBoxes,
-  faMoneyBillWave,
-  faChartLine
+  faBox,
+  faTruck,
+  faCheckCircle,
+  faExclamationCircle,
+  faChartLine,
+  faFileInvoice
 } from '@fortawesome/free-solid-svg-icons';
+import InvoicePaymentTracking from './InvoicePaymentTracking';
 import SupplierManagement from './SupplierManagement';
 import MainNavbar from '../Home/MainNavbar';
+import jsPDF from 'jspdf';
+import 'jspdf-autotable';
 
 const SupplierDashboard = () => {
   const [stats, setStats] = useState({
-    totalSuppliers: 0,
-    totalProducts: 0,
-    totalAmount: 0,
-    activeSuppliers: 0
+    totalOrders: 0,
+    pendingOrders: 0,
+    completedOrders: 0,
+    totalRevenue: 0
   });
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
 
   useEffect(() => {
     fetchSupplierStats();
@@ -24,19 +31,13 @@ const SupplierDashboard = () => {
 
   const fetchSupplierStats = async () => {
     try {
-      const response = await axios.get('http://localhost:5000/api/suppliers');
-      const suppliers = response.data;
-
-      const statistics = {
-        totalSuppliers: suppliers.length,
-        totalProducts: suppliers.reduce((acc, curr) => acc + (curr.quantity || 0), 0),
-        totalAmount: suppliers.reduce((acc, curr) => acc + (curr.amount || 0), 0),
-        activeSuppliers: suppliers.filter(s => s.isActive).length
-      };
-
-      setStats(statistics);
+      const response = await axios.get('http://localhost:5000/api/suppliers/stats');
+      setStats(response.data);
+      setLoading(false);
     } catch (error) {
-      console.error('Error fetching supplier statistics:', error);
+      console.error('Error fetching supplier stats:', error);
+      setError('Failed to load supplier statistics');
+      setLoading(false);
     }
   };
 
@@ -47,9 +48,9 @@ const SupplierDashboard = () => {
       margin: 80px auto 0;
     }
 
-    .stats-container {
+    .stats-grid {
       display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+      grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
       gap: 20px;
       margin-bottom: 30px;
     }
@@ -57,46 +58,19 @@ const SupplierDashboard = () => {
     .stat-card {
       background: white;
       padding: 20px;
-      border-radius: 10px;
-      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+      border-radius: 8px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
       display: flex;
       align-items: center;
-      transition: transform 0.2s;
-    }
-
-    .stat-card:hover {
-      transform: translateY(-5px);
+      gap: 15px;
     }
 
     .stat-icon {
-      width: 50px;
-      height: 50px;
-      border-radius: 10px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      margin-right: 15px;
       font-size: 24px;
-    }
-
-    .suppliers-icon {
+      padding: 15px;
+      border-radius: 50%;
       background: #e3f2fd;
       color: #1976d2;
-    }
-
-    .products-icon {
-      background: #f3e5f5;
-      color: #7b1fa2;
-    }
-
-    .amount-icon {
-      background: #e8f5e9;
-      color: #388e3c;
-    }
-
-    .active-icon {
-      background: #fff3e0;
-      color: #f57c00;
     }
 
     .stat-info h3 {
@@ -110,6 +84,20 @@ const SupplierDashboard = () => {
       font-size: 24px;
       font-weight: 600;
       color: #333;
+    }
+
+    .error-message {
+      background: #ffebee;
+      color: #c62828;
+      padding: 10px;
+      border-radius: 4px;
+      margin-bottom: 20px;
+    }
+
+    .loading {
+      text-align: center;
+      padding: 20px;
+      color: #666;
     }
 
     .dashboard-title {
@@ -126,49 +114,60 @@ const SupplierDashboard = () => {
       <MainNavbar />
       <div className="supplier-dashboard">
         <h1 className="dashboard-title">Supplier Dashboard</h1>
-        <div className="stats-container">
-          <div className="stat-card">
-            <div className="stat-icon suppliers-icon">
-              <FontAwesomeIcon icon={faUsers} />
-            </div>
-            <div className="stat-info">
-              <h3>Total Suppliers</h3>
-              <p>{stats.totalSuppliers}</p>
-            </div>
-          </div>
+        
+        {error && <div className="error-message">{error}</div>}
 
-          <div className="stat-card">
-            <div className="stat-icon products-icon">
-              <FontAwesomeIcon icon={faBoxes} />
-            </div>
-            <div className="stat-info">
-              <h3>Total Products</h3>
-              <p>{stats.totalProducts}</p>
-            </div>
-          </div>
+        {loading ? (
+          <div className="loading">Loading dashboard...</div>
+        ) : (
+          <>
+            <div className="stats-grid">
+              <div className="stat-card">
+                <div className="stat-icon">
+                  <FontAwesomeIcon icon={faBox} />
+                </div>
+                <div className="stat-info">
+                  <h3>Total Orders</h3>
+                  <p>{stats.totalOrders}</p>
+                </div>
+              </div>
 
-          <div className="stat-card">
-            <div className="stat-icon amount-icon">
-              <FontAwesomeIcon icon={faMoneyBillWave} />
-            </div>
-            <div className="stat-info">
-              <h3>Total Amount</h3>
-              <p>Rs. {stats.totalAmount.toLocaleString()}</p>
-            </div>
-          </div>
+              <div className="stat-card">
+                <div className="stat-icon">
+                  <FontAwesomeIcon icon={faTruck} />
+                </div>
+                <div className="stat-info">
+                  <h3>Pending Orders</h3>
+                  <p>{stats.pendingOrders}</p>
+                </div>
+              </div>
 
-          <div className="stat-card">
-            <div className="stat-icon active-icon">
-              <FontAwesomeIcon icon={faChartLine} />
-            </div>
-            <div className="stat-info">
-              <h3>Active Suppliers</h3>
-              <p>{stats.activeSuppliers}</p>
-            </div>
-          </div>
-        </div>
+              <div className="stat-card">
+                <div className="stat-icon">
+                  <FontAwesomeIcon icon={faCheckCircle} />
+                </div>
+                <div className="stat-info">
+                  <h3>Completed Orders</h3>
+                  <p>{stats.completedOrders}</p>
+                </div>
+              </div>
 
-        <SupplierManagement onUpdate={fetchSupplierStats} />
+              <div className="stat-card">
+                <div className="stat-icon">
+                  <FontAwesomeIcon icon={faChartLine} />
+                </div>
+                <div className="stat-info">
+                  <h3>Total Revenue</h3>
+                  <p>Rs. {stats.totalRevenue.toLocaleString()}</p>
+                </div>
+              </div>
+            </div>
+
+            <InvoicePaymentTracking />
+
+            <SupplierManagement onUpdate={fetchSupplierStats} />
+          </>
+        )}
       </div>
     </>
   );

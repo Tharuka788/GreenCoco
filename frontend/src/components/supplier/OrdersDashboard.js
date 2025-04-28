@@ -4,8 +4,10 @@ import { Pie } from 'react-chartjs-2';
 import { Chart as ChartJS, ArcElement, Tooltip, Legend } from 'chart.js';
 import { useNavigate } from 'react-router-dom';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faPlus, faEdit, faTrash, faChartPie, faSearch, faFilter, faCalendar, faMoneyBill, faBoxes } from '@fortawesome/free-solid-svg-icons';
+import { faPlus, faEdit, faTrash, faChartPie, faSearch, faCalendar, faMoneyBill, faBoxes } from '@fortawesome/free-solid-svg-icons';
 import MainNavbar from '../Home/MainNavbar';
+import jsPDF from 'jspdf';
+import 'jspdf-autotable';
 
 // Register Chart.js components
 ChartJS.register(ArcElement, Tooltip, Legend);
@@ -184,6 +186,17 @@ const OrdersDashboard = () => {
       console.error('Navigation error:', err);
       alert('Failed to navigate to the order form. Please check the console for errors.');
     }
+  };
+
+  // Minimal working PDF generator for each order
+  const generateOrderPDF = () => {
+    const doc = new jsPDF();
+    doc.text('Test PDF', 10, 10);
+    doc.autoTable({
+      head: [['Col1', 'Col2']],
+      body: [['A', 'B']],
+    });
+    doc.save('test.pdf');
   };
 
   const styles = `
@@ -802,6 +815,12 @@ const OrdersDashboard = () => {
                       onClick={() => handleOrderDelete(order._id)}
                     >
                       <FontAwesomeIcon icon={faTrash} /> Delete
+                    </button>
+                    <button
+                      className="update"
+                      onClick={() => generateOrderPDF()}
+                    >
+                      PDF
                     </button>
                   </td>
                 </tr>

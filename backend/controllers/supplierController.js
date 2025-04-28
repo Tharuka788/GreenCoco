@@ -125,11 +125,32 @@ const getSupplierPerformanceOverview = asyncHandler(async (req, res) => {
   res.json(performance);
 });
 
+// @desc    Get supplier statistics
+// @route   GET /api/suppliers/stats
+// @access  Public
+const getSupplierStats = asyncHandler(async (req, res) => {
+  const totalOrders = await Order.countDocuments();
+  const pendingOrders = await Order.countDocuments({ status: 'Pending' });
+  const completedOrders = await Order.countDocuments({ status: 'Delivered' });
+  const totalRevenueAgg = await Order.aggregate([
+    { $group: { _id: null, total: { $sum: '$amount' } } }
+  ]);
+  const totalRevenue = totalRevenueAgg[0]?.total || 0;
+
+  res.json({
+    totalOrders,
+    pendingOrders,
+    completedOrders,
+    totalRevenue
+  });
+});
+
 module.exports = {
   registerSupplier,
   getSuppliers,
   getSupplierById,
   updateSupplier,
   deleteSupplier,
-  getSupplierPerformanceOverview
+  getSupplierPerformanceOverview,
+  getSupplierStats
 };

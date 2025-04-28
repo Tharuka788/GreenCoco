@@ -540,6 +540,40 @@ const HomePage = () => {
       position: relative;
       z-index: 1;
     }
+
+    .cta-button {
+      display: inline-block;
+      padding: 16px 36px;
+      font-size: 1.25rem;
+      font-weight: 700;
+      color: #fff;
+      background: linear-gradient(90deg, #2ecc71 0%, #27ae60 100%);
+      border: none;
+      border-radius: 32px;
+      box-shadow: 0 4px 20px rgba(46, 204, 113, 0.15);
+      text-decoration: none;
+      transition: background 0.3s, transform 0.2s, box-shadow 0.3s;
+      margin-top: 20px;
+      letter-spacing: 1px;
+      position: relative;
+      overflow: hidden;
+    }
+    .cta-button:hover, .cta-button:focus {
+      background: linear-gradient(90deg, #27ae60 0%, #2ecc71 100%);
+      color: #fff;
+      transform: translateY(-3px) scale(1.04);
+      box-shadow: 0 8px 32px rgba(46, 204, 113, 0.25);
+      text-decoration: none;
+    }
+    .cta-button svg {
+      margin-left: 12px;
+      font-size: 1.1em;
+      vertical-align: middle;
+      transition: transform 0.2s;
+    }
+    .cta-button:hover svg {
+      transform: translateX(4px) scale(1.1);
+    }
   `;
 
   return (

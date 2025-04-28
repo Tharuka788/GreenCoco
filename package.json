@@ -1,0 +1,8 @@
+{
+  "dependencies": {
+    "geolib": "^3.3.4",
+    "jspdf": "^3.0.1",
+    "jspdf-autotable": "^5.0.2",
+    "validator": "^13.15.0"
+  }
+}

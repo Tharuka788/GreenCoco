@@ -29,6 +29,9 @@ const InventoryDetails = () => {
   const [weightBreakdown, setWeightBreakdown] = useState({});
   const LOW_STOCK_THRESHOLD = 10;
 
+  // Get today's date in YYYY-MM-DD format
+  const todayStr = new Date().toISOString().split('T')[0];
+
   useEffect(() => {
     const fetchInventory = async () => {
       try {
@@ -532,6 +535,7 @@ const InventoryDetails = () => {
                   value={formData.collectionDate}
                   onChange={handleChange}
                   required
+                  min={todayStr}
                 />
                 {errors.collectionDate && <span className="form-error">{errors.collectionDate}</span>}
               </div>
