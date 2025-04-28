@@ -118,7 +118,7 @@ const DriverManagement = () => {
       filterable: true,
       renderCell: (params) => (
         <Box sx={{ display: 'flex', alignItems: 'center' }}>
-          <BadgeIcon sx={{ color: '#1976d2', mr: 1 }} />
+          <BadgeIcon sx={{ color: '#2e7d32', mr: 1 }} />
           <div>{params.value}</div>
         </Box>
       )
@@ -142,7 +142,7 @@ const DriverManagement = () => {
         
         return (
           <Box sx={{ display: 'flex', alignItems: 'center' }}>
-            <DirectionsCarIcon sx={{ color: '#1976d2', mr: 1 }} />
+            <DirectionsCarIcon sx={{ color: '#2e7d32', mr: 1 }} />
             <div>{licensePlate}</div>
           </Box>
         );
@@ -228,7 +228,7 @@ const DriverManagement = () => {
     <Container maxWidth="lg" sx={{ py: 4 }}>
       <Paper elevation={3} sx={{ p: 3, borderRadius: 2 }}>
         <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
-          <Typography variant="h4" sx={{ fontWeight: '600', color: '#1976d2', display: 'flex', alignItems: 'center' }}>
+          <Typography variant="h4" sx={{ fontWeight: '600', color: '#2e7d32', display: 'flex', alignItems: 'center' }}>
             <BadgeIcon sx={{ mr: 1, fontSize: 32 }} />
             Driver Management
           </Typography>
